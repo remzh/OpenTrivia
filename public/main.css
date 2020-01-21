@@ -1,0 +1,102 @@
+@import url('https://fonts.googleapis.com/css?family=Raleway:400,600&display=swap');
+
+::selection{
+  background: #cde;
+}
+
+#nav{
+  user-select: none;
+}
+
+html, button, input{
+  font-family: 'Raleway';
+}
+
+body{
+  margin: 0
+}
+
+p{
+  font-size: 18px;
+}
+
+button{
+  background: #fff;
+  border: 1px solid #888;
+  transition: all 0.15s;
+}
+
+button:focus{
+  outline: none;;
+  border-color: #55f;
+}
+
+button:not([disabled]):hover{
+  border-color: #555;
+  background: #eef8fa; 
+  cursor: pointer;
+}
+
+button:not([disabled]):active{
+  color: #000;
+  border-color: #000;
+  background: #d0e4f3; 
+}
+
+#nav{
+  padding: 8px;
+  border-bottom: 1px solid #000;
+}
+
+.container{
+  text-align: center;
+}
+
+.right{
+  float: right;
+}
+
+#nav-top span{
+  font-size: 24px;
+}
+
+#nav-btm span{
+  font-size: 16px;
+  color: #777;
+}
+
+/* Specific CSS */
+.q:not(#q-wel){
+  display: none;
+}
+
+.btn-mc, #i-sa{
+  width: 80%; 
+  max-width: 600px;
+  font-size: 24px;
+  padding: 8px 16px;
+  margin-top: 8px;
+  text-align: left;
+}
+
+#i-sa{
+  padding: 8px;
+}
+
+a button{
+  font-size: 24px; 
+  padding: 8px 14px;
+}
+
+.btn-mc{
+  overflow: hidden;
+  word-wrap: none;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.btn-mc.selected:disabled{
+  color: #000;
+  border-color: #000;
+  background: #a8d8fd;
+}

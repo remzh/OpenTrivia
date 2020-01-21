@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Trivia Night</title>
+    <link rel='stylesheet' href='main.css'/>
+    <script defer src='https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js' integrity='sha256-vrn14y7WH7zgEElyQqm2uCGSQrX/xjYDjniRUQx3NyU=' crossorigin='anonymous'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/js/all.min.js' integrity='sha256-qM7QTJSlvtPSxVRjVWNM2OfTAz/3k5ovHOKmKXuYMO4=' crossorigin='anonymous'></script>
+    <script defer src='/socket.io/socket.io.js'></script>
+    <script defer src='logger.js'></script>
+    <script defer src='contestant.js'></script>
+  </head>
+  <body>
+    <div id='nav'>
+      <div id='nav-top'>
+        <span id='s-team'>...</span>
+        <span id='status' class='right'><i class='fas fa-circle-notch fa-spin'></i> Loading...</span>
+      </div>
+      <div id='nav-btm'>
+        <span id='s-school'>...</span>
+        <span id='s-ping-outer' style='display: none' class='right'>Ping: <span id='s-ping'>...</span>ms</span>
+      </div>
+    </div>
+    < div class='container'>
+      <h1 id='q-num'></h1>
+      <div id='q-wel' class='q'>
+        <h1>Welcome!</h1>
+        <p>We'll begin the competition shortly.</p>
+      </div>
+      <div id='q-mc' class='q'>
+        <button id='btn-a' class='btn-mc'><b>A</b> <span id='mc-1'></span></button><br/>
+        <button id='btn-b' class='btn-mc'><b>B</b> <span id='mc-2'></span></button><br/>
+        <button id='btn-c' class='btn-mc'><b>C</b> <span id='mc-3'></span></button><br/>
+        <button id='btn-d' class='btn-mc'><b>D</b> <span id='mc-4'></span></button><br/>
+        <button id='btn-e' class='btn-mc'><b>E</b> <span id='mc-5'></span></button>
+      </div>
+      <div id='q-sa' class='q'>
+        <input id='i-sa' placeholder='Type here...'/>
+        <p><b>Correct!</b> Time: <b>9.2s</b> (4.2s + 5.0s penalty)</p>
+      </div>
+      <div id='q-sp' class='q'>
+        <p>Place your answers to the minigame on the form below.</p>
+        <p>First team to answer all parts correctly wins!</p>
+        <a id='a-sp' target='blank'><button>Open Form</button></a>
+      </div>
+    </ div>
+  </body>
+</html>

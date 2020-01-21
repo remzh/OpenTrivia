@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Trivia Host</title>
+    <link rel='stylesheet' href='main.css'/>
+    <link rel='stylesheet' href='host/host.css'/>
+    <script defer src='https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js' integrity='sha256-vrn14y7WH7zgEElyQqm2uCGSQrX/xjYDjniRUQx3NyU=' crossorigin='anonymous'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/js/all.min.js' integrity='sha256-qM7QTJSlvtPSxVRjVWNM2OfTAz/3k5ovHOKmKXuYMO4=' crossorigin='anonymous'></script>
+    <script defer src='/socket.io/socket.io.js'></script>
+    <script defer src='logger.js'></script>
+    <script defer src='host/host.js'></script>
+  </head>
+  <body>
+    <div id='nav'>
+      <div id='nav-top'>
+        <span id='s-team'>...</span>
+        <span id='status' class='right'><i class='fas fa-circle-notch fa-spin'></i> Loading...</span>
+      </div>
+      <div id='nav-btm'>
+        <span id='s-school'>...</span>
+        <span id='s-ping-outer' style='display: none' class='right'>Ping: <span id='s-ping'>...</span>ms</span>
+      </div>
+    </div>
+    <div class='container'>
+      <h2>Testing</h2>
+      <button class='btn-lg' onclick='secSocket.emit("test", "mc")'>Test MC</button>
+      <button class='btn-lg' onclick='secSocket.emit("test", "sa")'>Test SA</button>
+      <button class='btn-lg' onclick='secSocket.emit("test", "sp")'>Test SP</button>
+      <br/>
+      <button class='btn-lg'>Start Timer</button>
+      <button class='btn-lg'>End Question</button>
+    </div>
+  </body>
+</html>
