@@ -3,6 +3,8 @@
   <head>
     <title>Trivia Night</title>
     <link rel='stylesheet' href='main.css'/>
+    <link rel='stylesheet' href='contestant.css'/>
+    <script defer src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js' integrity='sha256-4iQZ6BVL4qNKlQ27TExEhBN1HFPvAvAMbFavKKosSWQ=' crossorigin='anonymous'></script>
     <script defer src='https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js' integrity='sha256-vrn14y7WH7zgEElyQqm2uCGSQrX/xjYDjniRUQx3NyU=' crossorigin='anonymous'></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/js/all.min.js' integrity='sha256-qM7QTJSlvtPSxVRjVWNM2OfTAz/3k5ovHOKmKXuYMO4=' crossorigin='anonymous'></script>
     <script defer src='/socket.io/socket.io.js'></script>
@@ -10,6 +12,7 @@
     <script defer src='contestant.js'></script>
   </head>
   <body>
+    <div id='bk'></div>
     <div id='nav'>
       <div id='nav-top'>
         <span id='s-team'>...</span>
@@ -21,7 +24,8 @@
       </div>
     </div>
     <div class='container'>
-      <h1 id='q-num'></h1>
+      <h1 id='q-num' class='q'></h1>
+      <h1 id='q-stop' class='q'>Time's Up!</h1>
       <div id='q-wel' class='q'>
         <h1>Welcome!</h1>
         <p>We'll begin the competition shortly.</p>
@@ -34,14 +38,19 @@
         <button id='btn-e' class='btn-mc'><b>E</b> <span id='mc-5'></span></button>
       </div>
       <div id='q-sa' class='q'>
-        <input id='i-sa' placeholder='Type here...'/>
-        <p><b>Correct!</b> Time: <b>9.2s</b> (4.2s + 5.0s penalty)</p>
+        <input id='i-sa' maxlength='48' placeholder='Type here...'/>
+        <p id='sa-wrong' class='q'><b>Incorrect</b>, try again.</p>
+        <p id='sa-right' class='q'><b>Correct!</b> Time: <span id='sa-time'></span></p>
       </div>
       <div id='q-sp' class='q'>
         <p>Place your answers to the minigame on the form below.</p>
         <p>First team to answer all parts correctly wins!</p>
         <a id='a-sp' target='blank'><button>Open Form</button></a>
       </div>
+    </div>
+    <div id='footer'>
+      OpenTrivia &copy; 2020 Ryan Zhang. OpenTrivia is <a target='_blank' href='https://github.com/Ryan778/opentrivia'>open source</a>!
+      <span class='right'><a href='#' onclick='logger.open()'>Open Console</a></span>
     </div>
   </body>
 </html>

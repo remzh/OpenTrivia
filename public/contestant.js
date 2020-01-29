@@ -30,13 +30,21 @@ $('.btn-mc').on('click', (e) => {
   socket.emit('answer', target.id.slice(4)); 
 })
 
+$('#i-sa').on('keyup', (e) => {
+  if(e.key === 'Enter'){
+    logger.info(`submitted "${$('#i-sa').val()}" as answer`)
+    socket.emit('answer', $('#i-sa').val()); 
+    $('#i-sa').val('');
+  }
+})
+
 // $('#')
 
 socket.on('connect', () => {
   logger.info('socket connected; id: '+socket.id)
   if(!user){
-    logger.info('first connection, attempting to log in')
-    socket.emit('login'); 
+    logger.info('first connection, attempting to retrieve team info')
+    socket.emit('status'); 
     showStatus('pending', 'Authenticating...'); 
     return; 
   }
@@ -54,13 +62,16 @@ socket.on('disconnect', (reason) => {
 })
 
 socket.on('error', (error) => {
+  if(error === 'Authentication error'){
+    window.open('..', '_self')
+  }
   logger.error(error); 
 });
 
 socket.on('status', (res) => {
   if(res.valid){
     showStatus('success', 'Connected'); 
-    logger.info('login successful; recieved data: '+JSON.stringify(res.user))
+    logger.info('recieved data: '+JSON.stringify(res.user))
     user = res.user; 
     $('#s-team').text(user.TeamName); 
     $('#s-school').text(`${user.TeamID} • ${user.School}`)
@@ -75,12 +86,11 @@ socket.on('status', (res) => {
 }); 
 
 socket.on('question', (data) => {
+  logger.info('recieved question: '+JSON.stringify(data));
   $('.q').hide(); 
   if(data.num){
     $('#q-num').show(); 
     $('#q-num').text('Question ' + data.num); 
-  } else{
-    $('#q-num').hide(); 
   }
   switch(data.type){
     case 'mc': 
@@ -88,10 +98,12 @@ socket.on('question', (data) => {
       $('#q-mc').show(); 
       for(let i = 0; i < data.options.length; i++){
         $('#mc-' + (i+1)).text(data.options[i]); 
+        // $('#btn-' + (i+1)).prop('title', data.options[i]); 
       }
       break; 
-    case 'sa': 
+    case 'sa':  
       $('#q-sa').show(); 
+      $('#i-sa').prop('disabled', false); 
       $('#i-sa').val('');
       break; 
     case 'sp': 
@@ -99,6 +111,13 @@ socket.on('question', (data) => {
       $('#a-sp').prop('href', data.url); 
       break; 
   }
+})
+
+socket.on('stop', () => {
+  $('#q-num').hide(); 
+  $('#q-stop').show(); 
+  $('.btn-mc').prop('disabled', true); 
+  $('#i-sa').prop('disabled', true); 
 })
 
 socket.on('pong', (latency) => {

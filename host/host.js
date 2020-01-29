@@ -21,8 +21,13 @@ socket.on('connect', () => {
   }
 });
 
+let firstConnect = true; 
 secSocket.on('connect', () => {
-  logger.info('[sec] socket connected; id: '+socket.id)
+  logger.info('[sec] socket connected; id: '+socket.id); 
+  if(firstConnect){
+    firstConnect = false; 
+    secSocket.emit('get-questionList');
+  }
 })
 
 secSocket.on('connect_error', (err) => {
@@ -60,4 +65,38 @@ socket.on('status', (res) => {
 socket.on('pong', (latency) => {
   $('#s-ping-outer').show(); 
   $('#s-ping').text(latency); 
+})
+
+// actual host stuff
+
+secSocket.on('update', (msg) => {
+  logger.info('[server]' + msg); 
+})
+
+secSocket.on('question-full', (q) => {
+  logger.info('[sec] got question: '+JSON.stringify(q))
+  $('#q-cur').text(q.question + (q.type==='mc'?` (${q.options.join(', ')})`:'')); 
+  $('#q-ans').text(0); 
+  $('#q-cor').text(0);
+}); 
+
+secSocket.on('question-list', (l) => {
+  for(let i = 0; i < l.length; i++){
+    $('#sel-questions')[0].insertAdjacentHTML('beforeEnd', `<option value='${i}'>R${l[i].r} Q${l[i].q}</option>`); 
+  }
+})
+
+$('#btn-loadQuestion').on('click', () => {
+  secSocket.emit('load-question', parseInt($('#sel-questions').val())); 
+})
+
+$('#btn-startTimer').on('click', () => {
+  secSocket.emit('start-timer', $('#i-timer').val()); 
+})
+
+secSocket.on('ans-update', (dt) => {
+  let total = Object.keys(dt).length; 
+  let correct = Object.values(dt).filter(r => r==1).length; 
+  $('#q-ans').text(total); 
+  $('#q-cor').text(correct);
 })

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Trivia Host</title>
+    <link rel='stylesheet' href='../main.css'/>
+    <link rel='stylesheet' href='host.css'/>
+    <script defer src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js' integrity='sha256-4iQZ6BVL4qNKlQ27TExEhBN1HFPvAvAMbFavKKosSWQ=' crossorigin='anonymous'></script>
+    <script defer src='https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js' integrity='sha256-vrn14y7WH7zgEElyQqm2uCGSQrX/xjYDjniRUQx3NyU=' crossorigin='anonymous'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/js/all.min.js' integrity='sha256-qM7QTJSlvtPSxVRjVWNM2OfTAz/3k5ovHOKmKXuYMO4=' crossorigin='anonymous'></script>
+    <script defer src='/socket.io/socket.io.js'></script>
+    <script defer src='../logger.js'></script>
+    <script defer src='host.js'></script>
+  </head>
+  <body>
+    <div id='nav'>
+      <div id='nav-top'>
+        <span id='s-team'>...</span>
+        <span id='status' class='right'><i class='fas fa-circle-notch fa-spin'></i> Loading...</span>
+      </div>
+      <div id='nav-btm'>
+        <span id='s-school'>...</span>
+        <span id='s-ping-outer' style='display: none' class='right'>Ping: <span id='s-ping'>...</span>ms</span>
+      </div>
+    </div>
+    <div class='container'>
+      <h2>Question Loading</h2>
+      <p>Currently On: <b id='q-curNum'></b></p>
+      <select id='sel-questions'></select><button id='btn-loadQuestion'>Load</button>
+      <input type='number' id='i-timer' value='15'/><button id='btn-startTimer'>Start Timer</button>
+      <h2>Testing</h2>
+      <button class='btn-lg' onclick='secSocket.emit("test", "mc")'>Test MC</button>
+      <button class='btn-lg' onclick='secSocket.emit("test", "sa")'>Test SA</button>
+      <button class='btn-lg' onclick='secSocket.emit("test", "sp")'>Test SP</button>
+      <br/>
+      <button class='btn-lg'>Start Timer</button>
+      <button class='btn-lg' onclick='secSocket.emit("show-answers")'>Show Reults</button>
+      <h2>Question Stats</h2>
+      <p>Current Question: <span id='q-cur'>...</span></p>
+      <p>Answered: <span id='q-ans'>0</span></p>
+      <p>Correct: <span id='q-cor'>0</span></p>
+    </div>
+    <div id='footer'>
+      OpenTrivia &copy; 2020 Ryan Zhang. OpenTrivia is <a target='_blank' href='https://github.com/Ryan778/opentrivia'>open source</a>!
+      <span class='right'><a href='#' onclick='logger.open()'>Open Console</a></span>
+    </div>
+  </body>
+</html>

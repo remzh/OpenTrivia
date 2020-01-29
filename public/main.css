@@ -4,8 +4,9 @@
   background: #cde;
 }
 
-#nav{
-  user-select: none;
+body{
+  background: #444;
+  color: #fff;
 }
 
 html, button, input{
@@ -20,32 +21,54 @@ p{
   font-size: 18px;
 }
 
+a{
+  text-decoration: none;
+  color: #aac8ff; 
+}
+
+a:hover, a:focus{
+  text-decoration: underline;
+}
+
 button{
-  background: #fff;
-  border: 1px solid #888;
+  background: #333333af;
+  border: 1px solid #fff;
   transition: all 0.15s;
+  color: #fff; 
 }
 
 button:focus{
   outline: none;;
-  border-color: #55f;
+  border-color: #93d4ff;
 }
 
 button:not([disabled]):hover{
-  border-color: #555;
-  background: #eef8fa; 
+  background: #312f4eaf; 
   cursor: pointer;
 }
 
 button:not([disabled]):active{
-  color: #000;
-  border-color: #000;
-  background: #d0e4f3; 
+  color: #fff;
+  background: #2a3875af; 
 }
 
 #nav{
+  user-select: none;
   padding: 8px;
   border-bottom: 1px solid #000;
+  background: #3333336f;
+  color: #fff;
+}
+
+#bk{
+  z-index: -5;
+  position: fixed; 
+  top: 0; 
+  left: 0; 
+  width: 100%;
+  height: 100%; 
+  background-image: url(../images/bk.jpg);
+  background-size: cover;
 }
 
 .container{
@@ -62,41 +85,15 @@ button:not([disabled]):active{
 
 #nav-btm span{
   font-size: 16px;
-  color: #777;
+  color: #ddd;
 }
 
-/* Specific CSS */
-.q:not(#q-wel){
-  display: none;
-}
-
-.btn-mc, #i-sa{
-  width: 80%; 
-  max-width: 600px;
-  font-size: 24px;
-  padding: 8px 16px;
-  margin-top: 8px;
-  text-align: left;
-}
-
-#i-sa{
-  padding: 8px;
-}
-
-a button{
-  font-size: 24px; 
-  padding: 8px 14px;
-}
-
-.btn-mc{
-  overflow: hidden;
-  word-wrap: none;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.btn-mc.selected:disabled{
-  color: #000;
-  border-color: #000;
-  background: #a8d8fd;
+#footer{
+  background: #1111117f;
+  position: fixed;
+  font-size: 14px;
+  color: #ddd;
+  bottom: 0px;
+  padding: 5px;
+  width: calc(100% - 10px);
 }

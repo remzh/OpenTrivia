@@ -1,0 +1,4 @@
+{
+    // Open port 8100 by default
+    "appPort": 8100
+}

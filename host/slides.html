@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Trivia Host</title>
+    <link rel='stylesheet' href='../main.css'/>
+    <link rel='stylesheet' href='host.css'/>
+    <link rel='stylesheet' href='slides.css'/>
+    <script defer src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js' integrity='sha256-4iQZ6BVL4qNKlQ27TExEhBN1HFPvAvAMbFavKKosSWQ=' crossorigin='anonymous'></script>
+    <script defer src='https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js' integrity='sha256-vrn14y7WH7zgEElyQqm2uCGSQrX/xjYDjniRUQx3NyU=' crossorigin='anonymous'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/js/all.min.js' integrity='sha256-qM7QTJSlvtPSxVRjVWNM2OfTAz/3k5ovHOKmKXuYMO4=' crossorigin='anonymous'></script>
+    <script defer src='/socket.io/socket.io.js'></script>
+    <script defer src='../logger.js'></script>
+    <script defer src='slides.js'></script>
+  </head>
+  <body>
+    <div id='bkimg'></div>
+    <div id='main'>
+      <div id='catInfo'>
+        <b id='qnum'>...</b> <b id='cat'></b> <span id='subcat'></span>
+        <div id='timer'>
+          15
+        </div>
+      </div>
+      <h1 id='question'></h1>
+      <div class='row'>
+        <div id='q-options'>
+          <div id='opt-a' class='opt'><div class='opt-bar'></div><div class='opt-letter'>A</div> <span id='sp-a' class='opt-ans'></span></div>
+          <div id='opt-b' class='opt'><div class='opt-bar'></div><div class='opt-letter'>B</div> <span id='sp-b' class='opt-ans'></span></div>
+          <div id='opt-c' class='opt'><div class='opt-bar'></div><div class='opt-letter'>C</div> <span id='sp-c' class='opt-ans'></span></div>
+          <div id='opt-d' class='opt'><div class='opt-bar'></div><div class='opt-letter'>D</div> <span id='sp-d' class='opt-ans'></span></div>
+          <div id='opt-e' class='opt'><div class='opt-bar'></div><div class='opt-letter'>E</div> <span id='sp-e' class='opt-ans'></span></div>
+        </div>
+        <div id='q-image'>
+          <img id='image'/>
+        </div>
+      </div>
+    </div>
+    <div id='footer' style='font-size: 12px'>
+      <span id='status'><i class='fas fa-circle-notch fa-spin'></i> Loading...</span>
+      <span id='s-ping-outer' style='display: none'> (Ping: <span id='s-ping'>...</span>ms)</span>
+      <span class='right'>
+        <a href='#' onclick='logger.open()'>Console</a>
+      </span>
+    </div>
+  </body>
+</html>

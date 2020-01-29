@@ -1,0 +1,55 @@
+html {
+  -moz-user-focus: none;
+  user-select: none;
+}
+
+.q:not(#q-wel){
+  display: none;
+}
+
+.btn-mc, #i-sa{
+  width: 80%; 
+  max-width: 600px;
+  font-size: 24px;
+  padding: 8px 16px;
+  margin-top: 8px;
+  text-align: left;
+}
+
+#q-num{
+  text-shadow: 1px 1px 3px #444;
+}
+
+#i-sa{
+  padding: 8px;
+  transition: all 0.14s;
+  border: none; 
+  background: #ffffffaf; 
+  border-bottom: 1px solid #555;
+}
+
+#i-sa:hover{
+  border-color: #4040cc;
+}
+
+#i-sa:focus{
+  outline: none;
+  background: #d5e2ffaf;
+  border-bottom: 2px solid #4040cc;
+}
+
+a button{
+  font-size: 24px; 
+  padding: 8px 14px;
+}
+
+.btn-mc{
+  overflow: hidden;
+  word-wrap: none;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.btn-mc.selected:disabled{
+  background: #4255acaf; 
+}

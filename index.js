@@ -9,6 +9,7 @@ const app = require('express')();
 const path = require('path');
 const credentials = require(path.join(__dirname, 'secure', 'credentials.json')); // secure credentials
 
+const levenshtein = require('js-levenshtein');
 const tabletop = require('tabletop');
 const session = require('express-session');
 const sharedsession = require("express-socket.io-session");
@@ -62,7 +63,7 @@ let sess = {
   saveUninitialized: false, 
   resave: false,
   cookie: {
-    maxAge: 7200000
+    maxAge: 28800000
   }
 }
  
@@ -81,16 +82,25 @@ io.use(sharedsession(session(sess)));
 // Loading UserDB
 
 let userdb = []; 
-function loadUsers(){
+let questiondb = []; 
+function loadSheets(){
   tabletop.init({
     key: 'https://docs.google.com/spreadsheets/d/1PhWNoPC0itS4ZB0HVV_Y3vEcZFtw3vBEk2OiR0OpjbI/pubhtml', 
     simpleSheet: true
   }).then((dt) => {
     userdb = dt; 
-    console.log(userdb); 
+    logger.info(`Loaded UserDB (${dt.length} entries)`)
+  });
+  tabletop.init({
+    key: 'https://docs.google.com/spreadsheets/u/1/d/1cYaUC73QE8gvE-dotdOg_fS--dJhVQ3nO21ZnfndT5Q/pubhtml', 
+    simpleSheet: true
+  }).then((dt) => {
+    questiondb = dt; 
+    logger.info(`Loaded QuestionDB (${dt.length} entries)`); 
   }); 
 }
-loadUsers(); 
+loadSheets(); 
+
 
 function lookupUser(teamID){
   let out = userdb.filter(obj => {return obj.TeamID === teamID}); 
@@ -102,6 +112,142 @@ function lookupUser(teamID){
 }
 
 // End of UserDB
+// Question management
+
+let question = {
+  acceptingAnswers: false, 
+  timer: {
+    active: false,
+    interval: null,  
+    end: 0
+  }, 
+  current: {}, 
+  curIndex: -1, 
+  scores: {}, 
+  selections: {} // only used 
+}
+function getCurrentQuestion(full){
+  let obj = question.current; 
+  try {
+    let out = {
+      type: obj.Type.toLowerCase(), 
+      num: obj.Q
+    }
+    if(obj.Type === 'MC'){
+      out.options = [obj.OptA, obj.OptB, obj.OptC, obj.OptD, obj.OptE]
+    }
+    else if(obj.Type === 'SP'){
+      out.url = obj.Question; 
+    }
+    if(full){
+      out.round = obj.Round; 
+      out.question = obj.Question; 
+      out.image = obj.Image; 
+      out.media = obj.Media;
+      out.answer = obj.Answer;
+      out.category = obj.Category;
+      out.subcategory = obj.Subcategory  
+    }
+    return out; 
+  } catch (e) {
+    io.of('secure').emit('question-error', e); 
+    return {
+      type: 'sa', 
+      num: -1
+    }
+  }
+}
+function loadQuestion(index){
+  question.current = questiondb[index]; 
+  question.curIndex = index; 
+  io.emit('question', getCurrentQuestion()); 
+  io.of('secure').emit('question-full', getCurrentQuestion(1)); 
+}
+
+function processAnswer(team, ans){
+  let q = getCurrentQuestion(1); 
+  if(typeof ans !== 'string' || !team.TeamID){
+    logger.warn('Unable to process answer: Missing data'); 
+    io.of('secure').emit('update', 'processAnswer error: missing required data'); 
+    return false;
+  }
+  else if(!q.answer){
+    logger.warn('Unable to process answer: No question selected'); 
+    io.of('secure').emit('update', 'processAnswer error: no question selected server-side'); 
+    return false;
+  }
+  let tid = team.TeamID; 
+  if(q.type === 'mc'){
+    question.selections[tid] = ans.toLowerCase(); 
+    if(ans.toLowerCase() === q.answer.toLowerCase()){
+      question.scores[tid] = 1; 
+      return true; 
+    } else{
+      question.scores[tid] = 0; 
+      return false; 
+    }
+  } else if(q.type === 'sa'){
+    ans = ans.toLowerCase().trim(); 
+    let cor = q.answer.toLowerCase().trim(); // correct answer
+    if(ans.slice(0, 1) !== cor.slice(0, 1)){
+      question.scores[tid] = 0; // first letter must match
+      return false; 
+    } else if(levenshtein(ans, cor) < 3  || levenshtein(ans, cor) === 3 && cor.length > 11){
+      question.scores[tid] = 1;
+      return true; 
+    } else{
+      question.scores[tid] = 0;
+      return true; 
+    }
+  }
+}
+
+function getAnswerStats(){
+  if(question.current.Type === 'MC'){
+    let resp = Object.values(question.selections);
+    let t = resp.length; 
+    return {
+      type: 'mc', 
+      ans: question.current.Answer.toLowerCase(), 
+      correct: Object.values(question.scores).filter(r => r==1).length, 
+      total: Object.values(question.scores).length, 
+      a: Math.round(resp.filter(i => i=='a').length/t*1000)/1000, 
+      b: Math.round(resp.filter(i => i=='b').length/t*1000)/1000, 
+      c: Math.round(resp.filter(i => i=='c').length/t*1000)/1000, 
+      d: Math.round(resp.filter(i => i=='d').length/t*1000)/1000, 
+      e: Math.round(resp.filter(i => i=='e').length/t*1000)/1000, 
+    }
+  } else if(question.current.Type === 'SA'){
+    return {
+      type: 'sa', 
+      ans: question.current.Answer, 
+      correct: Object.values(question.scores).filter(r => r==1).length, 
+      total: Object.values(question.scores).length
+    }
+  }
+  return false
+}
+
+function startTimer(s){
+  question.timer.active = true; 
+  question.timer.end = Date.now() + (1000 * s); 
+  question.timer.interval = setInterval(() => {
+    let t = Math.round((question.timer.end - Date.now())/1000); 
+    io.of('secure').emit('timer', t); 
+    if(t <= 0){
+      clearInterval(question.timer.interval); 
+      question.acceptingAnswers = false; 
+      io.emit('stop'); 
+    }
+  }, 1000); 
+  io.of('secure').emit('timer', s); 
+}
+
+function stopTimer(){
+  clearInterval(question.timer.interval); 
+}
+
+// End question management
 // Socket.io
 
 const nsp = io.of('/secure');
@@ -120,7 +266,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     logger.info('[sec] recieved command: test ['+param+']')
     switch(param){
       case 'mc': 
-        io.in('users').emit('question', {
+        io.emit('question', {
           type: 'mc', 
           num: 1, 
           options: ['Apple', 'Banana', 'Carrot', 'Dragonfruit', 'Eggplant'], 
@@ -128,38 +274,67 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
         })
         break; 
       case 'sa': 
-        io.in('users').emit('question', {
+        io.emit('question', {
           type: 'sa', 
           num: 2
         })
         break; 
       case 'sp': 
-        io.in('users').emit('question', {
+        io.emit('question', {
           type: 'sp', 
           url: 'https://docs.google.com/forms/d/e/1FAIpQLSdjHuRngsHN1kXuf-Sq_-c_NdAY09MkEvXmRfCLmmICQkibEg/viewform'
         })
         break; 
     }
   })
+
+  socket.on('status', function(){
+    if(question.curIndex !== -1){
+      socket.emit('question-full', getCurrentQuestion(1))}
+  })
+
+  socket.on('load-question', function(q){
+    loadQuestion(q); 
+  })
+
+  socket.on('start-timer', function(t){
+    startTimer(t); 
+  })
+
+  socket.on('show-answers', function(){
+    if(question.acceptingAnswers){
+      io.emit('stop'); // stop accepting answers in case it wasn't already turned off
+      question.acceptingAnswers = false; 
+    }
+    io.of('secure').emit('answers', getAnswerStats());
+  })
+
+  socket.on('get-questionList', function(){
+    socket.emit('question-list', questiondb.map(r => {return {r: r.Round, q: r.Q}}))
+  }); 
 });
 
-io.on('connection', function(socket){
+io.use(function(socket, next){
+  if (socket.handshake.session && (socket.handshake.session.user || socket.handshake.session.host)){ // hosts only!
+    logger.info('[std] authenticated: '+socket.id);
+    socket.join('users'); 
+    next(); 
+  } else {
+    logger.info('[std] rejected: '+socket.id)
+      next(new Error('Authentication error'));
+  }    
+}).on('connection', function(socket){
   logger.info('[std] connected: '+socket.id);  
-  socket.on('login', function(){
-    console.log('[std] status for: '+socket.id);
-    console.log(socket.handshake.session)
+  socket.on('status', function(){
     if(socket.handshake.session.user){
-      socket.join('users'); 
       socket.emit('status', {valid: true, user: socket.handshake.session.user}); 
+      if(question.curIndex !== -1){
+        socket.emit('question', getCurrentQuestion())}
     } else{
       socket.emit('status', {valid: false}); 
     }
   })
 
-  socket.on('chat', function(msg){
-    logger.info('chat: ' + msg); 
-    io.emit('chat', msg);
-  });
   socket.on('disconnect', function(){
     logger.info('user disconnected');
   });
@@ -173,6 +348,17 @@ io.on('connection', function(socket){
     }
     else{
       socket.emit('status', {valid: false}); 
+    }
+  })
+
+
+  socket.on('answer', function(ans){
+    if(socket.handshake.session.user){
+      logger.info('[std] recieved answer: '+ans);  
+      processAnswer(socket.handshake.session.user, ans);
+      io.of('secure').emit('ans-update', question.scores);  
+    } else{
+      socket.emit('status', {valid: false});
     }
   })
 });
@@ -198,11 +384,18 @@ app.get('/host/*', (req, res) => {
     if(fs.existsSync(reqPath)){
       res.status(200).sendFile(reqPath);
     }
+    else if(fs.existsSync(reqPath + '.html')){
+      res.status(200).sendFile(reqPath + '.html');
+    }
     else{
       res.status(404).json({success: false, msg: '[404] File not found'}); 
     }
   }
   else{
+    if(fs.existsSync(reqPath + '.html')){
+      res.status(302).redirect('./?403'); 
+      return
+    }
     res.status(404).json({success: false, msg: '[403] Authorization required'}); 
   }
 })
