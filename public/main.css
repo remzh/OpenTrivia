@@ -97,3 +97,20 @@ button:not([disabled]):active{
   padding: 5px;
   width: calc(100% - 10px);
 }
+
+#snackbar{
+  z-index: 40; 
+  position: fixed; 
+  opacity: 0; 
+  transition: all 0.3s;
+  left: calc(50% - 150px);  
+  bottom: -40px;
+  width: 300px; 
+  height: 24px; 
+  background: #2f58359f;
+  color: #fff;
+  border: 1px solid #ffffff7f;
+  text-align: center;  
+  font-size: 20px;
+  padding: 12px 4px;
+}
