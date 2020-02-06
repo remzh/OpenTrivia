@@ -1,0 +1,48 @@
+@import url('https://fonts.googleapis.com/css?family=Raleway:400,600&display=swap');
+
+::selection{
+  background: #cde;
+}
+
+body{
+  font-family: 'Raleway', 'Roboto', 'Arial', sans-serif; 
+  background: url(images/landing.jpg);
+  background-size: cover;
+  background-attachment: fixed;
+  background-position: center;
+}
+
+#sq{
+  width: 360px;
+  padding: 5px 20px 20px;
+  background: #ffffff9f; 
+  margin: auto;
+  margin-top: 100px;
+}
+
+#sq form{
+  display: flex;
+}
+
+#sq form input{
+  width: calc(100% - 44px); 
+  background: none; 
+  border: none;
+  font-size: 16px;
+  border-radius: 0; 
+  border-bottom: 1px solid #555;
+  padding: 4px;
+}
+
+#sq form input:focus{
+  outline: none; 
+}
+
+#sq form button{
+  width: 36px;
+  font-size: 16px; 
+  padding: 4px; 
+  border: none; 
+  border-radius: 0; 
+  border-bottom: 1px solid #555;
+}

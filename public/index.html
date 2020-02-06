@@ -2,16 +2,19 @@
 <html>
   <head>
     <title>Trivia Night!</title>
+    <link rel='stylesheet' href='landing.css'/>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/js/all.min.js' integrity='sha256-qM7QTJSlvtPSxVRjVWNM2OfTAz/3k5ovHOKmKXuYMO4=' crossorigin='anonymous'></script>
   </head>
   <body>
-    <h2>Welcome to Trivia Night!</h2>
-    <p>Enter your <b>Team ID</b> below to continue.</p>
-    <p id='failed' style='display: none'>Invalid Team ID. Please try again.</p>
-    <form action='/auth' method='post'>
-      <input id='teamID' name='id' maxlength='16' placeholder='Team ID'/>
-      <button type='submit'><i class='fas fa-arrow-right'></i></button>
-    </form>
+    <div id='sq'>
+      <h2>Welcome to Trivia Night!</h2>
+      <p>Enter your <b>Team ID</b> below to continue.</p>
+      <p id='failed' style='display: none'>Invalid Team ID. Please try again.</p>
+      <form action='/auth' method='post'>
+        <input id='teamID' name='id' maxlength='16' placeholder='Team ID'/>
+        <button type='submit'><i class='fas fa-arrow-right'></i></button>
+      </form>
+    </div>
   </body>
   <script>
     if(location.search === '?failedLogin'){
