@@ -16,7 +16,7 @@ html {
   text-align: left;
 }
 
-#q-num{
+#q-num, #q-stop, #q-wel{
   text-shadow: 1px 1px 3px #444;
 }
 

@@ -105,7 +105,7 @@ secSocket.on('question-full', (data) => {
   }, 400)
 })
 
-secSocket.on('answers', (data) => {
+secSocket.on('answer-stats', (data) => {
   logger.info('Recieved answers: '+JSON.stringify(data)); 
   if(data.type === 'mc'){
     $('.opt').addClass('incorrect'); 

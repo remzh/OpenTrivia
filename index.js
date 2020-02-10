@@ -156,9 +156,8 @@ async function getScores(round){
 // Question management
 
 let question = {
-  acceptingAnswers: false, 
+  active: false, // whether answers can be submitted or not 
   timer: {
-    active: false,
     interval: null,  
     end: 0
   }, 
@@ -172,6 +171,7 @@ function getCurrentQuestion(full){
   try {
     let out = {
       type: obj.Type.toLowerCase(), 
+      active: question.active, 
       num: obj.Q
     }
     if(obj.Type === 'MC'){
@@ -201,22 +201,31 @@ function getCurrentQuestion(full){
 function loadQuestion(index){
   question.current = questiondb[index]; 
   question.curIndex = index; 
+  question.timestamp = Date.now(); 
   io.emit('question', getCurrentQuestion()); 
   io.of('secure').emit('question-full', getCurrentQuestion(1)); 
 }
 
-function processAnswer(team, ans){
+function processAnswer(team, ans, socket){
+  if(!question.active){
+    socket.emit('answer-ack', {ok: false, msg: 'Question not active'})
+    return; 
+  }
+
   let q = getCurrentQuestion(1); 
   if(typeof ans !== 'string' || !team.TeamID){
+    socket.emit('answer-ack', {ok: false, msg: 'No answer provided'})
     logger.warn('Unable to process answer: Missing data'); 
     io.of('secure').emit('update', 'processAnswer error: missing required data'); 
     return false;
   }
   else if(!q.answer){
     logger.warn('Unable to process answer: No question selected'); 
+    socket.emit('answer-ack', {ok: false, msg: 'No question active'})
     io.of('secure').emit('update', 'processAnswer error: no question selected server-side'); 
     return false;
   }
+  socket.emit('answer-ack', {ok: true})
   let tid = team.TeamID; 
   if(q.type === 'mc'){
     question.selections[tid] = ans.toLowerCase(); 
@@ -270,14 +279,13 @@ function getAnswerStats(){
 }
 
 function startTimer(s){
-  question.timer.active = true; 
   question.timer.end = Date.now() + (1000 * s); 
   question.timer.interval = setInterval(() => {
     let t = Math.round((question.timer.end - Date.now())/1000); 
     io.of('secure').emit('timer', t); 
     if(t <= 0){
       clearInterval(question.timer.interval); 
-      question.acceptingAnswers = false; 
+      question.active = false; 
       io.emit('stop'); 
     }
   }, 1000); 
@@ -335,6 +343,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
   })
 
   socket.on('load-question', function(q){
+    question.active = true; 
     loadQuestion(q); 
   })
 
@@ -342,12 +351,13 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     startTimer(t); 
   })
 
-  socket.on('show-answers', function(){
-    if(question.acceptingAnswers){
+  socket.on('show-answer', function(){
+    if(question.active){
       io.emit('stop'); // stop accepting answers in case it wasn't already turned off
-      question.acceptingAnswers = false; 
+      question.active = false; 
     }
-    io.of('secure').emit('answers', getAnswerStats());
+    io.of('secure').emit('answer-stats', getAnswerStats());
+    io.emit('answer', question.current.Answer.toLowerCase());
   })
 
   socket.on('get-questionList', function(){
@@ -396,7 +406,7 @@ io.use(function(socket, next){
   socket.on('answer', function(ans){
     if(socket.handshake.session.user){
       logger.info('[std] recieved answer: '+ans);  
-      processAnswer(socket.handshake.session.user, ans);
+      processAnswer(socket.handshake.session.user, ans, socket);
       io.of('secure').emit('ans-update', question.scores);  
     } else{
       socket.emit('status', {valid: false});

@@ -4,6 +4,16 @@ let user = false;
 
 let multiSelect = true; 
 
+let snkTimeout; 
+function showSnackbar(msg){
+  clearTimeout(snkTimeout); 
+  $('#snackbar').html(msg); 
+  $('#snackbar').css({'bottom': '40px', 'opacity': '1'}); 
+  snkTimeout = setTimeout(() => {
+    $('#snackbar').css({'bottom': '-40px', 'opacity': '0'}); 
+  }, 3000); 
+}
+
 function showStatus(type, msg){
   let map = {
     'error': ['fa-exclamation-triangle', 'st-red'], 
@@ -110,6 +120,15 @@ socket.on('question', (data) => {
       $('#q-sp').show(); 
       $('#a-sp').prop('href', data.url); 
       break; 
+  }
+})
+
+socket.on('answer-ack', (ack) => {
+  logger.info('recieved answer ack: '+JSON.stringify(ack)); 
+  if(ack.ok){
+    showSnackbar('Answer Submitted!');
+  } else{
+    alert(ack.msg); 
   }
 })
 
