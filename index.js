@@ -163,8 +163,8 @@ let question = {
   }, 
   current: {}, 
   curIndex: -1, 
-  scores: {}, 
-  selections: {} // only used 
+  scores: {}, // actual scores of each team (TeamID: 0/1)
+  selections: {} // only used in SA questions to record answers
 }
 function getCurrentQuestion(full){
   let obj = question.current; 
@@ -363,6 +363,13 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
   socket.on('get-questionList', function(){
     socket.emit('question-list', questiondb.map(r => {return {r: r.Round, q: r.Q}}))
   }); 
+
+  socket.on('scores-save', function(){
+    let r = getCurrentQuestion(true).round; 
+    let n = getCurrentQuestion(true).num; 
+    saveScores(question.round, question.num, question.scores); 
+  })
+
 });
 
 io.use(function(socket, next){
