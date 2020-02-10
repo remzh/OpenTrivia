@@ -50,7 +50,8 @@ dbClient.connect((e) => {
   if(e){logger.error('Failed to connect to local MongoDB server', e); require('process').exit()}
   logger.info('Connected to local MongoDB server.')
   mdb = dbClient.db(dbName);
-})
+  scoreDB = mdb.collection('scores');
+})  
 
 let sess_MongoStore = require('connect-mongo')(session); 
 let sess = {
@@ -112,6 +113,46 @@ function lookupUser(teamID){
 }
 
 // End of UserDB
+// Scoring management
+
+let scoreDB; 
+function saveScores(round, question, data){
+  scoreDB.findOne({
+    r: round,
+    q: question
+  }).then(r => {
+    if(r){
+      scoreDB.updateOne({
+        r: round, 
+        q: question
+      }, {
+        $set: {
+          d: data
+        }
+      }).then(() => {
+        logger.info(`[Scores] Updated: R${round} Q${question}`);
+      })
+    } else{
+      scoreDB.insertOne({
+        r: round, 
+        q: question, 
+        d: data
+      }).then(() => {
+        logger.info(`[Scores] Saved: R${round} Q${question}`);
+      })
+    }
+  })
+}
+
+async function getScores(round){
+  let res = await scoreDB.find({
+    r: round
+  }).toArray();
+  console.log(res);  
+  return res; 
+}
+
+// End of scoring management
 // Question management
 
 let question = {

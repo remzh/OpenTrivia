@@ -66,7 +66,7 @@ window.logger = {
         this.info('> '+ out)}
       this.logw.scrollTo(0, 1E10); 
     } catch (e){
-      // this.error('<' + e.message);
+      this.logw.scrollTo(0, 1E10); 
       this.error('> '+e.stack) 
     }
   }
