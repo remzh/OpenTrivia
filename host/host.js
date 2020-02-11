@@ -71,6 +71,7 @@ socket.on('pong', (latency) => {
 
 secSocket.on('update', (msg) => {
   logger.info('[server]' + msg); 
+  alert(msg); 
 })
 
 secSocket.on('question-full', (q) => {

@@ -8,6 +8,12 @@ const express = require('express');
 const app = require('express')();
 const path = require('path');
 const credentials = require(path.join(__dirname, 'secure', 'credentials.json')); // secure credentials
+const scoring = require(path.join(__dirname, 'secure', 'scoring.json')); 
+
+if(!scoring || !scoring.countedRounds){
+  logger.error('(critical) missing: scoring.countedRounds'); 
+  process.exit()
+}
 
 const levenshtein = require('js-levenshtein');
 const tabletop = require('tabletop');
@@ -144,12 +150,16 @@ function saveScores(round, question, data){
   })
 }
 
-async function getScores(round){
+async function loadScores(round){
   let res = await scoreDB.find({
     r: round
   }).toArray();
   console.log(res);  
   return res; 
+}
+
+async function tallyScores(round){
+  let raw = await loadScores(round); 
 }
 
 // End of scoring management
@@ -365,11 +375,21 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
   }); 
 
   socket.on('scores-save', function(){
-    let r = getCurrentQuestion(true).round; 
-    let n = getCurrentQuestion(true).num; 
-    saveScores(question.round, question.num, question.scores); 
+    let r = parseInt(getCurrentQuestion(true).round); 
+    let n = parseInt(getCurrentQuestion(true).num); 
+    if(scoring.countedRounds.indexOf(r) !== -1){
+      saveScores(r, n, question.scores); 
+      socket.emit('update', `Scores saved for R${r} Q${n}`);
+    } else{
+      socket.emit('update', `Round (R${r}) not counted; no scores saved`);
+    }
   })
 
+  socket.on('scores-load', function(r){
+    loadScores(r).then(res => {
+      socket.emit('update', res); 
+    })
+  })
 });
 
 io.use(function(socket, next){

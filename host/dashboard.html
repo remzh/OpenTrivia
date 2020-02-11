@@ -28,11 +28,10 @@
       <select id='sel-questions'></select><button id='btn-loadQuestion'>Load</button>
       <input type='number' id='i-timer' value='15'/><button id='btn-startTimer'>Start Timer</button>
       <h2>Testing</h2>
-      <button class='btn-lg' onclick='secSocket.emit("test", "mc")'>Test MC</button>
-      <button class='btn-lg' onclick='secSocket.emit("test", "sa")'>Test SA</button>
-      <button class='btn-lg' onclick='secSocket.emit("test", "sp")'>Test SP</button>
       <br/>
       <button class='btn-lg' onclick='secSocket.emit("show-answer")'>Show Answer</button>
+      <br/><br/>
+      <button class='btn-lg' onclick='secSocket.emit("scores-save")'>Save Scores</button>
       <h2>Question Stats</h2>
       <p>Current Question: <span id='q-cur'>...</span></p>
       <p>Answered: <span id='q-ans'>0</span></p>
