@@ -20,11 +20,18 @@ html {
   text-shadow: 1px 1px 3px #444;
 }
 
+.q-sa{
+  padding: 4px 8px;
+  font-size: 1.0em; 
+  background: #0000007f;
+}
+
 #i-sa{
   padding: 8px;
   transition: all 0.14s;
   border: none; 
-  background: #ffffffaf; 
+  background: #ffffffaf;
+  border-radius: 0; 
   border-bottom: 1px solid #555;
 }
 
@@ -52,4 +59,22 @@ a button{
 
 .btn-mc.selected:disabled{
   background: #4255acaf; 
+}
+
+.btn-mc.correct:disabled, .correct{
+  background: #219139af; 
+}
+
+#i-sa.correct{
+  background: #ccf5ceaf;
+  color: #030; 
+}
+
+.btn-mc.incorrect:disabled, .incorrect{
+  background: #ac4242af; 
+}
+
+#i-sa.incorrect{
+  background: #f5d2ccaf;
+  color: #300; 
 }

@@ -70,6 +70,7 @@ socket.on('pong', (latency) => {
 // actual host stuff
 
 secSocket.on('update', (msg) => {
+  if(typeof msg === 'object') msg = JSON.stringify(msg);  
   logger.info('[server]' + msg); 
   alert(msg); 
 })

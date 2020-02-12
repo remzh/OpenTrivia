@@ -5,6 +5,7 @@
     <title>Trivia Night</title>
     <link rel='stylesheet' href='main.css'/>
     <link rel='stylesheet' href='contestant.css'/>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/levenshtein/1.0.5/levenshtein.min.js' integrity='sha256-5RTt+B1DlqFis/ipkeYZ+1D8500HFobtz2aBJnhKRsA=' crossorigin='anonymous'></script>
     <script defer src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js' integrity='sha256-4iQZ6BVL4qNKlQ27TExEhBN1HFPvAvAMbFavKKosSWQ=' crossorigin='anonymous'></script>
     <script defer src='https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js' integrity='sha256-vrn14y7WH7zgEElyQqm2uCGSQrX/xjYDjniRUQx3NyU=' crossorigin='anonymous'></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/js/all.min.js' integrity='sha256-qM7QTJSlvtPSxVRjVWNM2OfTAz/3k5ovHOKmKXuYMO4=' crossorigin='anonymous'></script>
@@ -40,8 +41,11 @@
       </div>
       <div id='q-sa' class='q'>
         <input id='i-sa' maxlength='48' placeholder='Type here...'/>
-        <p id='sa-wrong' class='q'><b>Incorrect</b>, try again.</p>
-        <p id='sa-right' class='q'><b>Correct!</b> Time: <span id='sa-time'></span></p>
+        <p id='sa-recent' class='q'><span class='q-sa'>Most recent submission: <b id='sa-rec-val'></b></span></p>
+        <p id='sa-wrong-timed' class='q'><span class='q-sa incorrect'><b>Incorrect</b>, try again.</span></p>
+        <p id='sa-right-timed' class='q'><span class='q-sa correct'><i class='fas fa-check'></i> <b>Correct!</b> Time: <span id='sa-time'></span></span></p>
+        <p id='sa-wrong' class='q'><span class='q-sa incorrect'><b>Oops.</b> Next time!</span></p>
+        <p id='sa-right' class='q'><span class='q-sa correct'><i class='fas fa-check'></i> <b>Correct!</b> Nice job.</span></p>
       </div>
       <div id='q-sp' class='q'>
         <p>Place your answers to the minigame on the form below.</p>

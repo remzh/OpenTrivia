@@ -153,13 +153,25 @@ function saveScores(round, question, data){
 async function loadScores(round){
   let res = await scoreDB.find({
     r: round
-  }).toArray();
-  console.log(res);  
+  }).toArray();  
   return res; 
 }
 
 async function tallyScores(round){
   let raw = await loadScores(round); 
+  let out = {}; 
+  for(let i of raw){
+    for(let j in i.d){
+      if(i.d[j] === 1){
+        if(out[j]){
+          out[j] ++; 
+        } else{
+          out[j] = 1; 
+        }
+      }
+    }
+  }
+  return out; 
 }
 
 // End of scoring management
@@ -387,6 +399,12 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
 
   socket.on('scores-load', function(r){
     loadScores(r).then(res => {
+      socket.emit('update', res); 
+    })
+  })
+
+  socket.on('scores-tally', function(r){
+    tallyScores(r).then(res => {
       socket.emit('update', res); 
     })
   })
