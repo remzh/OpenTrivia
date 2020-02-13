@@ -95,6 +95,11 @@ function updateQuestion(data){
 
 secSocket.on('question-full', (data) => {
   logger.info('Recieved question: '+JSON.stringify(data));
+  if(!data.active){
+    $('#timer').text('0');
+    $('#timer').addClass('timer-low')}
+  else{
+    $('#timer').removeClass('timer-low')}
   $('#main').css('opacity', 0); 
   $('.opt').removeClass('correct').removeClass('incorrect');
   setTimeout(() => {
@@ -123,6 +128,10 @@ secSocket.on('answer-stats', (data) => {
 
 secSocket.on('timer', (t) => {
   $('#timer').text(t); 
+  if(t <= 3){
+    $('#timer').addClass('timer-low')}
+  else{
+    $('#timer').removeClass('timer-low')}
 }); 
 
 window.onresize = function(){

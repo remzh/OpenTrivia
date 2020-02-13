@@ -149,6 +149,12 @@ socket.on('question', (data) => {
       $('#a-sp').prop('href', data.url); 
       break; 
   }
+  if(!data.active){
+    $('#q-num').hide(); 
+    $('#q-stop').show(); 
+    $('.btn-mc').prop('disabled', true); 
+    $('#i-sa').prop('disabled', true); 
+  }
 })
 
 socket.on('answer', (ans) => {
