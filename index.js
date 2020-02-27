@@ -70,7 +70,7 @@ let sess = {
   saveUninitialized: false, 
   resave: false,
   cookie: {
-    maxAge: 28800000
+    maxAge: 172800000
   }
 }
  
@@ -192,24 +192,23 @@ function getCurrentQuestion(full){
   let obj = question.current; 
   try {
     let out = {
-      type: obj.Type.toLowerCase(), 
+      type: obj.type.toLowerCase(), 
       active: question.active, 
-      num: obj.Q
+      num: obj.num
     }
     if(obj.Type === 'MC'){
-      out.options = [obj.OptA, obj.OptB, obj.OptC, obj.OptD, obj.OptE]
+      out.options = [obj.optA, obj.optB, obj.optC, obj.optD, obj.optE]
     }
     else if(obj.Type === 'SP'){
-      out.url = obj.Question; 
+      out.url = obj.question; 
     }
     if(full){
-      out.round = obj.Round; 
-      out.question = obj.Question; 
-      out.image = obj.Image; 
-      out.media = obj.Media;
-      out.answer = obj.Answer;
-      out.category = obj.Category;
-      out.subcategory = obj.Subcategory  
+      out.round = obj.round; 
+      out.question = obj.question; 
+      out.image = obj.image; 
+      out.media = obj.media;
+      out.answer = obj.answer;
+      out.category = obj.category;
     }
     return out; 
   } catch (e) {
@@ -220,8 +219,29 @@ function getCurrentQuestion(full){
     }
   }
 }
+
+function mapQuestionEntry(inp){
+  return {
+    round: inp.Round, 
+    num: parseInt(inp.Q), 
+    type: inp.Type, 
+    timed: inp.Timed === 'TRUE' ? true : false, 
+    category: inp.Category, 
+    question: inp.Question,
+    answer: inp.Answer,  
+    image: inp.Image, 
+    media: inp.Media, 
+    optA: inp.OptA, 
+    optB: inp.OptB, 
+    optC: inp.OptC, 
+    optD: inp.OptD, 
+    optE: inp.OptE
+  }
+}
+
 function loadQuestion(index){
-  question.current = questiondb[index]; 
+  question.current = mapQuestionEntry(questiondb[index]);
+  console.log(question.current);  
   question.curIndex = index; 
   question.timestamp = Date.now(); 
   io.emit('question', getCurrentQuestion()); 
@@ -269,18 +289,18 @@ function processAnswer(team, ans, socket){
       return true; 
     } else{
       question.scores[tid] = 0;
-      return true; 
+      return false; 
     }
   }
 }
 
 function getAnswerStats(){
-  if(question.current.Type === 'MC'){
+  if(question.current.type === 'MC'){
     let resp = Object.values(question.selections);
     let t = resp.length; 
     return {
       type: 'mc', 
-      ans: question.current.Answer.toLowerCase(), 
+      ans: question.current.answer.toLowerCase(), 
       correct: Object.values(question.scores).filter(r => r==1).length, 
       total: Object.values(question.scores).length, 
       a: Math.round(resp.filter(i => i=='a').length/t*1000)/1000, 
@@ -289,10 +309,10 @@ function getAnswerStats(){
       d: Math.round(resp.filter(i => i=='d').length/t*1000)/1000, 
       e: Math.round(resp.filter(i => i=='e').length/t*1000)/1000, 
     }
-  } else if(question.current.Type === 'SA'){
+  } else if(question.current.type === 'SA'){
     return {
       type: 'sa', 
-      ans: question.current.Answer, 
+      ans: question.current.answer, 
       correct: Object.values(question.scores).filter(r => r==1).length, 
       total: Object.values(question.scores).length
     }
@@ -374,12 +394,16 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
   })
 
   socket.on('show-answer', function(){
+    if(!quesiton.current){
+      io.of('secure').emit('update', 'processAnswer error: no question selected server-side'); 
+      return; 
+    }
     if(question.active){
       io.emit('stop'); // stop accepting answers in case it wasn't already turned off
       question.active = false; 
     }
     io.of('secure').emit('answer-stats', getAnswerStats());
-    io.emit('answer', question.current.Answer.toLowerCase());
+    io.emit('answer', question.current.answer.toLowerCase());
   })
 
   socket.on('get-questionList', function(){
