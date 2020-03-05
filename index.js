@@ -266,7 +266,6 @@ function mapQuestionEntry(inp){
 
 function loadQuestion(index){
   question.current = mapQuestionEntry(questiondb[index]);
-  console.log(question.current);  
   question.curIndex = index; 
   question.timestamp = Date.now(); 
   io.emit('question', getCurrentQuestion()); 
@@ -419,7 +418,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
   })
 
   socket.on('show-answer', function(){
-    if(!quesiton.current){
+    if(!question.current){
       io.of('secure').emit('update', 'processAnswer error: no question selected server-side'); 
       return; 
     }
