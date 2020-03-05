@@ -174,6 +174,30 @@ async function tallyScores(round){
   return out; 
 }
 
+async function rankScores(round){
+  let scores = await (tallyScores(round)); 
+  let out = []; 
+  for(let team in scores){
+    out.push({
+      t: team, 
+      s: scores[team]
+    })
+  }
+  out = out.sort((a, b) => {
+    return a.s - b.s
+  })
+
+  return out; 
+}
+
+async function computeOverallScores(){
+  let scores = []; 
+  let ranks = [] 
+  for(let i of scoring.countedRounds){
+    scores.push(await rankScores(i))
+  }
+}
+
 // End of scoring management
 // Question management
 
@@ -186,6 +210,7 @@ let question = {
   current: {}, 
   curIndex: -1, 
   scores: {}, // actual scores of each team (TeamID: 0/1)
+  tb: {}, // tiebreak values (each timed question can gie up to 10.00 of TB)
   selections: {} // only used in SA questions to record answers
 }
 function getCurrentQuestion(full){
@@ -196,10 +221,10 @@ function getCurrentQuestion(full){
       active: question.active, 
       num: obj.num
     }
-    if(obj.Type === 'MC'){
+    if(obj.type === 'MC'){
       out.options = [obj.optA, obj.optB, obj.optC, obj.optD, obj.optE]
     }
-    else if(obj.Type === 'SP'){
+    else if(obj.type === 'SP'){
       out.url = obj.question; 
     }
     if(full){

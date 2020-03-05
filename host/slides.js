@@ -65,7 +65,12 @@ socket.on('pong', (latency) => {
 
 function updateQuestion(data){
   $('#question').text(data.question); 
-  $('#qnum').text(`R${data.round} Q${data.num}`); 
+  if(data.num){
+    $('#qnum').text(`R${data.round} Q${data.num}`)
+  } else if(data.round === 'B'){
+    $('#qnum').text(`Bonus`)}
+  else{
+    $('#qnum').text(`Round ${data.round}`)}
   $('#cat').text(data.category); 
   $('#subcat').text(data.subcategory?`• ${data.subcategory}`:'')
   $('#q-options').hide();
