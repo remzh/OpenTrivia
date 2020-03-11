@@ -122,7 +122,9 @@ function lookupUser(teamID){
 // Scoring management
 
 let scoreDB; 
-function saveScores(round, question, data){
+function saveScores(round, question, data, tb){
+  let dt = {d: data}
+    if(tb) dt.tb = tb; 
   scoreDB.findOne({
     r: round,
     q: question
@@ -132,18 +134,14 @@ function saveScores(round, question, data){
         r: round, 
         q: question
       }, {
-        $set: {
-          d: data
-        }
+        $set: dt
       }).then(() => {
         logger.info(`[Scores] Updated: R${round} Q${question}`);
       })
     } else{
-      scoreDB.insertOne({
-        r: round, 
-        q: question, 
-        d: data
-      }).then(() => {
+      dt.r = round; 
+      dt.q = question; 
+      scoreDB.insertOne(dt).then(() => {
         logger.info(`[Scores] Saved: R${round} Q${question}`);
       })
     }
@@ -162,11 +160,22 @@ async function tallyScores(round){
   let out = {}; 
   for(let i of raw){
     for(let j in i.d){
+      if(!out[j]) out[j] = {tb: 0}; 
       if(i.d[j] === 1){
-        if(out[j]){
-          out[j] ++; 
+        if(out[j].s){
+          out[j].s ++; 
         } else{
-          out[j] = 1; 
+          out[j].s = 1; 
+        }
+      }
+    }
+    for(let j in i.tb){
+      if(!out[j]) out[j] = {}; 
+      if(i.tb[j]){
+        if(out[j].tb){
+          out[j].tb += i.tb[j]; 
+        } else{
+          out[j].tb = i.tb[j]; 
         }
       }
     }
@@ -183,12 +192,27 @@ async function rankScores(round){
       s: scores[team]
     })
   }
-  out = out.sort((a, b) => {
-    return a.s - b.s
-  })
+  try {
+    out = out.sort((a, b) => {
+      if(a.s.s !== b.s.s){
+        return b.s.s - a.s.s; 
+      } else{
+        return b.s.tb - a.s.tb
+      }
+    })
+  } catch(e) {
+    logger.error(`[crit] rankScores failure: ${e}`); 
+    io.of('secure').emit('question-error', `[crit] unable to sort ranks: ${e}`); 
+  }
+
+  for(let i = 0; i < out.length; i++){
+    out[i].r = (i+1); 
+  }
 
   return out; 
 }
+
+// setTimeout(() => {rankScores(1).then(r => console.log(r))}, 3000); 
 
 async function computeOverallScores(){
   let scores = []; 
@@ -218,7 +242,7 @@ function tbCalc(){
   let cur = Date.now(); 
   let st = question.timestamp; 
   if(!st) return 0; // invalid, no question
-  let v = Math.round(10000 / (Math.pow(1.05, (st - cur - 5000)/1000))) / 1000; 
+  let v = Math.round(10000 / (Math.pow(1.05, (cur - st - 5000)/1000))) / 1000; 
   if(v > 10) return 10; 
   return v; 
 }
@@ -326,7 +350,7 @@ function processAnswer(team, ans, socket){
       question.scores[tid] = 1;
       if(q.timed){
         sentAck = true; 
-        socket.emit('answer-time', {time: Date.now() - question.timestamp, correct: true})
+        socket.emit('answer-time', {time: Date.now() - question.timestamp, correct: true, tb: tbCalc()})
         question.tb[tid] = tbCalc()}
       return true; 
     } else{
@@ -470,6 +494,12 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
 
   socket.on('scores-load', function(r){
     loadScores(r).then(res => {
+      socket.emit('update', res); 
+    })
+  })
+
+  socket.on('scores-rank', function(r){
+    rankScores(r).then(res => {
       socket.emit('update', res); 
     })
   })

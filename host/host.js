@@ -102,3 +102,7 @@ secSocket.on('ans-update', (dt) => {
   $('#q-ans').text(total); 
   $('#q-cor').text(correct);
 })
+
+setInterval(() => {
+  $('#s-time').text(moment().format('M.DD // hh:mm:ss A'))
+}, 1000); 
