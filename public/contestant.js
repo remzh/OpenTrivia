@@ -188,6 +188,27 @@ socket.on('answer-ack', (ack) => {
   }
 })
 
+socket.on('answer-time', (inp) => {
+  if(inp.correct){
+    $('#sa-time').text(inp.time/1000 + 's');
+    $('#i-sa').addClass('correct'); 
+    $('#i-sa').prop('disabled', true); 
+    $('#sa-right-timed').show(); 
+    $('#sa-right-timed').addClass('pulse');
+    $('#sa-wrong-timed').hide(); 
+    setTimeout(() => {
+      $('#sa-right-timed').removeClass('pulse');
+    }, 600) 
+  } else{
+    $('#sa-wrong-timed').show(); 
+    $('#sa-wrong-timed').addClass('pulse'); 
+    $('#sa-right-timed').hide(); 
+    setTimeout(() => {
+      $('#sa-wrong-timed').removeClass('pulse');
+    }, 600)
+  }
+})
+
 socket.on('stop', () => {
   $('#q-num').hide(); 
   $('#q-stop').show(); 

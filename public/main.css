@@ -5,6 +5,8 @@
 }
 
 body{
+  overscroll-behavior-x: none;
+  overscroll-behavior-y: none;
   background: #444;
   color: #fff;
 }
@@ -72,8 +74,13 @@ button:not([disabled]):active{
 }
 
 .container{
+  overflow: hidden;
+}
+
+.container{
   text-align: center;
 }
+
 
 .right{
   float: right;

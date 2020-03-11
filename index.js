@@ -202,17 +202,27 @@ async function computeOverallScores(){
 // Question management
 
 let question = {
-  active: false, // whether answers can be submitted or not 
+  active: false, // whether answers can be submitted or not
   timer: {
     interval: null,  
     end: 0
   }, 
-  current: {}, 
-  curIndex: -1, 
+  current: {}, // current question taken from array
+  curIndex: -1, // index of question in array
   scores: {}, // actual scores of each team (TeamID: 0/1)
   tb: {}, // tiebreak values (each timed question can gie up to 10.00 of TB)
   selections: {} // only used in SA questions to record answers
 }
+
+function tbCalc(){
+  let cur = Date.now(); 
+  let st = question.timestamp; 
+  if(!st) return 0; // invalid, no question
+  let v = Math.round(10000 / (Math.pow(1.05, (st - cur - 5000)/1000))) / 1000; 
+  if(v > 10) return 10; 
+  return v; 
+}
+
 function getCurrentQuestion(full){
   let obj = question.current; 
   try {
@@ -234,6 +244,7 @@ function getCurrentQuestion(full){
       out.media = obj.media;
       out.answer = obj.answer;
       out.category = obj.category;
+      out.timed = obj.timed; 
     }
     return out; 
   } catch (e) {
@@ -291,7 +302,7 @@ function processAnswer(team, ans, socket){
     io.of('secure').emit('update', 'processAnswer error: no question selected server-side'); 
     return false;
   }
-  socket.emit('answer-ack', {ok: true})
+  let sentAck = false; 
   let tid = team.TeamID; 
   if(q.type === 'mc'){
     question.selections[tid] = ans.toLowerCase(); 
@@ -307,15 +318,27 @@ function processAnswer(team, ans, socket){
     let cor = q.answer.toLowerCase().trim(); // correct answer
     if(ans.slice(0, 1) !== cor.slice(0, 1)){
       question.scores[tid] = 0; // first letter must match
+      if(q.timed){
+        sentAck = true; 
+        socket.emit('answer-time', {time: Date.now() - question.timestamp, correct: false})}
       return false; 
     } else if(levenshtein(ans, cor) < 3  || levenshtein(ans, cor) === 3 && cor.length > 11){
       question.scores[tid] = 1;
+      if(q.timed){
+        sentAck = true; 
+        socket.emit('answer-time', {time: Date.now() - question.timestamp, correct: true})
+        question.tb[tid] = tbCalc()}
       return true; 
     } else{
       question.scores[tid] = 0;
+      if(q.timed){
+        sentAck = true; 
+        socket.emit('answer-time', {time: Date.now() - question.timestamp, correct: false})}
       return false; 
     }
   }
+  if(!sentAck){
+    socket.emit('answer-ack', {ok: true})}
 }
 
 function getAnswerStats(){
@@ -438,7 +461,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     let r = parseInt(getCurrentQuestion(true).round); 
     let n = parseInt(getCurrentQuestion(true).num); 
     if(scoring.countedRounds.indexOf(r) !== -1){
-      saveScores(r, n, question.scores); 
+      saveScores(r, n, question.scores, question.tb); 
       socket.emit('update', `Scores saved for R${r} Q${n}`);
     } else{
       socket.emit('update', `Round (R${r}) not counted; no scores saved`);
@@ -459,7 +482,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
 });
 
 io.use(function(socket, next){
-  if (socket.handshake.session && (socket.handshake.session.user || socket.handshake.session.host)){ // hosts only!
+  if (socket.handshake.session && (socket.handshake.session.user || socket.handshake.session.host)){ // authorized users only
     logger.info('[std] authenticated: '+socket.id);
     socket.join('users'); 
     next(); 

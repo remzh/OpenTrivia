@@ -3,6 +3,21 @@ html {
   user-select: none;
 }
 
+@keyframes pulse {
+  from {
+    transform: scale(1)}
+  50% {
+    transform: scale(1.05)}
+  to {
+    transform: scale(1)}
+}
+
+.pulse {
+  -webkit-animation-name: pulse;
+  animation-name: pulse;
+  animation-duration: 0.6s;
+}
+
 .q:not(#q-wel){
   display: none;
 }
