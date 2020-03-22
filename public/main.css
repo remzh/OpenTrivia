@@ -96,13 +96,20 @@ button:not([disabled]):active{
 }
 
 #footer{
-  background: #1111117f;
+  background: transparent;
   position: fixed;
   font-size: 14px;
   color: #ddd;
   bottom: 0px;
   padding: 5px;
   width: calc(100% - 10px);
+  opacity: 0.3; 
+  transition: all 0.14s
+}
+
+#footer:hover, #footer:focus-within{
+  background: #1111117f;
+  opacity: 1;
 }
 
 #snackbar{
