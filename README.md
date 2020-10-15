@@ -1,6 +1,5 @@
-# OpenTrivia
-OpenTrivia is currently in very early stages of development. Expect to see a full, complete readme with documentation and everything in early April! 
-Until then, this is a very work in progress. 
+# Open Trivia
+Open Trivia is ready, but our documentation isn't. We'll be up and running in the next few days!
 
 ## What is it? 
 Think of it like [Socrative](https://socrative.com/), except less test-like and more flexixble.  OpenTrivia is an all-in-one trivia server that handles a client interface, a host interface, and a slideshow interface (to be projected). It supports the following: 

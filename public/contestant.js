@@ -50,19 +50,18 @@ function resetSA(){
   $('#i-sa').removeClass('correct').removeClass('incorrect');
 }
 
-$('.btn-mc').on('click', (e) => {
-  resetMC(); 
-  let targRaw = e.path; // chromium-based browser support
-  if(!e.path && e.explicitOriginalTarget) targRaw = e.explicitOriginalTarget;  // firefox support
-  let target = $(targRaw).filter('.btn-mc')[0]; 
-  console.log(e); 
-  $(target).addClass('selected');
-  if(multiSelect){
-    $(target).prop('disabled', true)}
-  else{
-    $('.btn-mc').prop('disabled', true)}
-  logger.info(`submitted "${target.id.slice(4)}" as answer`)
-  socket.emit('answer', target.id.slice(4)); 
+$('.btn-mc').forEach((e) => {
+  $(e).on('click', () => {
+    resetMC(); 
+    let target = e;  
+    $(target).addClass('selected');
+    if(multiSelect){
+      $(target).prop('disabled', true)}
+    else{
+      $('.btn-mc').prop('disabled', true)}
+    logger.info(`submitted "${target.id.slice(4)}" as answer`)
+    socket.emit('answer', target.id.slice(4)); 
+  })
 })
 
 $('#i-sa').on('keyup', (e) => {

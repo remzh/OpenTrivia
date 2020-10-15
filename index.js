@@ -1,3 +1,10 @@
+/**
+ * Open Trivia 
+ * (C) 2020 Ryan Zhang
+ * 
+ * See license.md for legal information.
+ */
+
 const port = process.env.PORT || 8100;
 
 // Init variables and server
@@ -7,13 +14,9 @@ const moment = require('moment');
 const express = require('express');
 const app = require('express')();
 const path = require('path');
+const colors = require('colors');
 const credentials = require(path.join(__dirname, 'secure', 'credentials.json')); // secure credentials
 const scoring = require(path.join(__dirname, 'secure', 'scoring.json')); 
-
-if(!scoring || !scoring.countedRounds){
-  logger.error('(critical) missing: scoring.countedRounds'); 
-  process.exit()
-}
 
 const levenshtein = require('js-levenshtein');
 const tabletop = require('tabletop');
@@ -27,13 +30,27 @@ app.use(cookieParser());
 
 const http = require('http').Server(app);
 const winston = require('winston');
+const logger_color = function(s) {
+  switch (s) {
+    case 'info': 
+      return 'info'.cyan; 
+    case 'warn': 
+      return 'warn'.yellow; 
+    case 'error': 
+      return 'error'.magenta
+    case 'debug': 
+      return 'debug'.green
+    default: 
+      return s
+  }
+}
 const logger = winston.createLogger({
   level: 'info',
   format: winston.format.json(),
   defaultMeta: { service: 'user-service' },
   transports: [
     new winston.transports.Console({
-      format: winston.format.printf(info => `${moment(new Date()).format('M/DD HH:mm:ss')}: ${info.level}: ${info.message}`)
+      format: winston.format.printf(info => `${moment(new Date()).format('M/DD HH:mm:ss')}: ${logger_color(info.level)}: ${info.message}`)
     }),
     new winston.transports.File({
       filename: path.join(__dirname, 'logs', 'error.log'),
@@ -46,6 +63,11 @@ const logger = winston.createLogger({
     })
   ]
 });
+
+if(!scoring || !scoring.countedRounds){
+  logger.error('(critical) missing: scoring.countedRounds'); 
+  process.exit()
+}
 
 const MongoClient = require('mongodb').MongoClient;
 const MongoURL = credentials.database;
@@ -184,7 +206,7 @@ async function tallyScores(round){
 }
 
 async function rankScores(round){
-  let scores = await (tallyScores(round)); 
+  let scores = await tallyScores(round); 
   let out = []; 
   for(let team in scores){
     out.push({
@@ -242,7 +264,7 @@ function tbCalc(){
   let cur = Date.now(); 
   let st = question.timestamp; 
   if(!st) return 0; // invalid, no question
-  let v = Math.round(10000 / (Math.pow(1.05, (cur - st - 5000)/1000))) / 1000; 
+  let v = Math.round(10000 / (Math.pow(1.05, (cur - st - 3000)/1000))) / 1000; 
   if(v > 10) return 10; 
   return v; 
 }
@@ -564,6 +586,10 @@ io.use(function(socket, next){
 
 app.get('/contestant', (req, res) => {
   res.status(200).sendFile(path.join(__dirname, 'public', 'contestant.html'))
+})
+
+app.get('/scores', (req, res) => {
+  res.status(200).sendFile(path.join(__dirname, 'public', 'scores.html'))
 })
 
 app.get('/host', (req, res) => {

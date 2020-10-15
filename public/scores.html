@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Scores • Trivia Night</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1, minimum-scale=1.0, maximum-scale=1.0'>
+    <link rel='stylesheet' href='main.css'/>
+    <script defer src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js' integrity='sha256-4iQZ6BVL4qNKlQ27TExEhBN1HFPvAvAMbFavKKosSWQ=' crossorigin='anonymous'></script>
+    <script defer src='https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js' integrity='sha256-vrn14y7WH7zgEElyQqm2uCGSQrX/xjYDjniRUQx3NyU=' crossorigin='anonymous'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/js/all.min.js' integrity='sha256-qM7QTJSlvtPSxVRjVWNM2OfTAz/3k5ovHOKmKXuYMO4=' crossorigin='anonymous'></script>
+    <script defer src='/socket.io/socket.io.js'></script>
+    <script defer src='logger.js'></script>
+    <style>
+      .c-inner {
+        background: rgba(0, 0, 0, 0.3); 
+        backdrop-filter: blur(3px);
+        max-width: 1200px;
+        margin: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div id='bk'></div>
+    <div id='nav'>
+      <div id='nav-top'>
+        <span id='s-team'>Scores</span>
+        <!-- <span id='status' class='right'><i class='fas fa-circle-notch fa-spin'></i> Loading...</span> -->
+      </div>
+      <div id='nav-btm'>
+        <span id='s-school'></span>
+      </div>
+    </div>
+    <div class='container'>
+      <div class='c-inner'>
+        <h1 style='text-shadow: 1px 1px 3px #444'>Current Standings</h1>
+        <p>Scores are not currently released. Check back after the round ends!</p>
+      </div>
+    </div>
+    <div id='snackbar'></div>
+    <div id='footer'>
+      OpenTrivia &copy; 2020 Ryan Zhang. OpenTrivia is <a target='_blank' href='https://github.com/Ryan778/opentrivia'>open source</a>!
+      <span class='right'><a href='#' onclick='logger.open()'>Open Console</a></span>
+    </div>
+  </body>
+</html>
