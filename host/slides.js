@@ -22,8 +22,9 @@ socket.on('connect', () => {
 });
 
 secSocket.on('connect', () => {
-  logger.info('[sec] socket connected; id: '+socket.id)
+  logger.info('[sec] socket connected; id: '+socket.id);
   secSocket.emit('status');
+  ping(); 
 })
 
 secSocket.on('connect_error', (err) => {
@@ -36,6 +37,7 @@ secSocket.on('error', (err) => {
 
 socket.on('disconnect', (reason) => {
   logger.info('socket disconnected: '+reason); 
+  $('#s-ping-outer').hide(); 
   if(reason === 'io server disconnect'){
     showStatus('error', 'Kicked by Server'); 
     alert('Disconnected by server. ')
@@ -58,10 +60,18 @@ socket.on('status', (res) => {
   }
 }); 
 
-socket.on('pong', (latency) => {
+let ping_ds = 0; 
+function ping() {
+  if (socket && socket.connected) {
+    ping_ds = Date.now(); 
+    socket.volatile.emit('tn-ping'); 
+  }
+}
+socket.on('pong', () => {
   $('#s-ping-outer').show(); 
-  $('#s-ping').text(latency); 
+  $('#s-ping').text(Date.now() - ping_ds); 
 })
+setInterval(ping, 7500); 
 
 function updateQuestion(data){
   $('#question').text(data.question); 

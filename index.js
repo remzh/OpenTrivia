@@ -352,6 +352,7 @@ function processAnswer(team, ans, socket){
   let tid = team.TeamID; 
   if(q.type === 'mc'){
     question.selections[tid] = ans.toLowerCase(); 
+    socket.emit('answer-ack', {ok: true});
     if(ans.toLowerCase() === q.answer.toLowerCase()){
       question.scores[tid] = 1; 
       return true; 
@@ -362,6 +363,8 @@ function processAnswer(team, ans, socket){
   } else if(q.type === 'sa'){
     ans = ans.toLowerCase().trim(); 
     let cor = q.answer.toLowerCase().trim(); // correct answer
+    if(!q.timed) {
+        socket.emit('answer-ack', {ok: true})}
     if(ans.slice(0, 1) !== cor.slice(0, 1)){
       question.scores[tid] = 0; // first letter must match
       if(q.timed){
@@ -552,6 +555,10 @@ io.use(function(socket, next){
     } else{
       socket.emit('status', {valid: false}); 
     }
+  })
+
+  socket.on('tn-ping', function(){
+    socket.emit('pong'); 
   })
 
   socket.on('disconnect', function(){

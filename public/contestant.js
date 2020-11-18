@@ -42,6 +42,9 @@ function resetMC(){
   $('.btn-mc.correct').removeClass('correct'); 
   $('.btn-mc.incorrect').removeClass('incorrect');  
   $('.btn-mc.selected').removeClass('selected'); 
+  $('.btn-mc').forEach((e) => {
+    $(e).children('b').text(e.id.slice(4).toUpperCase()); // reset letters
+  })
 }
 
 function resetSA(){
@@ -59,7 +62,8 @@ $('.btn-mc').forEach((e) => {
       $(target).prop('disabled', true)}
     else{
       $('.btn-mc').prop('disabled', true)}
-    logger.info(`submitted "${target.id.slice(4)}" as answer`)
+    $(target).children('b').html(`<i class='fas fa-circle-notch fa-spin' style='font-size: 20px'></i>`); 
+    logger.info(`submitted "${target.id.slice(4)}" as answer`);
     socket.emit('answer', target.id.slice(4)); 
   })
 })
@@ -84,6 +88,7 @@ socket.on('connect', () => {
     return; 
   }
   showStatus('success', 'Connected'); 
+  ping(); 
 });
 
 socket.on('disconnect', (reason) => {
@@ -92,6 +97,7 @@ socket.on('disconnect', (reason) => {
     showStatus('error', 'Kicked by Server'); 
     alert('Disconnected by server. ')
   } else {
+    $('#s-ping-outer').hide(); 
     showStatus('pending', 'Reconnecting...'); 
   }
 })
@@ -181,6 +187,9 @@ socket.on('answer', (ans) => {
 socket.on('answer-ack', (ack) => {
   logger.info('recieved answer ack: '+JSON.stringify(ack)); 
   if(ack.ok){
+    if(qType === 'mc') {
+      $('.btn-mc.selected').children('b').text($('.btn-mc.selected').prop('id').slice(4).toUpperCase()); 
+    }
     showSnackbar('Answer Submitted!');
   } else{
     alert(ack.msg); 
@@ -215,10 +224,18 @@ socket.on('stop', () => {
   $('#i-sa').prop('disabled', true); 
 })
 
-socket.on('pong', (latency) => {
+let ping_ds = 0; 
+function ping() {
+  if (socket && socket.connected) {
+    ping_ds = Date.now(); 
+    socket.volatile.emit('tn-ping'); 
+  }
+}
+socket.on('pong', () => {
   $('#s-ping-outer').show(); 
-  $('#s-ping').text(latency); 
+  $('#s-ping').text(Date.now() - ping_ds); 
 })
+setInterval(ping, 4000); 
 
 // socket.on('chat', function(msg){
 //   console.log(msg);

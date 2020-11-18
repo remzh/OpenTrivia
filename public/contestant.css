@@ -18,17 +18,20 @@ html {
   animation-duration: 0.6s;
 }
 
-.q:not(#q-wel){
+.q:not(#q-wel) {
   display: none;
 }
 
-.btn-mc, #i-sa{
+.btn-mc, #i-sa {
   width: 80%; 
   max-width: 600px;
   font-size: 24px;
-  padding: 8px 16px;
   margin-top: 8px;
   text-align: left;
+}
+
+#i-sa {
+  padding: 8px 16px;
 }
 
 #q-num, #q-stop, #q-wel{
@@ -70,6 +73,15 @@ a button{
   word-wrap: none;
   white-space: nowrap;
   text-overflow: ellipsis;
+  padding: 8px 16px 8px 12px;
+}
+
+.btn-mc b{
+  display: inline-block; 
+  width: 24px; 
+  vertical-align: bottom;
+  display: inline-block;
+  text-align: center;
 }
 
 .btn-mc.selected:disabled{
