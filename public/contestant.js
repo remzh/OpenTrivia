@@ -1,18 +1,42 @@
-let socket = io();
+let socket = io({
+  transports: ['websocket']
+});
 let status = 0; // 0 = offline,
 let user = false; 
 
 let multiSelect = true; 
 let qType = ''; 
 
-let snkTimeout; 
-function showSnackbar(msg){
-  clearTimeout(snkTimeout); 
-  $('#snackbar').html(msg); 
-  $('#snackbar').css({'bottom': '40px', 'opacity': '1'}); 
+let snkTimeout = false, snkType = 1; 
+/**
+ * Shows a temporary snackbar on the user's screen. 
+ * @param {string} msg 
+ * @param {boolean} [small=false] 
+ */
+function showSnackbar(msg, small){
+  let target = small?$('#snackbar-sm'):$('#snackbar'); 
+  let type = small?1:0; 
+  if (snkTimeout) {
+    clearTimeout(snkTimeout); 
+    if (type !== snkType) {
+      // hide existing snackbars
+      $('.snackbar').css({'bottom': '-40px', 'opacity': '0'}); 
+    } else {
+      // emphasize existing snackbar
+      snkTimeout = false; 
+      target.addClass('pulse');
+      setTimeout(() => {
+        target.removeClass('pulse');
+      }, 400) 
+    }
+  }
+  target.html(msg); 
+  target.css({'bottom': '40px', 'opacity': '1'}); 
+  snkType = type; 
   snkTimeout = setTimeout(() => {
-    $('#snackbar').css({'bottom': '-40px', 'opacity': '0'}); 
-  }, 3000); 
+    target.css({'bottom': '-40px', 'opacity': '0'}); 
+    snkTimeout = false;
+  }, 2100); 
 }
 
 function showStatus(type, msg){
@@ -42,6 +66,7 @@ function resetMC(){
   $('.btn-mc.correct').removeClass('correct'); 
   $('.btn-mc.incorrect').removeClass('incorrect');  
   $('.btn-mc.selected').removeClass('selected'); 
+  $('.btn-mc.pending').removeClass('pending'); 
   $('.btn-mc').forEach((e) => {
     $(e).children('b').text(e.id.slice(4).toUpperCase()); // reset letters
   })
@@ -57,7 +82,7 @@ $('.btn-mc').forEach((e) => {
   $(e).on('click', () => {
     resetMC(); 
     let target = e;  
-    $(target).addClass('selected');
+    $(target).addClass('pending');
     if(multiSelect){
       $(target).prop('disabled', true)}
     else{
@@ -102,8 +127,13 @@ socket.on('disconnect', (reason) => {
   }
 })
 
-socket.on('error', (error) => {
-  if(error === 'Authentication error'){
+socket.on('reconnect_attempt', () => {
+  // showSnackbar('Reconnecting...');
+  // socket.io.opts.transports = ['polling', 'websocket']; // attempt to use xhr failsafe
+});
+
+socket.on('connect_error', (error) => {
+  if(error.message === 'authentication error'){
     window.open('..', '_self')
   }
   logger.error(error); 
@@ -129,6 +159,7 @@ socket.on('status', (res) => {
 socket.on('question', (data) => {
   logger.info('recieved question: '+JSON.stringify(data));
   $('.q').hide(); 
+  $('#q-timer').css('background', ''); 
   qType = data.type; 
   if(data.num){
     $('#q-num').show(); 
@@ -137,6 +168,7 @@ socket.on('question', (data) => {
   switch(data.type){
     case 'mc': 
       resetMC();
+      $('.q-ind').css('opacity', 0).show(); // timer indicator
       $('#q-mc').show(); 
       for(let i = 0; i < data.options.length; i++){
         $('#mc-' + (i+1)).text(data.options[i]); 
@@ -145,6 +177,7 @@ socket.on('question', (data) => {
       break; 
     case 'sa': 
       resetSA(); 
+      $('.q-ind').css('opacity', 0).show(); // timer indicator
       $('#q-sa').show(); 
       $('#i-sa').prop('disabled', false); 
       $('#i-sa').val('');
@@ -168,8 +201,13 @@ socket.on('answer', (ans) => {
     let sel = $('.selected')[0].id.slice(4); 
     if(sel === ans){
       $('.selected').addClass('correct');
+      $('.selected').children('b').html(`<i class='fas fa-check'></i>`); 
     } else{
       $('.selected').addClass('incorrect'); 
+      $('.selected').children('b').html(`<i class='fas fa-times'></i>`); 
+      if ($('#btn-'+ans)[0]) {
+        $('#btn-'+ans).children('b').html(`<i class='fas fa-check'></i>`); 
+      }
     }
   } else if(qType === 'sa'){
     $('#i-sa').prop('disabled', true); 
@@ -188,17 +226,29 @@ socket.on('answer-ack', (ack) => {
   logger.info('recieved answer ack: '+JSON.stringify(ack)); 
   if(ack.ok){
     if(qType === 'mc') {
-      $('.btn-mc.selected').children('b').text($('.btn-mc.selected').prop('id').slice(4).toUpperCase()); 
+      resetMC(); 
+      // if ($('.btn-mc.pending')[0]) {
+      //   // remove pending icon
+      //   $('.btn-mc.pending').children('b').text($('.btn-mc.pending').prop('id').slice(4).toUpperCase());
+      //   $('.btn-mc.pending').removeClass('pending'); 
+      // } 
+      $(`#btn-${ack.selected}`).prop('disabled', true).addClass('selected'); 
     }
-    showSnackbar('Answer Submitted!');
+    if (ack.sender) {
+      showSnackbar('Answer Submitted!');
+    } else {
+      showSnackbar('Your teammate submitted an answer!', 1);
+    }
   } else{
     alert(ack.msg); 
   }
 })
 
 socket.on('answer-time', (inp) => {
+  logger.info('recieved answer ack (timed): '+JSON.stringify(inp)); 
   if(inp.correct){
     $('#sa-time').text(inp.time/1000 + 's');
+    $('#i-sa').val(inp.answer); 
     $('#i-sa').addClass('correct'); 
     $('#i-sa').prop('disabled', true); 
     $('#sa-right-timed').show(); 
@@ -207,6 +257,9 @@ socket.on('answer-time', (inp) => {
     setTimeout(() => {
       $('#sa-right-timed').removeClass('pulse');
     }, 600) 
+    if (!inp.sender) {
+      showSnackbar(`A teammate got the answer!`, 1); 
+    }
   } else{
     $('#sa-wrong-timed').show(); 
     $('#sa-wrong-timed').addClass('pulse'); 
@@ -236,6 +289,14 @@ socket.on('pong', () => {
   $('#s-ping').text(Date.now() - ping_ds); 
 })
 setInterval(ping, 4000); 
+socket.connect(); 
+ping(); 
+
+// Timer functionality
+socket.on('timer', (v) => {
+  $('#q-timer').css({'opacity': 1, 'background': `#${v>10?'00':(250 - v*25).toString(16).padStart(2, 0)}00007f`}); 
+  $('#q-timer').html(`<i class='fas fa-stopwatch'></i> <b>${v} second${v!=1?'s':''}</b> remaining.`);
+}); 
 
 // socket.on('chat', function(msg){
 //   console.log(msg);

@@ -38,10 +38,23 @@ html {
   text-shadow: 1px 1px 3px #444;
 }
 
-.q-sa{
+#q-num{
+  margin: 0.5em 0 0.2em;
+}
+
+.q-sa, .q-ind{
+  /* question-short answer, question-indicator */
   padding: 4px 8px;
   font-size: 1.0em; 
   background: #0000007f;
+  border: 1px solid #fff; 
+}
+
+#q-timer {
+  width: fit-content;
+  max-width: 200px;
+  margin: auto;
+  transition: opacity 0.2s, background 1.0s;
 }
 
 #i-sa{
@@ -82,6 +95,10 @@ a button{
   vertical-align: bottom;
   display: inline-block;
   text-align: center;
+}
+
+.btn-mc.pending:disabled{
+  background: #5e86bbaf; 
 }
 
 .btn-mc.selected:disabled{

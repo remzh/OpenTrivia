@@ -1,4 +1,100 @@
+html{
+  cursor: default; 
+}
+
+/* Navbar */
+
+#nav{
+  padding-bottom: 0;
+}
+
+#nav-cat{
+  padding-top: 4px;
+}
+
+#nav-cat a{
+  text-decoration: none;
+  display: inline-block; 
+  padding: 4px 8px;
+  border-bottom: 2px solid transparent; 
+  transition: all 0.2s; 
+}
+
+#nav-cat a.active{
+  background: #ffffff0f; 
+  border-color: #aac8ff;
+}
+
+/* General CSS */
+
 .btn-lg{
   font-size: 18px; 
   padding: 6px 12px;
+}
+
+.container{
+  display: none;
+  flex-wrap: wrap;
+}
+
+.col{
+  width: calc(50% - 40px); 
+  padding: 10px 20px;
+  display: inline-block;
+}
+
+.col-l{
+  width: calc(100% - 40px); 
+  padding: 10px 20px;
+}
+
+.left{
+  text-align: left;
+}
+
+h3{
+  text-decoration: underline;
+  margin-bottom: 8px;
+}
+
+p{
+  line-height: 1.3;
+  margin-top: 0; 
+  margin-bottom: 8px;
+}
+
+/* Specific CSS (for specific elements) */
+.btn-auto{
+  text-align: left;
+}
+
+.btn-auto::before{
+  font-size: 0.9rem;
+  color: #aac8ff; 
+  content: 'Next Task';
+  display: block;
+}
+
+.btn-auto[disabled]::before{
+  font-size: 0.9rem;
+  color: #feffaa; 
+  content: 'Pending Task';
+  display: block;
+}
+
+.btn-auto{
+  font-size: 1.4rem;
+  color: white; 
+}
+
+.btn-auto[disabled]{
+  font-size: 1.4rem;
+  color: #ccc; 
+}
+
+@media only screen and (max-width: 980px) {
+  .col{
+    padding: 0 20px;
+    width: calc(100% - 40px);
+  }
 }

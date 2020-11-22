@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta name='viewport' content='width=device-width, initial-scale=1, minimum-scale=1.0, maximum-scale=1.0'>
     <title>Trivia Host</title>
     <link rel='stylesheet' href='../main.css'/>
     <link rel='stylesheet' href='host.css'/>
@@ -21,26 +22,56 @@
         <span id='s-time'>...</span>
         <span id='s-ping-outer' style='display: none' class='right'>Ping: <span id='s-ping'>...</span>ms</span>
       </div>
+      <div id='nav-cat'>
+        <a data-target='basic' href='#basic'>Basic</a>
+        <a data-target='advanced' href='#advanced'>Advanced</a>
+        <a data-target='scores' href='#scores'>Scores</a>
+      </div>
     </div>
-    <div class='container'>
-      <h2>Question Loading</h2>
-      <p>Currently On: <b id='q-curNum'></b></p>
-      <select id='sel-questions'></select><button id='btn-loadQuestion'>Load</button>
-      <input type='number' id='i-timer' value='15'/><button id='btn-startTimer'>Start Timer</button>
-      <h2>Answers/Scoring</h2>
-      <br/>
-      <button class='btn-lg' onclick='secSocket.emit("show-answer")'>Show Answer</button>
-      <br/><br/>
-      <button class='btn-lg' onclick='secSocket.emit("scores-save")'>Save Scores</button>
-      <button class='btn-lg' onclick='secSocket.emit("scores-load", 1)'>Load Scores</button>
-      <button class='btn-lg' onclick='secSocket.emit("scores-tally", 1)'>Tally Scores</button>
-      <h2>Question Stats</h2>
-      <p>Current Question: <span id='q-cur'>...</span></p>
-      <p>Answered: <span id='q-ans'>0</span></p>
-      <p>Correct: <span id='q-cor'>0</span></p>
+    <div id='basic' class='container'>
+      <div class='col-l'>
+        <h2>tbd: basic</h2>
+        <button class='btn-auto'>Next Question</button>
+        <br/><br/>
+        <p>
+          <i class='fas fa-stopwatch'></i> <i class='field-timer'>No timer active.</i>
+        </p>
+      </div>
     </div>
+    <div id='advanced' class='container'>
+      <div class='col'>
+        <h2>Control Panel:</h2>
+        <h3>Override Defaults</h3>
+        <select id='sel-questions'></select><button id='btn-loadQuestion'>Load</button>
+        <input type='number' id='i-timer' value='15'/><button id='btn-startTimer'>Start Timer</button>
+        <h2>Answers/Scoring</h2>
+        <br/>
+        <button class='btn-lg' onclick='secSocket.emit("show-answer")'>Show Answer</button>
+        <br/><br/>
+        <button class='btn-lg' onclick='secSocket.emit("scores-save")'>Save Scores</button>
+        <button class='btn-lg' onclick='secSocket.emit("scores-load", 1)'>Load Scores</button>
+        <button class='btn-lg' onclick='secSocket.emit("scores-tally", 1)'>Tally Scores</button>
+      </div>
+      <div class='col'>
+        <h2>Host Stats:</h2>
+        <h2>Question Preview:</h2>
+        <div class='left'>
+          <h3>Current Question</h3>
+          <p><b id='q-cur-det'></b></br><i class='fas fa-stopwatch'></i> <i class='field-timer'>No timer active.</i><br/></p>
+          <p id='q-cur'><i>No question active.</i></p>
+          <h3>Question Stats</h3>
+          <p><span id='q-ans'>0</span> Answered, <span id='q-cor'>0</span> Correct • <a id='q-ans-val' title='No question active.' href='#' onclick='alert(this.title)'>Answer</a></p>
+        </div>
+      </div>
+    </div>
+    <div id='scores' class='container'>
+      <div class='col-l'>
+        <h2>tbd: scores</h2>
+      </div>
+    </div>
+    <br/><br/>
     <div id='footer'>
-      OpenTrivia &copy; 2020 Ryan Zhang. OpenTrivia is <a target='_blank' href='https://github.com/Ryan778/opentrivia'>open source</a>!
+      OpenTrivia &copy; 2020 Ryan Zhang. <br class='hide-on-lg'/>OpenTrivia is <a target='_blank' href='https://github.com/Ryan778/opentrivia'>open source</a>!
       <span class='right'><a href='#' onclick='logger.open()'>Open Console</a></span>
     </div>
   </body>

@@ -5,6 +5,7 @@
  * See license.md for legal information.
  */
 
+require('dotenv').config(); 
 const port = process.env.PORT || 8100;
 
 // Init variables and server
@@ -15,8 +16,14 @@ const express = require('express');
 const app = require('express')();
 const path = require('path');
 const colors = require('colors');
-const credentials = require(path.join(__dirname, 'secure', 'credentials.json')); // secure credentials
-const scoring = require(path.join(__dirname, 'secure', 'scoring.json')); 
+// const credentials = require(path.join(__dirname, 'secure', 'credentials.json')); // secure credentials
+// const scoring = require(path.join(__dirname, 'secure', 'scoring.json')); 
+let scoring = {
+  countedRounds: process.env.OT_SCORING_ROUNDS.split(',').map(r => parseInt(r)), 
+  roundMultiplier: process.env.OT_SCORING_MULT?process.env.OT_SCORING_MULT.split(',').map(r => parseFloat(r)):process.env.SCORING_ROUNDS.split(',').fill(1)
+}
+
+console.log(scoring); 
 
 const levenshtein = require('js-levenshtein');
 const tabletop = require('tabletop');
@@ -70,7 +77,7 @@ if(!scoring || !scoring.countedRounds){
 }
 
 const MongoClient = require('mongodb').MongoClient;
-const MongoURL = credentials.database;
+const MongoURL = process.env.DB_URL;
 const dbName = 'opentrivia';
 const dbClient = new MongoClient(MongoURL, {useNewUrlParser: true, useUnifiedTopology: true}); 
 let mdb; 
@@ -83,9 +90,9 @@ dbClient.connect((e) => {
 
 let sess_MongoStore = require('connect-mongo')(session); 
 let sess = {
-  secret: credentials.sessionKey,
+  secret: process.env.SESSION_KEY,
   store: new sess_MongoStore({
-    url: credentials.database, 
+    url: process.env.DB_URL, 
     autoRemove: 'interval', 
     autoRemoveInterval: 5
   }),
@@ -114,14 +121,14 @@ let userdb = [];
 let questiondb = []; 
 function loadSheets(){
   tabletop.init({
-    key: 'https://docs.google.com/spreadsheets/d/1PhWNoPC0itS4ZB0HVV_Y3vEcZFtw3vBEk2OiR0OpjbI/pubhtml', 
+    key: process.env.OT_USERS, 
     simpleSheet: true
   }).then((dt) => {
     userdb = dt; 
     logger.info(`Loaded UserDB (${dt.length} entries)`)
   });
   tabletop.init({
-    key: 'https://docs.google.com/spreadsheets/u/1/d/1cYaUC73QE8gvE-dotdOg_fS--dJhVQ3nO21ZnfndT5Q/pubhtml', 
+    key: process.env.OT_QUESTIONS, 
     simpleSheet: true
   }).then((dt) => {
     questiondb = dt; 
@@ -260,11 +267,23 @@ let question = {
   selections: {} // only used in SA questions to record answers
 }
 
+/**
+ * Calculates a user's tiebreaker score for a question based on how much time they took to correctly answer it
+ * Uses a quadratic bezier curve to (hopefully) fairly give scores based on a relatively normal distribution
+ * t (time, seconds) | v (value of tiebreaker)
+ * 3 | 10
+ * 9.5 | 8
+ * 15.4 | 5
+ * 19.7 | 3
+ * 26.7 | 1
+ * @returns {number} tiebreaker score, v (0 < v <= 10)
+ */
 function tbCalc(){
   let cur = Date.now(); 
   let st = question.timestamp; 
   if(!st) return 0; // invalid, no question
-  let v = Math.round(10000 / (Math.pow(1.05, (cur - st - 3000)/1000))) / 1000; 
+  let time = cur - st; // time taken
+  let v = Math.round(10000 / (Math.pow(1.06, (time/16000)*(time - 3000)/1000))) / 1000; 
   if(v > 10) return 10; 
   return v; 
 }
@@ -291,6 +310,7 @@ function getCurrentQuestion(full){
       out.answer = obj.answer;
       out.category = obj.category;
       out.timed = obj.timed; 
+      out.index = question.curIndex; 
     }
     return out; 
   } catch (e) {
@@ -345,14 +365,19 @@ function processAnswer(team, ans, socket){
   else if(!q.answer){
     logger.warn('Unable to process answer: No question selected'); 
     socket.emit('answer-ack', {ok: false, msg: 'No question active'})
-    io.of('secure').emit('update', 'processAnswer error: no question selected server-side'); 
+    io.of('secure').emit('update', `processAnswer error: no question selected server-side [${team.TeamID}]`); 
     return false;
   }
   let sentAck = false; 
   let tid = team.TeamID; 
   if(q.type === 'mc'){
+    if (['a', 'b', 'c', 'd', 'e'].indexOf(ans.toLowerCase()) === -1) {
+      socket.emit('answer-ack', {ok: false, msg: 'Invalid multiple choice option'})
+      io.of('secure').emit('update', `processAnswer error: invalid MC option (${ans.toLowerCase()}) [${team.TeamID}]`); 
+      return; 
+    }
     question.selections[tid] = ans.toLowerCase(); 
-    socket.emit('answer-ack', {ok: true});
+    teamBroadcast(socket, 'answer-ack', {ok: true, selected: ans.toLowerCase()});
     if(ans.toLowerCase() === q.answer.toLowerCase()){
       question.scores[tid] = 1; 
       return true; 
@@ -375,7 +400,7 @@ function processAnswer(team, ans, socket){
       question.scores[tid] = 1;
       if(q.timed){
         sentAck = true; 
-        socket.emit('answer-time', {time: Date.now() - question.timestamp, correct: true, tb: tbCalc()})
+        teamBroadcast(socket, 'answer-time', {time: Date.now() - question.timestamp, correct: true, tb: tbCalc(), answer: q.answer})
         question.tb[tid] = tbCalc()}
       return true; 
     } else{
@@ -387,7 +412,7 @@ function processAnswer(team, ans, socket){
     }
   }
   if(!sentAck){
-    socket.emit('answer-ack', {ok: true})}
+    socket.emit('answer-ack', {ok: false, msg: `We couldn't understand your answer. Please contact a dev.`})}
 }
 
 function getAnswerStats(){
@@ -417,21 +442,25 @@ function getAnswerStats(){
 }
 
 function startTimer(s){
+  if (question.timer.interval) {
+    clearInterval(question.timer.interval); 
+  }
   question.timer.end = Date.now() + (1000 * s); 
   question.timer.interval = setInterval(() => {
     let t = Math.round((question.timer.end - Date.now())/1000); 
-    io.of('secure').emit('timer', t); 
+    io.emit('timer', t); 
     if(t <= 0){
       clearInterval(question.timer.interval); 
       question.active = false; 
       io.emit('stop'); 
     }
   }, 1000); 
-  io.of('secure').emit('timer', s); 
+  io.emit('timer', s); 
 }
 
 function stopTimer(){
   clearInterval(question.timer.interval); 
+  question.timer.interval = false; 
 }
 
 // End question management
@@ -444,7 +473,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     next(); 
   } else {
     logger.info('[sec] rejected: '+socket.id)
-      next(new Error('Authentication error'));
+      next(new Error('authentication error'));
   }    
 }).on('connection', function(socket){
   logger.info('[sec] connected: '+socket.id);
@@ -536,14 +565,38 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
   })
 });
 
-io.use(function(socket, next){
+/**
+ * Identifies the team the current socket is in, and broadcasts a message to all other members on the team. 
+ * @param {object} socket - socket.io instance
+ * @param {string} message - message to broadcast
+ * @param {object} [payload] - payload to send alongside the message
+ */
+function teamBroadcast(socket, message, payload={}) {
+  if (!socket.handshake.session.user) return false; 
+  let teamID = socket.handshake.session.user.TeamID; 
+  if (socket.rooms.has(`team-${teamID}`)) { 
+    socket.to(`team-${teamID}`).emit(message, payload); 
+    payload.sender = true;
+    socket.emit(message, payload); 
+    return true; 
+  }
+  else {
+    return false; 
+  }
+}
+
+io.of('/').use(function(socket, next){
   if (socket.handshake.session && (socket.handshake.session.user || socket.handshake.session.host)){ // authorized users only
     logger.info('[std] authenticated: '+socket.id);
+    if (socket.handshake.session.user && socket.handshake.session.user.TeamID) {
+      socket.join(`team-${socket.handshake.session.user.TeamID}`); 
+    }
     socket.join('users'); 
     next(); 
   } else {
-    logger.info('[std] rejected: '+socket.id)
-      next(new Error('Authentication error'));
+    logger.info('[std] rejected: '+socket.id); 
+    socket.emit('status', {valid: false}); 
+      next(new Error('authentication error'));
   }    
 }).on('connection', function(socket){
   logger.info('[std] connected: '+socket.id);  
@@ -637,7 +690,7 @@ app.post('/auth', (req, res) => {
     res.status(302).redirect('/?failedLogin'); 
   }
   else{
-    if(req.body.id === credentials.hostPassword){
+    if(req.body.id === process.env.HOST_KEY){
       req.session.regenerate((err) => {
         if(err) {
           res.status(302).redirect('/?failedLogin'); 

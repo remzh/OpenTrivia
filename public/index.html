@@ -10,12 +10,15 @@
   <body>
     <div id='sq'>
       <h2>Welcome to Trivia Night!</h2>
-      <p>Enter your <b>Team ID</b> below to continue.</p>
       <p id='failed' style='display: none'>Invalid Team ID. Please try again.</p>
+      <p>Enter your <b>Team ID</b> below to continue.</p>
       <form action='/auth' method='post'>
         <input id='teamID' name='id' maxlength='16' placeholder='Team ID'/>
         <button type='submit'><i class='fas fa-arrow-right'></i></button>
       </form>
+    </div>
+    <div id='ft'>
+      OpenTrivia <span style='float: right'>&copy; 2020 Ryan Zhang</span>
     </div>
   </body>
   <script>

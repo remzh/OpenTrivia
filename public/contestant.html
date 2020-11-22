@@ -30,6 +30,7 @@
       <div class='c-inner'>
         <h1 id='q-num' class='q'></h1>
         <h1 id='q-stop' class='q'>Time's Up!</h1>
+        <div id='q-timer' class='q q-ind'></div>
         <div id='q-wel' class='q'>
           <h1>Welcome!</h1>
           <p>We'll begin the competition shortly.</p>
@@ -56,9 +57,10 @@
         </div>
       </div>
     </div>
-    <div id='snackbar'></div>
+    <div id='snackbar' class='snackbar'></div>
+    <div id='snackbar-sm' class='snackbar'></div>
     <div id='footer'>
-      OpenTrivia &copy; 2020 Ryan Zhang. <br/>OpenTrivia is <a target='_blank' href='https://github.com/Ryan778/opentrivia'>open source</a>!
+      OpenTrivia &copy; 2020 Ryan Zhang. <br class='hide-on-lg'/>OpenTrivia is <a target='_blank' href='https://github.com/Ryan778/opentrivia'>open source</a>!
       <span class='right'><a href='#' onclick='logger.open()'>Open Console</a></span>
     </div>
   </body>

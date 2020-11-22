@@ -10,10 +10,12 @@ body{
   background-size: cover;
   background-attachment: fixed;
   background-position: center;
+  overscroll-behavior: none;
 }
 
 #sq{
-  width: 360px;
+  width: calc(100% - 40px);
+  max-width: 360px;
   padding: 5px 20px 20px;
   background: #ffffff9f; 
   margin: auto;
@@ -32,10 +34,14 @@ body{
   border-radius: 0; 
   border-bottom: 1px solid #555;
   padding: 4px;
+  transition: border 0.3s, box-shadow 0.3s; 
 }
 
-#sq form input:focus{
+#sq form input:focus, input:focus ~ button{
   outline: none; 
+  border-bottom: 1px solid #008cff !important;
+  box-shadow: 0 1px 0 0 #008cff;
+  /* border-bottom: 2px solid #008cff; */
 }
 
 #sq form button{
@@ -45,4 +51,30 @@ body{
   border: none; 
   border-radius: 0; 
   border-bottom: 1px solid #555;
+  transition: border 0.3s, box-shadow 0.3s; 
+}
+
+#sq form button:focus{
+  outline: none;
+  background: #d8ffdbb2; 
+}
+
+#failed{
+  background: rgba(255, 105, 86, 0.3);
+  padding: 2px 4px;
+}
+
+#ft{
+  color: #fff;
+  position: fixed; 
+  bottom: 0px; 
+  left: 0;
+  padding: 0 5px;
+  height: 22px; 
+  width: calc(100% - 10px);
+  opacity: 0.5; 
+}
+
+#ft:hover{
+  opacity: 1;
 }

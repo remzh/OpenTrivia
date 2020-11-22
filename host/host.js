@@ -1,4 +1,6 @@
-let socket = io(); 
+let socket = io({
+  transports: ['websocket', 'xhr']
+}); 
 let secSocket = io.connect('/secure');
 let status = 0; 
 
@@ -77,6 +79,10 @@ socket.on('pong', () => {
 })
 setInterval(ping, 4000); 
 
+socket.on('timer', (t) => {
+  $('.field-timer').text(`${t} second${t===1?'':'s'} remaining.`); 
+})
+
 // actual host stuff
 
 secSocket.on('update', (msg) => {
@@ -86,10 +92,13 @@ secSocket.on('update', (msg) => {
 })
 
 secSocket.on('question-full', (q) => {
-  logger.info('[sec] got question: '+JSON.stringify(q))
-  $('#q-cur').text(q.question + (q.type==='mc'?` (${q.options.join(', ')})`:'')); 
+  logger.info('[sec] got question: '+JSON.stringify(q)); 
+  $('.field-timer').text(`No timer active.`); 
+  $('#q-cur-det').text(`R${q.round}Q${q.num} • ${q.type.toUpperCase()} • ${q.category}`);
+  $('#q-cur').html(q.question + (q.type==='mc'?`<br/><i> - ${q.options.join('</i><br/><i> - ')}</i>`:'')); 
   $('#q-ans').text(0); 
   $('#q-cor').text(0);
+  $('#q-ans-val').prop('title', `Answer: ${q.answer}`);
 }); 
 
 secSocket.on('question-list', (l) => {
@@ -113,6 +122,27 @@ secSocket.on('ans-update', (dt) => {
   $('#q-cor').text(correct);
 })
 
-setInterval(() => {
+$('#nav-cat a').on('click', (e) => {
+  let ele = e.srcElement; 
+  $('#nav-cat a.active').removeClass('active'); 
+  $(ele).addClass('active'); 
+  $('.container').hide(); 
+  $('#'+ele.dataset.target).css('display', 'flex'); 
+})
+
+function intervalUpdate() {
   $('#s-time').text(moment().format('M.DD // hh:mm:ss A'))
-}, 1000); 
+}
+setInterval(() => intervalUpdate, 1000); 
+
+window.onload = function() {
+  intervalUpdate(); 
+  if (location.hash && $(`#nav-cat a[href="${location.hash}"]`)) {
+    $(`#nav-cat a[href="${location.hash}"]`).addClass('active'); 
+    $(location.hash).css('display', 'flex'); 
+  } else {
+    window.open('#basic', '_self'); 
+    $(`#nav-cat a[href="#basic"]`).addClass('active'); 
+    $('#basic').css('display', 'flex'); 
+  }
+}

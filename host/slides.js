@@ -1,4 +1,6 @@
-let socket = io(); 
+let socket = io({
+  transports: ['websocket', 'xhr']
+}); 
 let secSocket = io.connect('/secure');
 let status = 0; 
 
@@ -141,7 +143,7 @@ secSocket.on('answer-stats', (data) => {
   }
 })
 
-secSocket.on('timer', (t) => {
+socket.on('timer', (t) => {
   $('#timer').text(t); 
   if(t <= 3){
     $('#timer').addClass('timer-low')}

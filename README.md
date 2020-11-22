@@ -12,6 +12,8 @@ Think of it like [Socrative](https://socrative.com/), except less test-like and 
 Inspired by the lack of customizability in existing (free) platofrms like Kahoot, Open Trivia is fully customizable while still having everything you need right out of the go. 
 
 ## Quickstart
+**I'm in the progress of migrating variables from a mess of JSON files scattered around into a few environmental variables. The following will be updated once the configuration migration process is complete.**
+
 You'll need to create a `credentials.json` file under the `secure` folder, and provide three keys: `database`, `sessionKey`, and `hostPassword`. 
 
 The `hostPassword` should begin with "host" and is used to give access to the slideshow and host dashboard. The `database` must be a MongoDB or MongoDB compatible database. 
