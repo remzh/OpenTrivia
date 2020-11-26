@@ -84,6 +84,7 @@ socket.on('timer', (t) => {
 })
 
 // actual host stuff
+// basic/advanced tab
 
 secSocket.on('update', (msg) => {
   if(typeof msg === 'object') msg = JSON.stringify(msg);  
@@ -122,6 +123,27 @@ secSocket.on('ans-update', (dt) => {
   $('#q-cor').text(correct);
 })
 
+// scoring
+secSocket.on('scores-host', (res) => {
+  console.log(res); 
+  if (!res.ok) {
+    $('#scores-table').text(`Failed to load: ${res.error}`); 
+    return; 
+  }
+  // <tr><th colspan='2'>Team</th><th colspan='${res.rounds.length}'>Rounds</th><th colspan='2'>Overall</th></tr>
+  let out = `<thead><tr><th>ID</th><th>Team Name</th>${res.rounds.map(r => `<th class='scores-round'>R${r}</th>`).join('')}<th>Points</th><th>Rank</th></tr></thead><tbody>`; // construct heading
+  res.data.forEach(r => {
+    let indiv = r.i.map(e => `<td>${e.s} <span class='scores-tb' title='${e.tb}'>(${Math.round(e.tb)})</span>${e.r === -1 ? '':` <span class='scores-rank'>[${e.r}]</span>`}</td>`).join(''); 
+    out += `<tr><td>${r.t}</td><td>${r.tn}</td>${indiv}<td>${r.s.s} <span class='scores-tb' title='${r.s.tb}'>(${r.s.tb.toFixed(1)})</span></td><td>${r.r}</td></tr>`
+  })
+  out += '</tbody>'; 
+  $('#scores-lu').text(moment().format('h:mm:ss a'))
+  $('#scores-table').html(out); 
+})
+
+
+// utilities + general (not socket.io-specific)
+
 $('#nav-cat a').on('click', (e) => {
   let ele = e.srcElement; 
   $('#nav-cat a.active').removeClass('active'); 
@@ -133,7 +155,7 @@ $('#nav-cat a').on('click', (e) => {
 function intervalUpdate() {
   $('#s-time').text(moment().format('M.DD // hh:mm:ss A'))
 }
-setInterval(() => intervalUpdate, 1000); 
+setInterval(intervalUpdate, 1000); 
 
 window.onload = function() {
   intervalUpdate(); 

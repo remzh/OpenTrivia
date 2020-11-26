@@ -243,11 +243,78 @@ async function rankScores(round){
 
 // setTimeout(() => {rankScores(1).then(r => console.log(r))}, 3000); 
 
-async function computeOverallScores(){
-  let scores = []; 
-  let ranks = [] 
-  for(let i of scoring.countedRounds){
-    scores.push(await rankScores(i))
+/**
+ * Calculates the overall score by taking the sum of the points in all the rounds specified. 
+ * Only teams that have answered at least one question in the first round will be counted. 
+ * @param {string} input - rounds to be used, separated with commas 
+ * @returns {object} {ok: (boolean), data: (array)}
+ */
+async function computeOverallScores(input, showTeamID=false){
+  try {
+    let scores = [];
+    let rounds = input ? input.split(',').map(r => parseInt(r)) : scoring.countedRounds; 
+    for(let i of rounds){
+      scores.push(await rankScores(i))
+    }
+
+    if (scores.length < 1) {
+      return {ok: false, error: 'No scores to report'}
+    }
+
+    let allTeams = userdb.map(r => r.TeamID); 
+
+    let totalScores = []; 
+    for (let team of allTeams) {
+      let points=[], tb = [], indiv=[]; // accumulation of score and tie-breaker respectively
+      for (let i of scores) {
+        let selTeam = i.find(r => r.t === team); 
+        if (selTeam) {
+          points.push(selTeam.s.s ? selTeam.s.s : 0); 
+          tb.push(selTeam.s.tb ? selTeam.s.tb : 0);
+          indiv.push({
+            s: selTeam.s.s ? selTeam.s.s : 0, 
+            tb: selTeam.s.tb ? Math.round(selTeam.s.tb*1000)/1000 : 0,
+            r: selTeam.r ? selTeam.r : -1
+          });
+        } else {
+          points.push(0); 
+          tb.push(0); 
+          indiv.push({
+            s: 0, 
+            tb: 0, 
+            r: -1
+          })
+        }
+      }
+      totalScores.push({
+        t: showTeamID ? team : team.slice(0, 1), 
+        tn: userdb.find(r => r.TeamID === team).TeamName, 
+        s: { // scores
+          s: points.reduce((a, c) => a+c), 
+          tb: Math.round(tb.reduce((a,c) => a+c)*1000)/1000
+        }, 
+        i: indiv
+      })
+    }
+
+    totalScores = totalScores.sort((a, b) => {
+      if(a.s.s !== b.s.s){
+        return b.s.s - a.s.s; 
+      } else{
+        return b.s.tb - a.s.tb
+      }
+    })
+    for(let i = 0; i < totalScores.length; i++){
+      if (i > 0 && totalScores[i-1].s.s === totalScores[i].s.s && totalScores[i-1].s.tb === totalScores[i].s.tb) {
+        totalScores[i].r = totalScores[i-1].r; // in the event of a tie
+        continue; 
+      }
+      totalScores[i].r = (i+1); 
+    }
+    return {ok: true, rounds, data: totalScores}
+  } catch (e) {
+    console.log(e); 
+    return {ok: false, error: e}
   }
 }
 
@@ -519,7 +586,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
   })
 
   socket.on('show-answer', function(){
-    if(!question.current){
+    if(!question.current || !question.current.answer){
       io.of('secure').emit('update', 'processAnswer error: no question selected server-side'); 
       return; 
     }
@@ -556,6 +623,53 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     rankScores(r).then(res => {
       socket.emit('update', res); 
     })
+  })
+
+  socket.on('scores-compute', function(r){
+    computeOverallScores(r?r:false, true).then(res => {
+      socket.emit('scores-host', res); 
+    })
+  })
+
+  socket.on('scores-publish', async function(){
+    let scores = await computeOverallScores(); 
+    if (!scores.ok) {
+      socket.emit('update', {type: 'scores-publish', ok: false, error: scores.error}); 
+      return; 
+    }
+    let scores_clean = Object.assign({}, scores); // scores w/o team IDs or teams' individual scores
+    scores_clean.data = scores_clean.data.map(input => {
+      return {
+        t: input.t.slice(0, 1), 
+        tn: input.tn, 
+        s: input.s,
+        r: input.r
+      }
+    }); 
+    let ts = new Date(); 
+    let curEntry = await scoreDB.findOne({
+      published: true
+    }); 
+    if (curEntry) {
+      await scoreDB.updateOne({
+        published: true
+      }, {
+        $set: {
+          ts, 
+          scores, 
+          scores_clean
+        }
+      }); 
+    } else {
+      await scoreDB.insertOne({
+        ts, 
+        scores,
+        score_clean, 
+        published: true
+      }); 
+    }
+    console.log(curEntry); 
+    io.of('secure').emit('update', {type: 'scores-publish', ok: true, ts}); 
   })
 
   socket.on('scores-tally', function(r){

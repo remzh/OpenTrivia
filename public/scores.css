@@ -1,0 +1,22 @@
+html {
+  cursor: default;
+  user-select: none;
+}
+
+.c-inner {
+  background: rgba(0, 0, 0, 0.3); 
+  padding: 12px 20px;
+  backdrop-filter: blur(3px);
+  max-width: 1200px;
+  margin: auto;
+}
+
+#bk { 
+  background-image: url(/images/bk2.jpg);
+}
+
+@media only screen and (min-width: 800px) {
+  .c-inner {
+    margin-top: 12px;
+  }
+}
