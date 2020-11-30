@@ -78,3 +78,12 @@ body{
 #ft:hover{
   opacity: 1;
 }
+
+a {
+  color: #336ad1;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}

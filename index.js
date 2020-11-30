@@ -23,8 +23,6 @@ let scoring = {
   roundMultiplier: process.env.OT_SCORING_MULT?process.env.OT_SCORING_MULT.split(',').map(r => parseFloat(r)):process.env.SCORING_ROUNDS.split(',').fill(1)
 }
 
-console.log(scoring); 
-
 const levenshtein = require('js-levenshtein');
 const tabletop = require('tabletop');
 const session = require('express-session');
@@ -138,13 +136,11 @@ function loadSheets(){
 loadSheets(); 
 
 
-function lookupUser(teamID){
-  let out = userdb.filter(obj => {return obj.TeamID === teamID}); 
-  if(out.length > 0){
-    return out[0]; 
-  } else{
-    return false; 
-  }
+function lookupUser(teamPIN){
+  let out = userdb.find(obj => {
+    return String(obj.TeamPIN) === teamPIN
+  }); 
+  return out; 
 }
 
 // End of UserDB
@@ -238,10 +234,11 @@ async function rankScores(round){
     out[i].r = (i+1); 
   }
 
-  return out; 
+  return {
+    round, 
+    ranks: out
+  }; 
 }
-
-// setTimeout(() => {rankScores(1).then(r => console.log(r))}, 3000); 
 
 /**
  * Calculates the overall score by taking the sum of the points in all the rounds specified. 
@@ -249,7 +246,7 @@ async function rankScores(round){
  * @param {string} input - rounds to be used, separated with commas 
  * @returns {object} {ok: (boolean), data: (array)}
  */
-async function computeOverallScores(input, showTeamID=false){
+async function computeOverallScores(input, showTeamID=true){
   try {
     let scores = [];
     let rounds = input ? input.split(',').map(r => parseInt(r)) : scoring.countedRounds; 
@@ -265,22 +262,28 @@ async function computeOverallScores(input, showTeamID=false){
 
     let totalScores = []; 
     for (let team of allTeams) {
-      let points=[], tb = [], indiv=[]; // accumulation of score and tie-breaker respectively
-      for (let i of scores) {
+      let points=0, correct=0, tb = 0, indiv=[]; // accumulation of score and tie-breaker respectively
+      for (let round of scores) {
+        let i = round.ranks, roundNum = round.round; 
         let selTeam = i.find(r => r.t === team); 
         if (selTeam) {
-          points.push(selTeam.s.s ? selTeam.s.s : 0); 
-          tb.push(selTeam.s.tb ? selTeam.s.tb : 0);
+          let numCorrect = selTeam.s.s ? selTeam.s.s : 0; 
+          let multiplier = scoring.roundMultiplier[scoring.countedRounds.indexOf(roundNum)]; 
+          if (isNaN(multiplier)) multiplier = 1; 
+          points += numCorrect * multiplier; 
+          correct += numCorrect; 
+          tb += (selTeam.s.tb ? selTeam.s.tb : 0);
           indiv.push({
-            s: selTeam.s.s ? selTeam.s.s : 0, 
+            s: numCorrect*multiplier, 
+            c: numCorrect, 
+            m: multiplier, 
             tb: selTeam.s.tb ? Math.round(selTeam.s.tb*1000)/1000 : 0,
             r: selTeam.r ? selTeam.r : -1
           });
         } else {
-          points.push(0); 
-          tb.push(0); 
           indiv.push({
             s: 0, 
+            c: 0, 
             tb: 0, 
             r: -1
           })
@@ -290,8 +293,9 @@ async function computeOverallScores(input, showTeamID=false){
         t: showTeamID ? team : team.slice(0, 1), 
         tn: userdb.find(r => r.TeamID === team).TeamName, 
         s: { // scores
-          s: points.reduce((a, c) => a+c), 
-          tb: Math.round(tb.reduce((a,c) => a+c)*1000)/1000
+          c: correct,
+          s: points, 
+          tb: Math.round(tb*1000)/1000
         }, 
         i: indiv
       })
@@ -313,7 +317,6 @@ async function computeOverallScores(input, showTeamID=false){
     }
     return {ok: true, rounds, data: totalScores}
   } catch (e) {
-    console.log(e); 
     return {ok: false, error: e}
   }
 }
@@ -598,8 +601,14 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     io.emit('answer', question.current.answer.toLowerCase());
   })
 
-  socket.on('get-questionList', function(){
+  socket.on('host-firstConnect', async function(){
     socket.emit('question-list', questiondb.map(r => {return {r: r.Round, q: r.Q}}))
+    let curScores = await scoreDB.findOne({
+      published: true
+    }); 
+    if (curScores) {
+      socket.emit('scores-publish', {ok: true, ts: curScores.ts}); 
+    }
   }); 
 
   socket.on('scores-save', function(){
@@ -634,15 +643,18 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
   socket.on('scores-publish', async function(){
     let scores = await computeOverallScores(); 
     if (!scores.ok) {
-      socket.emit('update', {type: 'scores-publish', ok: false, error: scores.error}); 
+      socket.emit({type: 'scores-publish', ok: false, error: scores.error}); 
       return; 
     }
-    let scores_clean = Object.assign({}, scores); // scores w/o team IDs or teams' individual scores
-    scores_clean.data = scores_clean.data.map(input => {
+    // scores w/o team IDs or teams' individual scores
+    let scores_clean = Object.assign({}, scores); 
+    // remove individual scores
+    scores_clean.data = scores_clean.data.map(input => { 
       return {
         t: input.t.slice(0, 1), 
         tn: input.tn, 
-        s: input.s,
+        s: {s: input.s.s},
+        i: input.i.map(r => {return {r: r.r}}),
         r: input.r
       }
     }); 
@@ -668,7 +680,6 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
         published: true
       }); 
     }
-    console.log(curEntry); 
     io.of('secure').emit('update', {type: 'scores-publish', ok: true, ts}); 
   })
 
@@ -800,11 +811,11 @@ app.get('/host/*', (req, res) => {
 app.use(express.static('public')); 
 
 app.post('/auth', (req, res) => {
-  if(typeof req.body.id !== 'string'){
+  if(typeof req.body.creds !== 'string'){
     res.status(302).redirect('/?failedLogin'); 
   }
   else{
-    if(req.body.id === process.env.HOST_KEY){
+    if(req.body.creds === process.env.HOST_KEY){
       req.session.regenerate((err) => {
         if(err) {
           res.status(302).redirect('/?failedLogin'); 
@@ -816,7 +827,7 @@ app.post('/auth', (req, res) => {
       return; 
     }
     
-    let user = lookupUser(req.body.id); 
+    let user = lookupUser(req.body.creds); 
     if(!user){
       res.status(302).redirect('/?failedLogin'); 
       return; 
@@ -824,11 +835,60 @@ app.post('/auth', (req, res) => {
     else{
       req.session.regenerate((err) => {
         if(err) {
+          logger.error(err); 
           res.status(302).redirect('/?failedLogin'); 
           return; 
         }
         req.session.user = user; 
-        res.status(302).redirect('/contestant'); 
+        if (req.headers.referer && req.headers.referer.indexOf('continue=scores') !== -1) {
+          res.status(302).redirect('/scores'); 
+        } else {
+          res.status(302).redirect('/contestant'); 
+        }
+      })
+    }
+  }
+})
+
+// Scoreboard
+app.get('/scores/data', async function(req, res) {
+  let scores = await scoreDB.findOne({
+    published: true
+  }); 
+  if (!scores) {
+    res.status(200).json({
+      ok: true, 
+      scores: false, 
+      team: false
+    })
+  } else {
+    if (req.session.user) {
+      let tid = req.session.user.TeamID; 
+      try {
+        let teamIndex = scores.scores.data.findIndex(r => r.t === tid); 
+        if (teamIndex !== -1) {
+          let input = scores.scores.data[teamIndex]; 
+          input.t = input.t.slice(0, 1); 
+          input.hl = true; 
+          scores.scores_clean.data.splice(teamIndex, 1, input); 
+        } 
+        res.status(200).json({
+          ok: true, 
+          scores: scores.scores_clean, 
+          team: req.session.user
+        })
+      } catch (err) {
+        res.status(500).json({
+          ok: false, 
+          error: err, 
+          team: req.session.user
+        })
+      }
+    } else {
+      res.status(200).json({
+        ok: true, 
+        scores: scores.scores_clean, 
+        team: false
       })
     }
   }

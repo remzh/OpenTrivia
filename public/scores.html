@@ -10,13 +10,13 @@
     <script src='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/js/all.min.js' integrity='sha256-qM7QTJSlvtPSxVRjVWNM2OfTAz/3k5ovHOKmKXuYMO4=' crossorigin='anonymous'></script>
     <script defer src='/socket.io/socket.io.js'></script>
     <script defer src='logger.js'></script>
+    <script defer src='scores.js'></script>
   </head>
   <body>
     <div id='bk'></div>
     <div id='nav'>
       <div id='nav-top'>
         <span id='s-team'>Scores</span>
-        <!-- <span id='status' class='right'><i class='fas fa-circle-notch fa-spin'></i> Loading...</span> -->
       </div>
       <div id='nav-btm'>
         <span id='s-school'></span>
@@ -25,13 +25,18 @@
     <div class='container'>
       <div class='c-inner'>
         <h1 style='text-shadow: 1px 1px 3px #444'>Current Standings</h1>
-        <p>Scores are not currently released. Check back after the round ends!</p>
+        <p id='s-mobile' class='message'><i class='fas fa-fw fa-mobile-alt'></i> Rotate your screen to show per-round rankings.</p>
+        <p id='s-signin' class='message'><i class='fas fa-fw fa-info-circle'></i> <b>You are not signed in.</b> <a href='/?continue=scores'>Sign in</a> to see your team's details on each round.</p>
+        <p id='s-team-msg' class='message'><i class='fas fa-fw fa-check'></i> You're signed in as <b>(team)</b>.</p>
+        <p id='s-load'><i class='fas fa-circle-notch fa-spin'></i> Loading scoreboard...</p>
+        <p id='s-none' style='display: none'>Scores are not currently released. Check back after the round ends!</p>
+        <table id='scores-table'></table>
+        <div style='text-align: left;'>
+          <br/>
+          OpenTrivia &copy; 2020 Ryan Zhang. <br class='hide-on-lg'/>OpenTrivia is <a target='_blank' href='https://github.com/Ryan778/opentrivia'>open source</a>!
+          <span class='right'><a href='#' onclick='logger.open()'>Open Console</a> • <a href='..'>Landing Page</a></span>
+        </div>
       </div>
-    </div>
-    <div id='snackbar'></div>
-    <div id='footer'>
-      OpenTrivia &copy; 2020 Ryan Zhang. OpenTrivia is <a target='_blank' href='https://github.com/Ryan778/opentrivia'>open source</a>!
-      <span class='right'><a href='#' onclick='logger.open()'>Open Console</a></span>
     </div>
   </body>
 </html>

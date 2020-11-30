@@ -10,10 +10,10 @@
   <body>
     <div id='sq'>
       <h2>Welcome to Trivia Night!</h2>
-      <p id='failed' style='display: none'>Invalid Team ID. Please try again.</p>
-      <p>Enter your <b>Team ID</b> below to continue.</p>
+      <p id='failed' style='display: none'>Invalid Team PIN. Please try again.</p>
+      <p>Enter your <b>Team PIN</b> below to continue.<br/>Or, you can <a href='scores'>open the scoreboard</a>.</p>
       <form action='/auth' method='post'>
-        <input id='teamID' name='id' maxlength='16' placeholder='Team ID'/>
+        <input id='creds' name='creds' maxlength='16' placeholder='Team PIN'/>
         <button type='submit'><i class='fas fa-arrow-right'></i></button>
       </form>
     </div>
@@ -28,12 +28,12 @@
       document.getElementById('failed').style.display = 'block'; 
       document.getElementById('failed').innerText='Sign in using the Team ID field to continue.'}
     window.onload = () => {
-      document.getElementById('teamID').focus(); 
-      document.getElementById('teamID').addEventListener('input', () => {
-        if(document.getElementById('teamID').value.slice(0, 4) === 'host'){
-          document.getElementById('teamID').type = 'password'; // host passwords are prefixed with "host"
+      document.getElementById('creds').focus(); 
+      document.getElementById('creds').addEventListener('input', () => {
+        if(document.getElementById('creds').value.slice(0, 4) === 'host'){
+          document.getElementById('creds').type = 'password'; // host passwords are prefixed with "host"
         } else{
-          document.getElementById('teamID').type = 'text'; 
+          document.getElementById('creds').type = 'text'; 
         }
       })
     }

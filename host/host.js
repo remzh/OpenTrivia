@@ -29,7 +29,8 @@ secSocket.on('connect', () => {
   ping(); 
   if(firstConnect){
     firstConnect = false; 
-    secSocket.emit('get-questionList');
+    secSocket.emit('host-firstConnect'); // loads question list and currently published scores
+    secSocket.emit('status'); // checks to see what's currently active
   }
 })
 
@@ -133,14 +134,21 @@ secSocket.on('scores-host', (res) => {
   // <tr><th colspan='2'>Team</th><th colspan='${res.rounds.length}'>Rounds</th><th colspan='2'>Overall</th></tr>
   let out = `<thead><tr><th>ID</th><th>Team Name</th>${res.rounds.map(r => `<th class='scores-round'>R${r}</th>`).join('')}<th>Points</th><th>Rank</th></tr></thead><tbody>`; // construct heading
   res.data.forEach(r => {
-    let indiv = r.i.map(e => `<td>${e.s} <span class='scores-tb' title='${e.tb}'>(${Math.round(e.tb)})</span>${e.r === -1 ? '':` <span class='scores-rank'>[${e.r}]</span>`}</td>`).join(''); 
-    out += `<tr><td>${r.t}</td><td>${r.tn}</td>${indiv}<td>${r.s.s} <span class='scores-tb' title='${r.s.tb}'>(${r.s.tb.toFixed(1)})</span></td><td>${r.r}</td></tr>`
+    let indiv = r.i.map(e => `<td>${e.s} <span class='scores-tb' title='TB: ${e.tb}'>(${Math.round(e.tb)})</span>${e.r === -1 ? '':` <span class='scores-rank'>[${e.r}]</span>`}</td>`).join(''); 
+    out += `<tr><td>${r.t}</td><td>${r.tn}</td>${indiv}<td>${r.s.s} <span class='scores-tb' title='TB: ${r.s.tb}'>(${r.s.tb.toFixed(1)})</span></td><td>${r.r}</td></tr>`
   })
   out += '</tbody>'; 
   $('#scores-lu').text(moment().format('h:mm:ss a'))
   $('#scores-table').html(out); 
 })
 
+secSocket.on('scores-publish', (status) => {
+  if(status.ok) {
+    $('#scores-lp').html(`<a target='_blank' href='/scores'>${moment(status.ts).format('hh:mm:ss a')}</a>`); 
+  } else {
+    alert('error: scores failed to publish - ' + status.error); 
+  }
+})
 
 // utilities + general (not socket.io-specific)
 

@@ -1,12 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;700&display=swap');
+
 html {
   cursor: default;
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-text-size-adjust: 100%;
 }
 
 .c-inner {
   background: rgba(0, 0, 0, 0.3); 
   padding: 12px 20px;
-  backdrop-filter: blur(3px);
   max-width: 1200px;
   margin: auto;
 }
@@ -15,8 +18,145 @@ html {
   background-image: url(/images/bk2.jpg);
 }
 
+/* Messages at top */
+
+.message {
+  text-align: left;
+  background: #38374799;
+  border: 1px solid #fff;
+  padding: 6px 10px;
+  display: none;
+  font-size: 1.0rem;
+}
+
+/* Scoring specific CSS */
+
+#scores-table {
+  margin-top: 8px;
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #fff;
+  font-size: 1.2rem;
+  font-family: 'Source Sans Pro', 'Raleway', sans-serif;
+}
+
+thead {
+  background: #38374799;
+  border-bottom: 1px solid #fff;
+}
+
+tbody tr {
+  border-bottom: 1px solid #fff;
+  transition: background 0.2s;
+}
+
+tbody tr td {
+  background: #00000031;
+}
+
+tbody tr.hl td {
+  background: #8dceff36;
+}
+
+tbody tr.hl td:nth-child(1) span.scores-team {
+  color: #9dffff;
+}
+
+th, td {
+  padding: 2px 6px;
+}
+
+thead tr th:nth-child(1), tbody tr td:nth-child(1), thead tr th:nth-last-child(2), tbody tr td:nth-last-child(2) {
+  border-right: 1px solid #ffffff6f;
+}
+
+.scores-tb {
+  color: #bdd4ff; 
+  cursor: help;
+}
+
+.scores-cor {
+  color: #baf8bd; 
+  cursor: help;
+}
+
+.scores-pts {
+  color: #baf8ee; 
+  /* cursor: help; */
+}
+
+.scores-rank {
+  font-size: 2.4rem;
+  font-weight: bold;
+}
+
+td .scores-det {
+  height: 24px;
+  overflow-y: hidden;
+}
+
+td .scores-det .scores-pts {
+  height: 24px;
+  overflow: hidden;
+  transition: height 0.2s;
+}
+
+td:hover[tabindex] .scores-det .scores-pts, td:focus .scores-det .scores-pts {
+  height: 0px; 
+}
+
+td[tabindex]:hover, td:focus {
+  outline: none;
+  box-shadow: inset 0px 0px 4px #ffffffaf;
+  cursor: pointer;
+}
+
+td:focus-visible {
+  /* box-shadow: none; */
+  outline: 2px solid #65d9ff;
+}
+
+.scores-rank-sm{
+  font-size: 2.0rem;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.scores-team-sub {
+  font-size: 0.9rem;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+.scores-team {
+  font-size: 1.6rem;
+}
+
+@media only screen and (max-width: 540px) {
+  thead tr th:not(:nth-child(1)):not(:nth-last-child(1)), tbody tr td:not(:nth-child(1)):not(:nth-last-child(1)) {
+    display: none;
+  }
+  #s-mobile.message {
+    display: block;
+  }
+}
+
 @media only screen and (min-width: 800px) {
   .c-inner {
     margin-top: 12px;
+    margin-bottom: 18px;
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+  }
+
+  tbody tr td:not(:nth-child(1)) {
+    width: 90px;
+  }
+}
+
+@media only screen and (max-width: 799px) {
+  table {
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
   }
 }
