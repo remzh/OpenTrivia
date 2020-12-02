@@ -63,6 +63,10 @@ p{
   margin-bottom: 8px;
 }
 
+input::placeholder {
+  color: #bbb;
+}
+
 /* Scoring */
 
 #scores-outer {

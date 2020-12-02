@@ -116,6 +116,7 @@ secSocket.on('question-full', (data) => {
     $('#timer').text('0');
     $('#timer').addClass('timer-low')}
   else{
+    $('#timer').html(`<i class='fas fa-stopwatch'></i>`); 
     $('#timer').removeClass('timer-low')}
   $('#main').css('opacity', 0); 
   $('.opt').removeClass('correct').removeClass('incorrect');
@@ -144,6 +145,11 @@ secSocket.on('answer-stats', (data) => {
 })
 
 socket.on('timer', (t) => {
+  if (t === -1) {
+    $('#timer').html(`<i class='fas fa-stopwatch'></i>`); 
+    $('#timer').removeClass('timer-low');
+    return; 
+  }
   $('#timer').text(t); 
   if(t <= 3){
     $('#timer').addClass('timer-low')}

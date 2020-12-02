@@ -294,6 +294,11 @@ ping();
 
 // Timer functionality
 socket.on('timer', (v) => {
+  if (v === -1) {
+    $('#q-timer').css({'opacity': 1, 'background': `#0000a07f`}); 
+    $('#q-timer').html(`<i class='fas fa-stopwatch'></i> Timer paused.`);
+    return; 
+  }
   $('#q-timer').css({'opacity': 1, 'background': `#${v>10?'00':(250 - v*25).toString(16).padStart(2, 0)}00007f`}); 
   $('#q-timer').html(`<i class='fas fa-stopwatch'></i> <b>${v} second${v!=1?'s':''}</b> remaining.`);
 }); 

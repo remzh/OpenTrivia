@@ -333,6 +333,7 @@ let question = {
   current: {}, // current question taken from array
   curIndex: -1, // index of question in array
   scores: {}, // actual scores of each team (TeamID: 0/1)
+  scoresSaved: false, // whether the scores for this question have been saved or not
   tb: {}, // tiebreak values (each timed question can gie up to 10.00 of TB)
   selections: {} // only used in SA questions to record answers
 }
@@ -373,6 +374,7 @@ function getCurrentQuestion(full){
       out.url = obj.question; 
     }
     if(full){
+      out.scoresSaved = question.scoresSaved; 
       out.round = obj.round; 
       out.question = obj.question; 
       out.image = obj.image; 
@@ -411,7 +413,12 @@ function mapQuestionEntry(inp){
   }
 }
 
-function loadQuestion(index){
+function loadQuestion(index, socket){
+  if (!questiondb[index]) {
+    socket.emit('update', {type: 'question', msg: `Question index ${index} does not exist`}); 
+    return; 
+  }
+  question.active = true; 
   question.current = mapQuestionEntry(questiondb[index]);
   question.curIndex = index; 
   question.timestamp = Date.now(); 
@@ -455,7 +462,7 @@ function processAnswer(team, ans, socket){
       question.scores[tid] = 0; 
       return false; 
     }
-  } else if(q.type === 'sa'){
+  } else if(q.type === 'sa' || q.type === 'bz'){
     ans = ans.toLowerCase().trim(); 
     let cor = q.answer.toLowerCase().trim(); // correct answer
     if(!q.timed) {
@@ -499,13 +506,15 @@ function getAnswerStats(){
       c: Math.round(resp.filter(i => i=='c').length/t*1000)/1000, 
       d: Math.round(resp.filter(i => i=='d').length/t*1000)/1000, 
       e: Math.round(resp.filter(i => i=='e').length/t*1000)/1000, 
+      scoresSaved: question.scoresSaved
     }
-  } else if(question.current.type === 'SA'){
+  } else if(question.current.type === 'SA' || question.current.type === 'BZ'){
     return {
-      type: 'sa', 
+      type: question.current.type.toLowerCase(), 
       ans: question.current.answer, 
-      correct: Object.values(question.scores).filter(r => r==1).length, 
-      total: Object.values(question.scores).length
+      correct: Object.values(question.scores).filter(r => r>0).length, 
+      total: Object.values(question.scores).length, 
+      scoresSaved: question.scoresSaved
     }
   }
   return false
@@ -531,6 +540,7 @@ function startTimer(s){
 function stopTimer(){
   clearInterval(question.timer.interval); 
   question.timer.interval = false; 
+  io.emit('timer', -1); 
 }
 
 // End question management
@@ -548,31 +558,9 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
 }).on('connection', function(socket){
   logger.info('[sec] connected: '+socket.id);
 
-  socket.on('test', function(param){
-    logger.info('[sec] recieved command: test ['+param+']')
-    switch(param){
-      case 'mc': 
-        io.emit('question', {
-          type: 'mc', 
-          num: 1, 
-          options: ['Apple', 'Banana', 'Carrot', 'Dragonfruit', 'Eggplant'], 
-          canChange: true
-        })
-        break; 
-      case 'sa': 
-        io.emit('question', {
-          type: 'sa', 
-          num: 2
-        })
-        break; 
-      case 'sp': 
-        io.emit('question', {
-          type: 'sp', 
-          url: 'https://docs.google.com/forms/d/e/1FAIpQLSdjHuRngsHN1kXuf-Sq_-c_NdAY09MkEvXmRfCLmmICQkibEg/viewform'
-        })
-        break; 
-    }
-  })
+  socket.on('action-nextQuestion', () => {
+    loadQuestion(question.curIndex + 1, socket); 
+  }); 
 
   socket.on('status', function(){
     if(question.curIndex !== -1){
@@ -580,15 +568,30 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
   })
 
   socket.on('load-question', function(q){
-    question.active = true; 
-    loadQuestion(q); 
+    loadQuestion(q, socket); 
   })
 
   socket.on('start-timer', function(t){
-    startTimer(t); 
+    if (t) {
+      startTimer(t); 
+    } else {
+      let type = getCurrentQuestion().type; 
+      switch (type) {
+        case 'sa': 
+          startTimer(20); 
+          break; 
+        default: 
+          startTimer(10); 
+          break; 
+      }
+    }
   })
 
-  socket.on('show-answer', function(){
+  socket.on('stop-timer', function() {
+    stopTimer(); 
+  })
+
+  socket.on('show-answer', function(saveScores){
     if(!question.current || !question.current.answer){
       io.of('secure').emit('update', 'processAnswer error: no question selected server-side'); 
       return; 
@@ -596,6 +599,14 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     if(question.active){
       io.emit('stop'); // stop accepting answers in case it wasn't already turned off
       question.active = false; 
+    }
+    if (saveScores) {
+      question.scoresSaved = true; 
+      let r = parseInt(getCurrentQuestion(true).round), n = parseInt(getCurrentQuestion(true).num); 
+      if(scoring.countedRounds.indexOf(r) !== -1){
+        socket.emit('update', `Scores saved for R${r} Q${n}`);
+        saveScores(r, n, question.scores, question.tb); 
+      }
     }
     io.of('secure').emit('answer-stats', getAnswerStats());
     io.emit('answer', question.current.answer.toLowerCase());
@@ -614,6 +625,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
   socket.on('scores-save', function(){
     let r = parseInt(getCurrentQuestion(true).round); 
     let n = parseInt(getCurrentQuestion(true).num); 
+    question.scoresSaved = true; 
     if(scoring.countedRounds.indexOf(r) !== -1){
       saveScores(r, n, question.scores, question.tb); 
       socket.emit('update', `Scores saved for R${r} Q${n}`);
@@ -622,17 +634,17 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     }
   })
 
-  socket.on('scores-load', function(r){
-    loadScores(r).then(res => {
-      socket.emit('update', res); 
-    })
-  })
+  // socket.on('scores-load', function(r){
+  //   loadScores(r).then(res => {
+  //     socket.emit('update', res); 
+  //   })
+  // })
 
-  socket.on('scores-rank', function(r){
-    rankScores(r).then(res => {
-      socket.emit('update', res); 
-    })
-  })
+  // socket.on('scores-rank', function(r){
+  //   rankScores(r).then(res => {
+  //     socket.emit('update', res); 
+  //   })
+  // })
 
   socket.on('scores-compute', function(r){
     computeOverallScores(r?r:false, true).then(res => {
@@ -683,11 +695,11 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     io.of('secure').emit('update', {type: 'scores-publish', ok: true, ts}); 
   })
 
-  socket.on('scores-tally', function(r){
-    tallyScores(r).then(res => {
-      socket.emit('update', res); 
-    })
-  })
+  // socket.on('scores-tally', function(r){
+  //   tallyScores(r).then(res => {
+  //     socket.emit('update', res); 
+  //   })
+  // })
 });
 
 /**

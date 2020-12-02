@@ -81,7 +81,17 @@ socket.on('pong', () => {
 setInterval(ping, 4000); 
 
 socket.on('timer', (t) => {
-  $('.field-timer').text(`${t} second${t===1?'':'s'} remaining.`); 
+  if (t === -1) {
+    $('.field-timer').text(`Timer paused.`); 
+    $('.btn-auto').prop('disabled', false).text('Start Timer')
+  } else {
+    $('.field-timer').text(`${t} second${t===1?'':'s'} remaining.`); 
+    if (t === 0) {
+      $('.btn-auto').prop('disabled', false).text('Show Results'); 
+    } else {
+      $('.btn-auto').prop('disabled', true).text('Waiting for Timer'); 
+    }
+  }
 })
 
 // actual host stuff
@@ -96,11 +106,22 @@ secSocket.on('update', (msg) => {
 secSocket.on('question-full', (q) => {
   logger.info('[sec] got question: '+JSON.stringify(q)); 
   $('.field-timer').text(`No timer active.`); 
+  $('.field-q-num').text(`R${q.round}Q${q.num} • ${q.type.toUpperCase()}`);
   $('#q-cur-det').text(`R${q.round}Q${q.num} • ${q.type.toUpperCase()} • ${q.category}`);
   $('#q-cur').html(q.question + (q.type==='mc'?`<br/><i> - ${q.options.join('</i><br/><i> - ')}</i>`:'')); 
   $('#q-ans').text(0); 
   $('#q-cor').text(0);
   $('#q-ans-val').prop('title', `Answer: ${q.answer}`);
+  $('#i-timer').prop('placeholder', q.type==='sa'?'20':'10'); 
+
+  $('.btn-auto').prop('disabled', false); 
+  if (q.active) {
+    $('.btn-auto').text('Start Timer')
+  } else if (!q.scoresSaved) {
+    $('.btn-auto').text('Show Results')
+  } else {
+    $('.btn-auto').text('Next Question')
+  }
 }); 
 
 secSocket.on('question-list', (l) => {
@@ -114,7 +135,11 @@ $('#btn-loadQuestion').on('click', () => {
 })
 
 $('#btn-startTimer').on('click', () => {
-  secSocket.emit('start-timer', $('#i-timer').val()); 
+  secSocket.emit('start-timer', $('#i-timer').val()?$('#i-timer').val():false); 
+})
+
+$('#btn-stopTimer').on('click', () => {
+  secSocket.emit('stop-timer'); 
 })
 
 secSocket.on('ans-update', (dt) => {
@@ -149,6 +174,37 @@ secSocket.on('scores-publish', (status) => {
     alert('error: scores failed to publish - ' + status.error); 
   }
 })
+
+// magic button
+$('.btn-auto').on('click', (e) => {
+  let val = $('.btn-auto').text(); 
+  $('.btn-auto').prop('disabled', true).text('Processing...'); 
+  switch (val) {
+    case 'Next Question': 
+      secSocket.emit('action-nextQuestion'); 
+      break; 
+    case 'Start Timer': 
+      secSocket.emit('start-timer'); 
+      break; 
+    case 'Show Results': 
+      secSocket.emit('show-answer', 1); 
+      break; 
+    default: 
+      alert(`Invalid parameter. Reloading the page may resolve this.`); 
+      break; 
+  }
+})
+
+secSocket.on('answer-stats', (stats) => {
+  if (stats.scoresSaved) {
+    $('.btn-auto').text('Showing Answers');
+    setTimeout(() => {
+      $('.btn-auto').prop('disabled', false).text('Next Question');
+    }, 2000); 
+  } else {
+    $('.btn-auto').text('Waiting for Score Save');
+  }
+}); 
 
 // utilities + general (not socket.io-specific)
 
