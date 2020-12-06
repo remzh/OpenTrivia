@@ -21,8 +21,10 @@
           <i class='fas fa-stopwatch'></i>
         </div>
       </div>
-      <h1 id='question'></h1>
       <div class='row'>
+        <h1 id='question'></h1>
+      </div>
+      <div class='row' style='flex-shrink: 1;'>
         <div id='q-options'>
           <div id='opt-a' class='opt'><div class='opt-bar'></div><div class='opt-letter'>A</div> <span id='sp-a' class='opt-ans'></span></div>
           <div id='opt-b' class='opt'><div class='opt-bar'></div><div class='opt-letter'>B</div> <span id='sp-b' class='opt-ans'></span></div>
@@ -32,6 +34,13 @@
         </div> 
         <div id='q-image'>
           <img id='image'/>
+        </div>
+        <div id='q-stats'>
+          <!-- For short answer, buzzer, and "are you ready" (type=md) questions -->
+          <div id='q-pb-outer'><div id='q-pb-inner'></div></div>
+          <p>
+            <b id='q-stats-num'>0%</b> of teams <span id='q-stats-msg'>have correctly answered!</span>
+          </p>
         </div>
       </div>
     </div>

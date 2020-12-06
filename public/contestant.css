@@ -1,6 +1,8 @@
 html {
   -moz-user-focus: none;
+  -webkit-user-select: none;
   user-select: none;
+  overscroll-behavior: none;
 }
 
 @keyframes pulse {
@@ -42,6 +44,10 @@ html {
   margin: 0.5em 0 0.2em;
 }
 
+#q-sa {
+  padding-bottom: 4px;
+}
+
 .q-sa, .q-ind{
   /* question-short answer, question-indicator */
   padding: 4px 8px;
@@ -62,6 +68,7 @@ html {
   transition: all 0.14s;
   border: none; 
   background: #ffffffaf;
+  color: #000;
   border-radius: 0; 
   border-bottom: 1px solid #555;
 }
@@ -73,7 +80,8 @@ html {
 #i-sa:focus{
   outline: none;
   background: #d5e2ffaf;
-  border-bottom: 2px solid #4040cc;
+  border-color: #4040cc;
+  box-shadow: 0 1px 0 0 #4040cc;
 }
 
 a button{

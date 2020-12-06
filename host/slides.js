@@ -4,6 +4,8 @@ let socket = io({
 let secSocket = io.connect('/secure');
 let status = 0; 
 
+let curType = ''; 
+
 function showStatus(type, msg){
   let map = {
     'error': ['fa-exclamation-triangle', 'st-red'], 
@@ -75,8 +77,31 @@ socket.on('pong', () => {
 })
 setInterval(ping, 7500); 
 
+blurInterval = false; 
 function updateQuestion(data){
-  $('#question').text(data.question); 
+  curType = data.type; 
+  
+  // Render question
+  $('#question').css('font-size', '3.5rem'); 
+  if (data.question.indexOf('|') === -1) {
+    $('#question').text(data.question); 
+  } else {
+    $('#question').html(data.question.split('|')[0] + '<br/>' + data.question.split('|').slice(1).map(r => `<span class='blurred'><span class='hint'>Hint: </span>${r}</span>`).join('<br/>')); 
+    if (blurInterval) clearInterval(blurInterval); 
+    blurInterval = setInterval(() => {
+      if ($('.blurred').length > 0) {
+        $('.blurred').first().removeClass('blurred');
+      } else {
+        clearInterval(blurInterval); 
+        blurInterval = false; 
+      }
+    }, 10000); 
+  }
+
+  if ($('#question')[0].offsetHeight > 300) {
+    $('#question').css('font-size', '2.9rem')}
+
+  // Round / Question Number info
   if(data.num){
     $('#qnum').text(`R${data.round} Q${data.num}`)
   } else if(data.round === 'B'){
@@ -95,6 +120,7 @@ function updateQuestion(data){
   if(data.type === 'mc'){
     $('#q-image').removeClass('img-fullWidth');
     $('#q-options').show(); 
+    $('#q-stats').hide(); 
     let p = ['a', 'b', 'c', 'd', 'e']; 
     for(let i = 0; i <= 4; i++){
       if(data.options[i]){
@@ -106,6 +132,18 @@ function updateQuestion(data){
   }
   else{
     $('#q-image').addClass('img-fullWidth');
+    if (data.type === 'sa' || data.type === 'bz' || data.type === 'md') {
+      $('#q-stats').show(); 
+      $('#q-pb-inner').css('width', '0%');
+      $('#q-stats-num').text(`0%`); 
+      if (data.type === 'md') {
+        $('#q-stats-msg').text('are ready!'); 
+      } else {
+        $('#q-stats-msg').text('have correctly answered!'); 
+      }
+    } else {
+      $('#q-stats').hide(); 
+    }
   }
   $('#image').prop('style', `height: ${window.innerHeight - $('#question')[0].offsetHeight - 150}px`)
 }
@@ -141,6 +179,16 @@ secSocket.on('answer-stats', (data) => {
     setTimeout(() => {
       $('.opt-perc').css('opacity', 1);
     }, 800);
+  }
+})
+
+secSocket.on('answer-update', (data) => {
+  if (curType === 'sa' || curType === 'bz' || curType === 'md') {
+    let correct = data.correct, totalTeams = data.total; 
+    if (correct > totalTeams) totalTeams = correct; 
+    // $('#q-stats-num').text(`${correct}/${totalTeams} (${Math.round(100*correct/totalTeams)}%)`);
+    $('#q-stats-num').text(`${Math.round(100*correct/totalTeams)}%`);
+    $('#q-pb-inner').css('width', `${Math.round(1000*correct/totalTeams)/10}%`);
   }
 })
 

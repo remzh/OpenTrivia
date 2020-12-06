@@ -35,6 +35,11 @@
           <h1>Welcome!</h1>
           <p>We'll begin the competition shortly.</p>
         </div>
+        <div id='q-md' class='q'>
+          <h2>Get ready!</h2>
+          <p>Press the button below when your team's ready.</p>
+          <button id='btn-r' class='btn-mc'><b><i class='far fa-check-circle'></i></b> My team's ready!</button>
+        </div>
         <div id='q-mc' class='q'>
           <button id='btn-a' class='btn-mc'><b>A</b> <span id='mc-1'></span></button><br/>
           <button id='btn-b' class='btn-mc'><b>B</b> <span id='mc-2'></span></button><br/>
@@ -45,7 +50,7 @@
         <div id='q-sa' class='q'>
           <input id='i-sa' maxlength='48' placeholder='Type here...'/>
           <p id='sa-recent' class='q'><span class='q-sa'>Most recent submission: <b id='sa-rec-val'></b></span></p>
-          <p id='sa-wrong-timed' class='q'><span class='q-sa incorrect'><b>Incorrect</b>, try again.</span></p>
+          <p id='sa-wrong-timed' class='q'><span class='q-sa incorrect'><b>Incorrect</b>, <span id='q-sa-incorrect-msg'>try again</span>.</span></p>
           <p id='sa-right-timed' class='q'><span class='q-sa correct'><i class='fas fa-check'></i> <b>Correct!</b> Time: <span id='sa-time'></span></span></p>
           <p id='sa-wrong' class='q'><span class='q-sa incorrect'><b>Oops.</b> Next time!</span></p>
           <p id='sa-right' class='q'><span class='q-sa correct'><i class='fas fa-check'></i> <b>Correct!</b> Nice job.</span></p>

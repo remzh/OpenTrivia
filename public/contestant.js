@@ -186,6 +186,8 @@ socket.on('question', (data) => {
       $('#q-sp').show(); 
       $('#a-sp').prop('href', data.url); 
       break; 
+    case 'md': 
+      $('#q-md').show(); 
   }
   if(!data.active){
     $('#q-num').hide(); 
@@ -209,7 +211,7 @@ socket.on('answer', (ans) => {
         $('#btn-'+ans).children('b').html(`<i class='fas fa-check'></i>`); 
       }
     }
-  } else if(qType === 'sa'){
+  } else if(qType === 'sa' || qType === 'bz'){
     $('#i-sa').prop('disabled', true); 
     $('#i-sa').val($('#i-sa').prop('placeholder')); 
     if(checkSA(ans, $('#i-sa').prop('placeholder'))){
@@ -233,6 +235,8 @@ socket.on('answer-ack', (ack) => {
       //   $('.btn-mc.pending').removeClass('pending'); 
       // } 
       $(`#btn-${ack.selected}`).prop('disabled', true).addClass('selected'); 
+    } else if (qType === 'md') {
+      $(`#btn-r`).prop('disabled', true).addClass('selected correct').children('b').html(`<i class='fas fa-check'></i>`); 
     }
     if (ack.sender) {
       showSnackbar('Answer Submitted!');
@@ -261,6 +265,11 @@ socket.on('answer-time', (inp) => {
       showSnackbar(`A teammate got the answer!`, 1); 
     }
   } else{
+    if (inp.message) {
+      $('#q-sa-incorrect-msg').text(inp.message);
+    } else {
+      $('#q-sa-incorrect-msg').text('try again');
+    }
     $('#sa-wrong-timed').show(); 
     $('#sa-wrong-timed').addClass('pulse'); 
     $('#sa-right-timed').hide(); 

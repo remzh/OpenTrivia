@@ -11,6 +11,9 @@ body{
   background-attachment: fixed;
   background-position: center;
   overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: default;
 }
 
 #sq{
@@ -51,12 +54,16 @@ body{
   border: none; 
   border-radius: 0; 
   border-bottom: 1px solid #555;
-  transition: border 0.3s, box-shadow 0.3s; 
+  transition: border 0.3s, box-shadow 0.3s, background 0.15s; 
 }
 
 #sq form button:focus{
   outline: none;
-  background: #d8ffdbb2; 
+  background: #cdf3ffb2; 
+}
+
+#sq form button:focus-visible{
+  background: #a5eaffb2; 
 }
 
 #failed{

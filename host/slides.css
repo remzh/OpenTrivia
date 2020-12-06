@@ -5,10 +5,13 @@
 html{
   -moz-user-select: none; 
   user-select: none;
-  
   border: 1px solid white; 
+  /* cursor: none; */
 }
 
+#footer{
+  cursor: default;
+}
 
 #bkimg{
   position: fixed; 
@@ -24,9 +27,16 @@ html{
 
 #main{
   padding: 0 10px;
-  margin: 20px 5% 0; 
+  margin: 20px 4% 0; 
   transition: opacity 0.2s;
+  display: flex;
+  flex-direction: column;
+  flex-basis: auto;
+  /* height: inherit; */
+  /* border: 1px solid red; */
 }
+
+/* Flexbox */
 
 /* Top "bar" (round info, category info, timer) */
 
@@ -62,6 +72,18 @@ html{
 h1{ 
   font-size: 3.5rem;
   margin: 12px 0 16px
+}
+
+h1 span{
+  transition: filter 0.4s; 
+}
+
+.blurred{
+  filter: blur(18px);
+}
+
+.hint{
+  color: #81d7ff;
 }
 
 /* MC Options */
@@ -150,9 +172,41 @@ h1{
 #q-image img{
   margin-left: 8px;
   max-height: 560px;
+  height: 100%;
 }
 
 .img-fullWidth{
   width: 100%; 
   text-align: center;
+}
+
+/* Question stats (sa/bz/md) */
+
+#q-stats{
+  width: 100%; 
+  text-align: center;
+}
+
+#q-stats p{
+  font-size: 1.8rem;
+}
+
+#q-pb-outer{
+  background: #c0c0c08f;
+  margin: auto;
+  height: 8px;
+  width: 60%;
+  margin-bottom: 12px;
+  position: relative;
+  /* max-width: ; */
+}
+
+#q-pb-inner{
+  position: absolute;
+  top: 0; 
+  left: 0; 
+  width: 0%; 
+  height: 8px;
+  background: #00ff6a8f;
+  transition: width 0.24s;
 }

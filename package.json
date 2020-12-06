@@ -1,6 +1,6 @@
 {
-  "name": "socketio-test",
-  "version": "1.0.0",
+  "name": "opentrivia",
+  "version": "0.23.0",
   "description": "",
   "main": "index.js",
   "scripts": {

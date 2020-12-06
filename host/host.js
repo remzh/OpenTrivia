@@ -142,11 +142,11 @@ $('#btn-stopTimer').on('click', () => {
   secSocket.emit('stop-timer'); 
 })
 
-secSocket.on('ans-update', (dt) => {
-  let total = Object.keys(dt).length; 
-  let correct = Object.values(dt).filter(r => r==1).length; 
-  $('#q-ans').text(total); 
-  $('#q-cor').text(correct);
+secSocket.on('answer-update', (dt) => {
+  // let total = Object.keys(dt).length; 
+  // let correct = Object.values(dt).filter(r => r==1).length; 
+  $('#q-ans').text(dt.attempted); 
+  $('#q-cor').text(dt.correct);
 })
 
 // scoring

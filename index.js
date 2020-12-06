@@ -426,27 +426,40 @@ function loadQuestion(index, socket){
   io.of('secure').emit('question-full', getCurrentQuestion(1)); 
 }
 
+/**
+ * Processes a contestant's answer by scoring it and sending feedback
+ * @param {object} team - team object from client session
+ * @param {*} ans - the answer a contestant selected
+ * @param {*} socket - the socket.io instance of the contestant
+ */
 function processAnswer(team, ans, socket){
   if(!question.active){
     socket.emit('answer-ack', {ok: false, msg: 'Question not active'})
     return; 
   }
 
-  let q = getCurrentQuestion(1); 
+  let q = getCurrentQuestion(1), sentAck = false, tid = team.TeamID; 
+
   if(typeof ans !== 'string' || !team.TeamID){
     socket.emit('answer-ack', {ok: false, msg: 'No answer provided'})
     logger.warn('Unable to process answer: Missing data'); 
     io.of('secure').emit('update', 'processAnswer error: missing required data'); 
     return false;
   }
-  else if(!q.answer){
+  else if(!q.answer || q.type === 'md'){
+    if (q.type === 'md') { // "are you ready" screen
+      if (ans.toLowerCase() === 'r') {
+        question.scores[tid] = 1; 
+        teamBroadcast(socket, 'answer-ack', {ok: true, selected: 'r'});
+        return true; 
+      }
+      return false; 
+    }
     logger.warn('Unable to process answer: No question selected'); 
     socket.emit('answer-ack', {ok: false, msg: 'No question active'})
     io.of('secure').emit('update', `processAnswer error: no question selected server-side [${team.TeamID}]`); 
     return false;
   }
-  let sentAck = false; 
-  let tid = team.TeamID; 
   if(q.type === 'mc'){
     if (['a', 'b', 'c', 'd', 'e'].indexOf(ans.toLowerCase()) === -1) {
       socket.emit('answer-ack', {ok: false, msg: 'Invalid multiple choice option'})
@@ -467,29 +480,56 @@ function processAnswer(team, ans, socket){
     let cor = q.answer.toLowerCase().trim(); // correct answer
     if(!q.timed) {
         socket.emit('answer-ack', {ok: true})}
-    if(ans.slice(0, 1) !== cor.slice(0, 1)){
-      question.scores[tid] = 0; // first letter must match
-      if(q.timed){
+
+    if(parseFloat(cor).toString() === cor) { // numerical answer
+      let input = parseFloat(ans.replace(/,/g, '')), actual = parseFloat(cor); 
+      if (input === actual) {
         sentAck = true; 
-        socket.emit('answer-time', {time: Date.now() - question.timestamp, correct: false})}
-      return false; 
-    } else if(levenshtein(ans, cor) < 3  || levenshtein(ans, cor) === 3 && cor.length > 11){
-      question.scores[tid] = 1;
-      if(q.timed){
-        sentAck = true; 
-        teamBroadcast(socket, 'answer-time', {time: Date.now() - question.timestamp, correct: true, tb: tbCalc(), answer: q.answer})
-        question.tb[tid] = tbCalc()}
-      return true; 
-    } else{
+        teamBroadcast(socket, 'answer-time', {time: Date.now() - question.timestamp, correct: true, tb: tbCalc(), answer: q.answer}); 
+        question.scores[tid] = 1;
+        question.tb[tid] = tbCalc(); 
+        return true; 
+      } 
+      sentAck = true; 
       question.scores[tid] = 0;
-      if(q.timed){
+      if (input < actual) {
+        socket.emit('answer-time', {time: Date.now() - question.timestamp, correct: false, message: 'too low'}); 
+      } else if (input > actual) {
+        socket.emit('answer-time', {time: Date.now() - question.timestamp, correct: false, message: 'too high'}); 
+      } else {
+        socket.emit('answer-time', {time: Date.now() - question.timestamp, correct: false, message: 'should be a number'}); 
+      }
+    } else {
+      if(ans.slice(0, 1) !== cor.slice(0, 1)){ // non-numerical answer
+        question.scores[tid] = 0; // first letter must match
         sentAck = true; 
-        socket.emit('answer-time', {time: Date.now() - question.timestamp, correct: false})}
-      return false; 
+        socket.emit('answer-time', {time: Date.now() - question.timestamp, correct: false}); 
+        return false; 
+      } else if(levenshtein(ans, cor) < 3  || levenshtein(ans, cor) === 3 && cor.length > 11){
+        sentAck = true; 
+        teamBroadcast(socket, 'answer-time', {time: Date.now() - question.timestamp, correct: true, tb: tbCalc(), answer: q.answer}); 
+        question.scores[tid] = 1;
+        question.tb[tid] = tbCalc(); 
+        return true; 
+      } else{
+        question.scores[tid] = 0;
+        sentAck = true; 
+        socket.emit('answer-time', {time: Date.now() - question.timestamp, correct: false}); 
+        return false; 
+      }
     }
+
   }
   if(!sentAck){
     socket.emit('answer-ack', {ok: false, msg: `We couldn't understand your answer. Please contact a dev.`})}
+}
+
+function emitAnswerUpdate(){
+  io.of('secure').emit('answer-update', {
+    attempted: Object.keys(question.scores).length, 
+    correct: Object.values(question.scores).filter(r => r>0).length, 
+    total: userdb.length
+  });  
 }
 
 function getAnswerStats(){
@@ -549,14 +589,14 @@ function stopTimer(){
 const nsp = io.of('/secure');
 nsp.use(sharedsession(session(sess))).use(function(socket, next){
   if (socket.handshake.session && socket.handshake.session.host){ // hosts only!
-    logger.info('[sec] authenticated: '+socket.id)
+    logger.debug('[sec] authenticated: '+socket.id)
     next(); 
   } else {
-    logger.info('[sec] rejected: '+socket.id)
+    logger.debug('[sec] rejected: '+socket.id)
       next(new Error('authentication error'));
   }    
 }).on('connection', function(socket){
-  logger.info('[sec] connected: '+socket.id);
+  logger.debug('[sec] connected: '+socket.id);
 
   socket.on('action-nextQuestion', () => {
     loadQuestion(question.curIndex + 1, socket); 
@@ -724,19 +764,19 @@ function teamBroadcast(socket, message, payload={}) {
 
 io.of('/').use(function(socket, next){
   if (socket.handshake.session && (socket.handshake.session.user || socket.handshake.session.host)){ // authorized users only
-    logger.info('[std] authenticated: '+socket.id);
+    logger.debug('[std] authenticated: '+socket.id);
     if (socket.handshake.session.user && socket.handshake.session.user.TeamID) {
       socket.join(`team-${socket.handshake.session.user.TeamID}`); 
     }
     socket.join('users'); 
     next(); 
   } else {
-    logger.info('[std] rejected: '+socket.id); 
+    logger.debug('[std] rejected: '+socket.id); 
     socket.emit('status', {valid: false}); 
       next(new Error('authentication error'));
   }    
 }).on('connection', function(socket){
-  logger.info('[std] connected: '+socket.id);  
+  logger.debug('[std] connected: '+socket.id);  
   socket.on('status', function(){
     if(socket.handshake.session.user){
       socket.emit('status', {valid: true, user: socket.handshake.session.user}); 
@@ -752,12 +792,12 @@ io.of('/').use(function(socket, next){
   })
 
   socket.on('disconnect', function(){
-    logger.info('user disconnected');
+    // logger.info('user disconnected');
   });
 
   socket.on('sec-login', function(){
     if(socket.handshake.session.host){
-      logger.info('[sec] authenticated: '+socket.id); 
+      logger.debug('[sec] authenticated: '+socket.id); 
       socket.join('users'); 
       socket.join('hosts'); 
       socket.emit('status', {valid: true}); 
@@ -767,12 +807,11 @@ io.of('/').use(function(socket, next){
     }
   })
 
-
   socket.on('answer', function(ans){
     if(socket.handshake.session.user){
       logger.info('[std] recieved answer: '+ans);  
       processAnswer(socket.handshake.session.user, ans, socket);
-      io.of('secure').emit('ans-update', question.scores);  
+      emitAnswerUpdate(); 
     } else{
       socket.emit('status', {valid: false});
     }
