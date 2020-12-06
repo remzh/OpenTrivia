@@ -322,6 +322,14 @@ async function computeOverallScores(input, showTeamID=true){
 }
 
 // End of scoring management
+// Message
+
+let currentMessage = {
+  title: 'Welcome!', 
+  body: `We'll begin the competition shortly.`
+}; 
+
+// End of messages
 // Question management
 
 let question = {
@@ -450,6 +458,7 @@ function processAnswer(team, ans, socket){
     if (q.type === 'md') { // "are you ready" screen
       if (ans.toLowerCase() === 'r') {
         question.scores[tid] = 1; 
+        question.selections[tid] = 'r'; 
         teamBroadcast(socket, 'answer-ack', {ok: true, selected: 'r'});
         return true; 
       }
@@ -457,13 +466,13 @@ function processAnswer(team, ans, socket){
     }
     logger.warn('Unable to process answer: No question selected'); 
     socket.emit('answer-ack', {ok: false, msg: 'No question active'})
-    io.of('secure').emit('update', `processAnswer error: no question selected server-side [${team.TeamID}]`); 
+    io.of('secure').emit('update', `processAnswer error: no question selected server-side [${tid}]`); 
     return false;
   }
   if(q.type === 'mc'){
     if (['a', 'b', 'c', 'd', 'e'].indexOf(ans.toLowerCase()) === -1) {
       socket.emit('answer-ack', {ok: false, msg: 'Invalid multiple choice option'})
-      io.of('secure').emit('update', `processAnswer error: invalid MC option (${ans.toLowerCase()}) [${team.TeamID}]`); 
+      io.of('secure').emit('update', `processAnswer error: invalid MC option (${ans.toLowerCase()}) [${tid}]`); 
       return; 
     }
     question.selections[tid] = ans.toLowerCase(); 
@@ -476,6 +485,7 @@ function processAnswer(team, ans, socket){
       return false; 
     }
   } else if(q.type === 'sa' || q.type === 'bz'){
+    question.selections[tid] = ans; 
     ans = ans.toLowerCase().trim(); 
     let cor = q.answer.toLowerCase().trim(); // correct answer
     if(!q.timed) {
@@ -776,12 +786,35 @@ io.of('/').use(function(socket, next){
       next(new Error('authentication error'));
   }    
 }).on('connection', function(socket){
-  logger.debug('[std] connected: '+socket.id);  
-  socket.on('status', function(){
+  /**
+   * Message sent upon initial socket connection to get current info
+   * @param {number} mode - 0/undefined if initial connection, 1 if reconnection
+   */
+  socket.on('status', function(mode){
     if(socket.handshake.session.user){
-      socket.emit('status', {valid: true, user: socket.handshake.session.user}); 
+      if (!mode) {
+        socket.emit('status', {valid: true, user: socket.handshake.session.user})}
+
       if(question.curIndex !== -1){
         socket.emit('question', getCurrentQuestion())}
+      else {
+        socket.emit('announcement', currentMessage); 
+      }
+
+      let sel = question.selections[socket.handshake.session.user.TeamID]; 
+      if (sel){
+        // send saved answer if applicable
+        let {type, answer, timed} = getCurrentQuestion(1);
+        if (type === 'mc' || type === 'md') {
+          socket.emit('answer-ack', {ok: true, selected: sel}); 
+        } else if ((type === 'sa' && timed) || type === 'bz') {
+          if (question.scores[socket.handshake.session.user.TeamID] > 0) {
+            socket.emit('answer-time', {correct: true, answer: answer}); 
+          }
+        } else if (type === 'sa') {
+          socket.emit('answer-ack', {ok: true, selected: sel}); 
+        }
+      }
     } else{
       socket.emit('status', {valid: false}); 
     }
@@ -809,7 +842,7 @@ io.of('/').use(function(socket, next){
 
   socket.on('answer', function(ans){
     if(socket.handshake.session.user){
-      logger.info('[std] recieved answer: '+ans);  
+      logger.debug('[std] recieved answer: '+ans);  
       processAnswer(socket.handshake.session.user, ans, socket);
       emitAnswerUpdate(); 
     } else{

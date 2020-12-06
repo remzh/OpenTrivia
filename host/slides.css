@@ -182,6 +182,10 @@ h1 span{
 
 /* Question stats (sa/bz/md) */
 
+.valign{
+  margin-top: 20px;
+}
+
 #q-stats{
   width: 100%; 
   text-align: center;

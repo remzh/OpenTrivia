@@ -20,7 +20,7 @@ html {
   animation-duration: 0.6s;
 }
 
-.q:not(#q-wel) {
+.q:not(#q-msg) {
   display: none;
 }
 
@@ -36,7 +36,7 @@ html {
   padding: 8px 16px;
 }
 
-#q-num, #q-stop, #q-wel{
+#q-num, #q-stop, #q-msg, #q-sp p, #q-md h2, #q-md p{
   text-shadow: 1px 1px 3px #444;
 }
 

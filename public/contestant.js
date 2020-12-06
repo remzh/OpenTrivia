@@ -2,6 +2,7 @@ let socket = io({
   transports: ['websocket']
 });
 let status = 0; // 0 = offline,
+let lastConnected = 0; 
 let user = false; 
 
 let multiSelect = true; 
@@ -111,6 +112,9 @@ socket.on('connect', () => {
     socket.emit('status'); 
     showStatus('pending', 'Authenticating...'); 
     return; 
+  } else if (Date.now() - lastConnected > 500) {
+    // check if question has since changed
+    socket.emit('status', 1); 
   }
   showStatus('success', 'Connected'); 
   ping(); 
@@ -123,6 +127,7 @@ socket.on('disconnect', (reason) => {
     alert('Disconnected by server. ')
   } else {
     $('#s-ping-outer').hide(); 
+    lastConnected = Date.now(); 
     showStatus('pending', 'Reconnecting...'); 
   }
 })
@@ -188,6 +193,7 @@ socket.on('question', (data) => {
       break; 
     case 'md': 
       $('#q-md').show(); 
+      $('#btn-r').prop('disabled', false).removeClass('selected correct').html(`<b><i class='far fa-check-circle'></i></b> My team's ready!`);
   }
   if(!data.active){
     $('#q-num').hide(); 
@@ -195,6 +201,16 @@ socket.on('question', (data) => {
     $('.btn-mc').prop('disabled', true); 
     $('#i-sa').prop('disabled', true); 
   }
+})
+
+socket.on('announcement', (data) => {
+  logger.info('recieved announcement: '+JSON.stringify(data));
+  $('.q').hide(); 
+  $('#q-timer').css('background', ''); 
+
+  $('#q-msg h1').text(data.title); 
+  $('#q-msg p').text(data.body); 
+  $('#q-msg').show(); 
 })
 
 socket.on('answer', (ans) => {
