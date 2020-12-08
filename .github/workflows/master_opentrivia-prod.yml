@@ -20,11 +20,19 @@ jobs:
       with:
         node-version: '12.x'
 
-    - name: npm install, build, and test
+    - name: Environment variables
+      env:
+        DB_URL: ${{secrets.OpenTrivia_MongoDB}}
+        HOST_KEY: ${{secrets.OpenTrivia_HostKey}}
+        SESSION_KEY: ${{secrets.OpenTrivia_SessionKey}}
+        OT_QUESTIONS: ${{secrets.OpenTrivia_Questions}}
+        OT_USERS: ${{secrets.OpenTrivia_Users}}
+        OT_SCORING_ROUNDS: 1,2,3,4,5,6
+        OT_SCORING_MULT: 10,11,12,13,14,40
+
+    - name: npm install
       run: |
         npm install
-        npm run build --if-present
-        npm run test --if-present
 
     - name: 'Deploy to Azure Web App'
       uses: azure/webapps-deploy@v2
