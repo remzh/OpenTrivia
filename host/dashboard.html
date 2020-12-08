@@ -46,9 +46,15 @@
         <h3>Override Defaults</h3>
         <select id='sel-questions'></select> <button id='btn-loadQuestion'>Load</button><br/><br/>
         <input type='number' id='i-timer' style='width: 40px'/> <button id='btn-startTimer'>Start Timer</button> <button id='btn-stopTimer'>Pause Timer</button>
+        <h3>Announcement Page</h3>
+        <input id='i-ann-title' placeholder='Title'/>
+        <br/>
+        <input id='i-ann-body' placeholder='Body'/>
+        <br/>
+        <button id='btn-ann'>Post</button>
         <h2>Answers/Scoring</h2>
         <br/>
-        <button class='btn-lg' onclick='secSocket.emit("show-answer")'>Show Answer</button>
+        <button class='btn-lg' onclick='secSocket.emit("show-answer", 1)'>Show Answer</button><br/><button class='btn' onclick='secSocket.emit("show-answer")'>Show w/o saving</button>
         <br/><br/>
         <button class='btn-lg' onclick='secSocket.emit("scores-save")'>Save Scores</button>
         <!-- <button class='btn-lg' onclick='secSocket.emit("scores-compute", `1,2,3,4,5,6`)'>MAGIC</button> -->

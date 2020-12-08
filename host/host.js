@@ -159,8 +159,8 @@ secSocket.on('scores-host', (res) => {
   // <tr><th colspan='2'>Team</th><th colspan='${res.rounds.length}'>Rounds</th><th colspan='2'>Overall</th></tr>
   let out = `<thead><tr><th>ID</th><th>Team Name</th>${res.rounds.map(r => `<th class='scores-round'>R${r}</th>`).join('')}<th>Points</th><th>Rank</th></tr></thead><tbody>`; // construct heading
   res.data.forEach(r => {
-    let indiv = r.i.map(e => `<td>${e.s} <span class='scores-tb' title='TB: ${e.tb}'>(${Math.round(e.tb)})</span>${e.r === -1 ? '':` <span class='scores-rank'>[${e.r}]</span>`}</td>`).join(''); 
-    out += `<tr><td>${r.t}</td><td>${r.tn}</td>${indiv}<td>${r.s.s} <span class='scores-tb' title='TB: ${r.s.tb}'>(${r.s.tb.toFixed(1)})</span></td><td>${r.r}</td></tr>`
+    let indiv = r.i.map(e => `<td><span class='scores-green' title='Points: ${e.s}'>${e.c}</span>•<span class='scores-tb' title='TB: ${e.tb}'>${Math.round(e.tb)}</span>${e.r === -1 ? '':` <span class='scores-rank'>[${e.r}]</span>`}</td>`).join(''); 
+    out += `<tr><td>${r.t}</td><td><span class='scores-tb' onclick='alert("Team Members: ${r.tm}")' title="Team Members: ${r.tm}">[+]</span> ${r.tn}</td>${indiv}<td>${r.s.s} <span class='scores-tb' title='TB: ${r.s.tb}'>(${r.s.tb.toFixed(1)})</span></td><td>${r.r}</td></tr>`
   })
   out += '</tbody>'; 
   $('#scores-lu').text(moment().format('h:mm:ss a'))
@@ -207,6 +207,13 @@ secSocket.on('answer-stats', (stats) => {
 }); 
 
 // utilities + general (not socket.io-specific)
+
+$('#btn-ann').on('click', () => {
+  secSocket.emit('announce', {
+    title: $('#i-ann-title').val(), 
+    body: $('#i-ann-body').val()
+  }); 
+})
 
 $('#nav-cat a').on('click', (e) => {
   let ele = e.srcElement; 

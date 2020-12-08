@@ -80,8 +80,9 @@ setInterval(ping, 7500);
 blurInterval = false; 
 function updateQuestion(data){
   curType = data.type; 
-  
   // Render question
+  $('#timer').show(); // show the timer
+  $('#q-details').show(); 
   $('#question').css('font-size', '3.5rem'); 
   if (data.question.indexOf('|') === -1) {
     $('#question').text(data.question); 
@@ -147,6 +148,18 @@ function updateQuestion(data){
   }
   $('#image').prop('style', `height: ${window.innerHeight - $('#question')[0].offsetHeight - 150}px`)
 }
+
+socket.on('announcement', (data) => {
+  $('#main').css('opacity', 0); 
+  setTimeout(() => {
+    $('#q-details').hide(); 
+    $('#timer').hide(); 
+    $('#cat').text(''); 
+    $('#qnum').text('Announcement'); 
+    $('#question').text(data.body); 
+    $('#main').css('opacity', 1); 
+  }, 400)
+})
 
 secSocket.on('question-full', (data) => {
   logger.info('Recieved question: '+JSON.stringify(data));

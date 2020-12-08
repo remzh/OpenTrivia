@@ -244,9 +244,10 @@ async function rankScores(round){
  * Calculates the overall score by taking the sum of the points in all the rounds specified. 
  * Only teams that have answered at least one question in the first round will be counted. 
  * @param {string} input - rounds to be used, separated with commas 
+ * @param {boolean} showAllInfo - whether to also list members and team IDs
  * @returns {object} {ok: (boolean), data: (array)}
  */
-async function computeOverallScores(input, showTeamID=true){
+async function computeOverallScores(input, showAllInfo=true){
   try {
     let scores = [];
     let rounds = input ? input.split(',').map(r => parseInt(r)) : scoring.countedRounds; 
@@ -290,8 +291,9 @@ async function computeOverallScores(input, showTeamID=true){
         }
       }
       totalScores.push({
-        t: showTeamID ? team : team.slice(0, 1), 
+        t: showAllInfo ? team : team.slice(0, 1), 
         tn: userdb.find(r => r.TeamID === team).TeamName, 
+        ...(showAllInfo && {tm: userdb.find(r => r.TeamID === team).Members}),
         s: { // scores
           c: correct,
           s: points, 
@@ -743,6 +745,13 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
       }); 
     }
     io.of('secure').emit('update', {type: 'scores-publish', ok: true, ts}); 
+  })
+
+  socket.on('announce', function(msg) {
+    currentMessage.title = msg.title; 
+    currentMessage.body = msg.body; 
+    if (question.active) question.active = false; 
+    io.to('users').emit('announcement', currentMessage); 
   })
 
   // socket.on('scores-tally', function(r){

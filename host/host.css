@@ -104,6 +104,11 @@ thead tr th:nth-child(2), tbody tr td:nth-child(2), thead tr th:nth-last-child(3
   border-right: 1px solid #aaa;
 }
 
+.scores-green {
+  color: #aaffc6; 
+  cursor: help;
+}
+
 .scores-tb {
   color: #aac8ff; 
   cursor: help;
@@ -152,7 +157,7 @@ thead tr th:nth-child(2), tbody tr td:nth-child(2), thead tr th:nth-last-child(3
 
 @media only screen and (min-width: 980px) {
   thead th.scores-round, thead tr th:nth-last-child(2) {
-    width: 98px;
+    width: 88px;
   }
   
   thead tr th:nth-child(1), tbody tr td:nth-child(1), thead tr th:nth-last-child(1), tbody tr td:nth-last-child(1) {

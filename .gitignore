@@ -1,5 +1,6 @@
 node_modules
 .vscode
+.storage
 secure
 logs
 .env
