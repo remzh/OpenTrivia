@@ -1,0 +1,41 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: Build and deploy Node.js app to Azure Web App - opentrivia-prod
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@master
+
+    - name: Set up Node.js version
+      uses: actions/setup-node@v1
+      with:
+        node-version: '12.x'
+
+    - name: npm install
+      run: |
+        npm install
+      env:
+        DB_URL: ${{secrets.OpenTrivia_MongoDB}}
+        HOST_KEY: ${{secrets.OpenTrivia_HostKey}}
+        SESSION_KEY: ${{secrets.OpenTrivia_SessionKey}}
+        OT_QUESTIONS: ${{secrets.OpenTrivia_Questions}}
+        OT_USERS: ${{secrets.OpenTrivia_Users}}
+        OT_SCORING_ROUNDS: 1,2,3,4,5,6
+        OT_SCORING_MULT: 10,11,12,13,14,40
+
+    - name: 'Deploy to Azure Web App'
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'opentrivia-prod'
+        slot-name: 'production'
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_ae5826fdd6264f36bc0c9f0f9d2ae244 }}
+        package: .
