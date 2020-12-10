@@ -120,6 +120,8 @@ thead tr th:nth-child(2), tbody tr td:nth-child(2), thead tr th:nth-last-child(3
 }
 
 /* Specific CSS (for specific elements) */
+
+/* Auto Button */
 .btn-auto{
   text-align: left;
 }
@@ -146,6 +148,12 @@ thead tr th:nth-child(2), tbody tr td:nth-child(2), thead tr th:nth-last-child(3
 .btn-auto[disabled]{
   font-size: 1.4rem;
   color: #ccc; 
+}
+
+/* Announcements section */
+#i-ann-body{
+  width: 290px; 
+  margin-top: 6px;
 }
 
 @media only screen and (max-width: 980px) {

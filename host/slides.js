@@ -81,7 +81,11 @@ blurInterval = false;
 function updateQuestion(data){
   curType = data.type; 
   // Render question
-  $('#timer').show(); // show the timer
+  if (data.type !== 'md') {
+    $('#timer').show(); // show the timer
+  } else {
+    $('#timer').hide(); // unless it's an "are you ready" question
+  }
   $('#q-details').show(); 
   $('#question').css('font-size', '3.5rem'); 
   if (data.question.indexOf('|') === -1) {
@@ -149,20 +153,25 @@ function updateQuestion(data){
   $('#image').prop('style', `height: ${window.innerHeight - $('#question')[0].offsetHeight - 150}px`)
 }
 
-socket.on('announcement', (data) => {
+function displayAnnouncement(data) {
   $('#main').css('opacity', 0); 
   setTimeout(() => {
     $('#q-details').hide(); 
     $('#timer').hide(); 
+    $('#main').addClass('announcement'); 
     $('#cat').text(''); 
-    $('#qnum').text('Announcement'); 
+    $('#qnum').text(data.title); 
     $('#question').text(data.body); 
     $('#main').css('opacity', 1); 
   }, 400)
-})
+}
+
+secSocket.on('announcement', displayAnnouncement);
+socket.on('announcement', displayAnnouncement); 
 
 secSocket.on('question-full', (data) => {
   logger.info('Recieved question: '+JSON.stringify(data));
+  $('#main').removeClass('announcement'); 
   if(!data.active){
     $('#timer').text('0');
     $('#timer').addClass('timer-low')}
@@ -220,4 +229,13 @@ socket.on('timer', (t) => {
 
 window.onresize = function(){
   $('#image').prop('style', `height: ${window.innerHeight - $('#question')[0].offsetHeight - 150}px`)
+}
+
+let mhTimeout; 
+document.body.onmousemove = function() {
+  clearTimeout(mhTimeout); 
+  $('body').prop('style', 'cursor: default'); 
+  mhTimeout = setTimeout(() => {
+    $('body').prop('style', 'cursor: none'); 
+  }, 1600); 
 }

@@ -44,20 +44,27 @@
       <div class='col'>
         <h2>Control Panel:</h2>
         <h3>Override Defaults</h3>
-        <select id='sel-questions'></select> <button id='btn-loadQuestion'>Load</button><br/><br/>
+        <select id='sel-questions'></select> <button id='btn-loadQuestion'>Load</button> <button id='btn-loadNextQuestion'>Load Next</button><br/><br/>
         <input type='number' id='i-timer' style='width: 40px'/> <button id='btn-startTimer'>Start Timer</button> <button id='btn-stopTimer'>Pause Timer</button>
         <h3>Announcement Page</h3>
         <input id='i-ann-title' placeholder='Title'/>
+        <select id='i-ann-template'>
+          <option value='none'>(Select a Template)</option>
+          <option value="|">(Clear Fields)</option>
+          <optgroup label='Templates'>
+            <option value="Welcome!|We'll begin the competition shortly.">Welcome!</option>
+            <option value="Intermission|We're currently taking a planned intermission.">Intermission</option>
+            <option value="Minigame|A minigame (not on Open Trivia) is currently in progress.">Minigame</option>
+          </optgroup>
+        </select>
         <br/>
-        <input id='i-ann-body' placeholder='Body'/>
+        <textarea id='i-ann-body' placeholder='Body'></textarea>
         <br/>
         <button id='btn-ann'>Post</button>
         <h2>Answers/Scoring</h2>
         <br/>
-        <button class='btn-lg' onclick='secSocket.emit("show-answer", 1)'>Show Answer</button><br/><button class='btn' onclick='secSocket.emit("show-answer")'>Show w/o saving</button>
+        <button class='btn-lg' onclick='secSocket.emit("show-answer", 1)'>Show Answer</button> <button class='btn-lg' onclick='secSocket.emit("scores-save")'>Save Scores</button><br/><button class='btn' onclick='secSocket.emit("show-answer")' style='margin-top: 8px'>Show w/o saving</button>
         <br/><br/>
-        <button class='btn-lg' onclick='secSocket.emit("scores-save")'>Save Scores</button>
-        <!-- <button class='btn-lg' onclick='secSocket.emit("scores-compute", `1,2,3,4,5,6`)'>MAGIC</button> -->
       </div>
       <div class='col'>
         <h2>Host Stats:</h2>

@@ -33,14 +33,14 @@ a:hover, a:focus{
   text-decoration: underline;
 }
 
-button, input, select{
+button, input, select, textarea{
   background: #333333af;
   border: 1px solid #fff;
   transition: all 0.15s;
   color: #fff; 
 }
 
-button:focus, input:focus{
+button:focus, input:focus, textarea:focus{
   outline: none;
   border-color: #93d4ff;
 }

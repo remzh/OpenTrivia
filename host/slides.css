@@ -67,6 +67,12 @@ html{
   background: #ffba8866; 
 }
 
+/* Announcement */
+
+#main.announcement{
+  margin-top: 12%;
+}
+
 /* Question */
 
 h1{ 
@@ -84,6 +90,10 @@ h1 span{
 
 .hint{
   color: #81d7ff;
+}
+
+#q-details{
+  overflow: hidden;
 }
 
 /* MC Options */

@@ -125,13 +125,35 @@ secSocket.on('question-full', (q) => {
 }); 
 
 secSocket.on('question-list', (l) => {
+  let curRound = -1; 
   for(let i = 0; i < l.length; i++){
+    if(l[i].r !== curRound) {
+      if (curRound !== -1) {
+        $('#sel-questions')[0].insertAdjacentHTML('beforeEnd', `</optgroup>`);
+      }
+      $('#sel-questions')[0].insertAdjacentHTML('beforeEnd', `<optgroup label='Round ${l[i].r}'>`);
+      curRound = l[i].r; 
+    }
     $('#sel-questions')[0].insertAdjacentHTML('beforeEnd', `<option value='${i}'>R${l[i].r} Q${l[i].q}</option>`); 
   }
+  $('#sel-questions')[0].insertAdjacentHTML('beforeEnd', `</optgroup>`);
 })
+
+function updateAnn(val) {
+  $('#q-cur-det').html(`<span class='scores-green'>SP: Announcement</span>`);
+  $('.field-timer').text('Timer not applicable.'); 
+  $('#q-cur').html(`<b>${val.title}</b><br><span>${val.body}</span>`);
+}
+
+socket.on('announcement', updateAnn); // used in most cases
+secSocket.on('announcement', updateAnn); // used on initial connection
 
 $('#btn-loadQuestion').on('click', () => {
   secSocket.emit('load-question', parseInt($('#sel-questions').val())); 
+})
+
+$('#btn-loadNextQuestion').on('click', () => {
+  secSocket.emit('action-nextQuestion'); 
 })
 
 $('#btn-startTimer').on('click', () => {
@@ -208,12 +230,19 @@ secSocket.on('answer-stats', (stats) => {
 
 // utilities + general (not socket.io-specific)
 
+$('#i-ann-template').on('change', () => {
+  let val = $('#i-ann-template').val(); 
+  $('#i-ann-title').val(val.split('|')[0]); 
+  $('#i-ann-body').val(val.split('|')[1]); 
+  $('#i-ann-template').val('none'); 
+});
+
 $('#btn-ann').on('click', () => {
   secSocket.emit('announce', {
     title: $('#i-ann-title').val(), 
     body: $('#i-ann-body').val()
   }); 
-})
+});
 
 $('#nav-cat a').on('click', (e) => {
   let ele = e.srcElement; 
@@ -221,7 +250,7 @@ $('#nav-cat a').on('click', (e) => {
   $(ele).addClass('active'); 
   $('.container').hide(); 
   $('#'+ele.dataset.target).css('display', 'flex'); 
-})
+});
 
 function intervalUpdate() {
   $('#s-time').text(moment().format('M.DD // hh:mm:ss A'))

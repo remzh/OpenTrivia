@@ -231,6 +231,10 @@ async function rankScores(round){
   }
 
   for(let i = 0; i < out.length; i++){
+    if (i > 0 && out[i-1].s.s === out[i].s.s && out[i-1].s.tb === out[i].s.tb) {
+      out[i].r = out[i-1].r; // in the event of a tie
+      continue; 
+    }
     out[i].r = (i+1); 
   }
 
@@ -275,7 +279,7 @@ async function computeOverallScores(input, showAllInfo=true){
           correct += numCorrect; 
           tb += (selTeam.s.tb ? selTeam.s.tb : 0);
           indiv.push({
-            s: numCorrect*multiplier, 
+            s: Math.round(numCorrect*multiplier), 
             c: numCorrect, 
             m: multiplier, 
             tb: selTeam.s.tb ? Math.round(selTeam.s.tb*1000)/1000 : 0,
@@ -575,7 +579,7 @@ function getAnswerStats(){
 function startTimer(s){
   if (question.timer.interval) {
     clearInterval(question.timer.interval); 
-  }
+   }
   question.timer.end = Date.now() + (1000 * s); 
   question.timer.interval = setInterval(() => {
     let t = Math.round((question.timer.end - Date.now())/1000); 
@@ -616,7 +620,10 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
 
   socket.on('status', function(){
     if(question.curIndex !== -1){
-      socket.emit('question-full', getCurrentQuestion(1))}
+      socket.emit('question-full', getCurrentQuestion(1)); 
+    } else {
+      socket.emit('announcement', currentMessage); 
+    }
   })
 
   socket.on('load-question', function(q){
@@ -643,7 +650,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     stopTimer(); 
   })
 
-  socket.on('show-answer', function(saveScores){
+  socket.on('show-answer', function(shouldSaveScores){
     if(!question.current || !question.current.answer){
       io.of('secure').emit('update', 'processAnswer error: no question selected server-side'); 
       return; 
@@ -652,7 +659,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
       io.emit('stop'); // stop accepting answers in case it wasn't already turned off
       question.active = false; 
     }
-    if (saveScores) {
+    if (shouldSaveScores) {
       question.scoresSaved = true; 
       let r = parseInt(getCurrentQuestion(true).round), n = parseInt(getCurrentQuestion(true).num); 
       if(scoring.countedRounds.indexOf(r) !== -1){
@@ -748,6 +755,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
   })
 
   socket.on('announce', function(msg) {
+    question.curIndex = -1; 
     currentMessage.title = msg.title; 
     currentMessage.body = msg.body; 
     if (question.active) question.active = false; 
