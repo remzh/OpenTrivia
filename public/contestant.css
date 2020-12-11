@@ -105,7 +105,7 @@ a button{
   text-align: center;
 }
 
-.btn-mc.pending:disabled{
+.btn-mc.pending:disabled, .light-blue{
   background: #5e86bbaf; 
 }
 

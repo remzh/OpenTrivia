@@ -186,11 +186,13 @@ async function tallyScores(round){
   for(let i of raw){
     for(let j in i.d){
       if(!out[j]) out[j] = {tb: 0}; 
-      if(i.d[j] === 1){
+      if(i.d[j] > 0){
         if(out[j].s){
-          out[j].s ++; 
+          out[j].s += i.d[j]; // score
+          out[j].c ++; // number correct
         } else{
-          out[j].s = 1; 
+          out[j].s = i.d[j]; 
+          out[j].c = 1; 
         }
       }
     }
@@ -272,14 +274,15 @@ async function computeOverallScores(input, showAllInfo=true){
         let i = round.ranks, roundNum = round.round; 
         let selTeam = i.find(r => r.t === team); 
         if (selTeam) {
-          let numCorrect = selTeam.s.s ? selTeam.s.s : 0; 
+          let scoreRaw = selTeam.s.s ? selTeam.s.s : 0; 
+          let numCorrect = selTeam.s.c ? selTeam.s.c : 0; 
           let multiplier = scoring.roundMultiplier[scoring.countedRounds.indexOf(roundNum)]; 
           if (isNaN(multiplier)) multiplier = 1; 
-          points += numCorrect * multiplier; 
+          points += scoreRaw * multiplier; 
           correct += numCorrect; 
           tb += (selTeam.s.tb ? selTeam.s.tb : 0);
           indiv.push({
-            s: Math.round(numCorrect*multiplier), 
+            s: Math.round(scoreRaw*multiplier), 
             c: numCorrect, 
             m: multiplier, 
             tb: selTeam.s.tb ? Math.round(selTeam.s.tb*1000)/1000 : 0,
@@ -300,7 +303,7 @@ async function computeOverallScores(input, showAllInfo=true){
         ...(showAllInfo && {tm: userdb.find(r => r.TeamID === team).Members}),
         s: { // scores
           c: correct,
-          s: points, 
+          s: Math.round(100*points)/100, 
           tb: Math.round(tb*1000)/1000
         }, 
         i: indiv
@@ -346,6 +349,7 @@ let question = {
   }, 
   current: {}, // current question taken from array
   curIndex: -1, // index of question in array
+  numAnswered: 0, // only used on buzzer ("BZ") rounds to determine scoring
   scores: {}, // actual scores of each team (TeamID: 0/1)
   scoresSaved: false, // whether the scores for this question have been saved or not
   tb: {}, // tiebreak values (each timed question can gie up to 10.00 of TB)
@@ -410,7 +414,7 @@ function getCurrentQuestion(full){
 
 function mapQuestionEntry(inp){
   return {
-    round: inp.Round, 
+    round: inp.Round, // (string)
     num: parseInt(inp.Q), 
     type: inp.Type, 
     timed: inp.Timed === 'TRUE' ? true : false, 
@@ -428,6 +432,7 @@ function mapQuestionEntry(inp){
 }
 
 function loadQuestion(index, socket){
+  stopTimer(); // if currently active
   if (!questiondb[index]) {
     socket.emit('update', {type: 'question', msg: `Question index ${index} does not exist`}); 
     return; 
@@ -436,8 +441,25 @@ function loadQuestion(index, socket){
   question.current = mapQuestionEntry(questiondb[index]);
   question.curIndex = index; 
   question.timestamp = Date.now(); 
+  question.numAnswered = 0; 
+
+  // Clear scores
+  question.scores = {}; 
+  question.tb = {}; 
+  question.selections = {}; 
+
   io.emit('question', getCurrentQuestion()); 
   io.of('secure').emit('question-full', getCurrentQuestion(1)); 
+}
+
+/**
+ * Adds an ordinal suffix to a number. Used for buzzer questions.
+ * @param {number} n - number to add an ordinal to
+ */
+function getNumberWithOrdinal(n) {
+  var s = ["th", "st", "nd", "rd"],
+      v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 
 /**
@@ -496,14 +518,20 @@ function processAnswer(team, ans, socket){
     let cor = q.answer.toLowerCase().trim(); // correct answer
     if(!q.timed) {
         socket.emit('answer-ack', {ok: true})}
+    else if (question.scores[tid] > 0) { // already answered
+      socket.emit('answer-time', {correct: true, answer: q.answer}); 
+      return true; 
+    }
 
     if(parseFloat(cor).toString() === cor) { // numerical answer
       let input = parseFloat(ans.replace(/,/g, '')), actual = parseFloat(cor); 
       if (input === actual) {
         sentAck = true; 
-        teamBroadcast(socket, 'answer-time', {time: Date.now() - question.timestamp, correct: true, tb: tbCalc(), answer: q.answer}); 
+        if (q.timed) {
+          teamBroadcast(socket, 'answer-time', {time: Date.now() - question.timestamp, correct: true, tb: tbCalc(), answer: q.answer}); 
+          question.tb[tid] = tbCalc(); 
+        }
         question.scores[tid] = 1;
-        question.tb[tid] = tbCalc(); 
         return true; 
       } 
       sentAck = true; 
@@ -523,14 +551,35 @@ function processAnswer(team, ans, socket){
         return false; 
       } else if(levenshtein(ans, cor) < 3  || levenshtein(ans, cor) === 3 && cor.length > 11){
         sentAck = true; 
-        teamBroadcast(socket, 'answer-time', {time: Date.now() - question.timestamp, correct: true, tb: tbCalc(), answer: q.answer}); 
-        question.scores[tid] = 1;
-        question.tb[tid] = tbCalc(); 
+        if (q.type === 'bz') {
+          question.scores[tid] = Math.max(Math.round(100*(1-0.065*Math.pow(question.numAnswered, 0.8)))/100, 0.25);
+          question.numAnswered ++; 
+
+          let mult = scoring.roundMultiplier[scoring.countedRounds.indexOf(parseInt(q.round))]; 
+
+          teamBroadcast(socket, 'answer-time', {time: Date.now() - question.timestamp, correct: true, answer: q.answer}); 
+          teamBroadcast(socket, 'answer-buzzer', {
+            message: `Your team was ${getNumberWithOrdinal(question.numAnswered)} to answer correctly${question.numAnswered > 5 ? '.':'!'}`, 
+            points: mult ? Math.round(mult*question.scores[tid]) : question.scores[tid]
+          }); 
+
+          if (!question.timer.interval) {
+            startTimer(10); 
+          }
+        } else {
+          question.scores[tid] = 1;
+          if (q.timed) {
+            teamBroadcast(socket, 'answer-time', {time: Date.now() - question.timestamp, correct: true, tb: tbCalc(), answer: q.answer}); 
+            question.tb[tid] = tbCalc(); 
+          }
+        }
         return true; 
       } else{
         question.scores[tid] = 0;
         sentAck = true; 
-        socket.emit('answer-time', {time: Date.now() - question.timestamp, correct: false}); 
+        if (q.timed) {
+          socket.emit('answer-time', {time: Date.now() - question.timestamp, correct: false}); 
+        }
         return false; 
       }
     }
@@ -586,6 +635,7 @@ function startTimer(s){
     io.emit('timer', t); 
     if(t <= 0){
       clearInterval(question.timer.interval); 
+      question.timer.interval = false; 
       question.active = false; 
       io.emit('stop'); 
     }
@@ -594,9 +644,11 @@ function startTimer(s){
 }
 
 function stopTimer(){
-  clearInterval(question.timer.interval); 
-  question.timer.interval = false; 
-  io.emit('timer', -1); 
+  if (question.timer.interval) {
+    clearInterval(question.timer.interval); 
+    question.timer.interval = false; 
+    io.emit('timer', -1); 
+  }
 }
 
 // End question management

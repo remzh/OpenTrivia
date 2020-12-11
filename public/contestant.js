@@ -181,6 +181,7 @@ socket.on('question', (data) => {
       }
       break; 
     case 'sa': 
+    case 'bz': 
       resetSA(); 
       $('.q-ind').css('opacity', 0).show(); // timer indicator
       $('#q-sa').show(); 
@@ -230,11 +231,13 @@ socket.on('answer', (ans) => {
   } else if(qType === 'sa' || qType === 'bz'){
     $('#i-sa').prop('disabled', true); 
     $('#i-sa').val($('#i-sa').prop('placeholder')); 
-    if(checkSA(ans, $('#i-sa').prop('placeholder'))){
+    if($('#sa-right-timed').css('display') === 'block' || $('#sa-right').css('display') === 'block' || checkSA(ans, $('#i-sa').prop('placeholder'))){
       $('#i-sa').addClass('correct'); 
+      $('#sa-right-timed').hide(); 
       $('#sa-right').show(); 
     } else{
       $('#i-sa').addClass('incorrect');
+      $('#sa-wrong-timed').hide(); 
       $('#sa-wrong').show(); 
     }
   }
@@ -267,12 +270,14 @@ socket.on('answer-ack', (ack) => {
 socket.on('answer-time', (inp) => {
   logger.info('recieved answer ack (timed): '+JSON.stringify(inp)); 
   if(inp.correct){
-    $('#sa-time').text(inp.time/1000 + 's');
-    $('#i-sa').val(inp.answer); 
-    $('#i-sa').addClass('correct'); 
-    $('#i-sa').prop('disabled', true); 
-    $('#sa-right-timed').show(); 
-    $('#sa-right-timed').addClass('pulse');
+    if (inp.time) {
+      $('#sa-time').text(inp.time/1000 + 's');
+    } else {
+      $('#sa-time').text('n/a');
+    }
+    $('#i-sa')[0].blur(); 
+    $('#i-sa').val(inp.answer).addClass('correct').prop('disabled', true); 
+    $('#sa-right-timed').show().addClass('pulse'); 
     $('#sa-wrong-timed').hide(); 
     setTimeout(() => {
       $('#sa-right-timed').removeClass('pulse');
@@ -293,6 +298,13 @@ socket.on('answer-time', (inp) => {
       $('#sa-wrong-timed').removeClass('pulse');
     }, 600)
   }
+})
+
+socket.on('answer-buzzer', (inp) => {
+  logger.info('recieved answer ack (buzzer): '+JSON.stringify(inp)); 
+  $('#sa-buzzer-msg').text(inp.message); 
+  $('#sa-buzzer-points').text(inp.points); 
+  $('#sa-buzzer').css('display', 'inline-block');
 })
 
 socket.on('stop', () => {
