@@ -923,11 +923,28 @@ io.of('/').use(function(socket, next){
 // End of Socket.io
 
 app.get('/contestant', (req, res) => {
-  res.status(200).sendFile(path.join(__dirname, 'public', 'contestant.html'))
+  if(req.session.user) {
+    if (process.env.OT_SKIP_NAMES !== '1' && !req.session.user.name) {
+      res.status(302).redirect(`/identity?tn=${encodeURIComponent(req.session.user.TeamName)}`); 
+      return; 
+    }
+    res.status(200).sendFile(path.join(__dirname, 'public', 'contestant.html'))
+  } 
+  else {
+    res.status(302).redirect('/');
+  }
 })
 
 app.get('/scores', (req, res) => {
   res.status(200).sendFile(path.join(__dirname, 'public', 'scores.html'))
+})
+
+app.get('/identity', (req, res) => {
+  if(req.session.user) {
+    res.status(200).sendFile(path.join(__dirname, 'public', 'identity.html'))
+  } else {
+    res.status(302).redirect('/');
+  }
 })
 
 app.get('/host', (req, res) => {
@@ -996,10 +1013,26 @@ app.post('/auth', (req, res) => {
         if (req.headers.referer && req.headers.referer.indexOf('continue=scores') !== -1) {
           res.status(302).redirect('/scores'); 
         } else {
-          res.status(302).redirect('/contestant'); 
+          if (process.env.OT_SKIP_NAMES === '1') {
+            res.status(302).redirect('/contestant'); 
+          } else {
+            res.status(302).redirect(`/identity?tn=${encodeURIComponent(user.TeamName)}`); 
+          }
         }
       })
     }
+  }
+})
+
+app.post('/identity', (req, res) => {
+  let user = req.session.user; 
+  if (!user) {
+    res.status(302).redirect('/'); 
+  } else if (typeof req.body.name === 'string' && req.body.name.length > 1) {
+    user.name = req.body.name; 
+    res.status(302).redirect('/contestant'); 
+  } else {
+    res.status(302).redirect(`/identity?tn=${encodeURIComponent(user.TeamName)}&err=${encodeURIComponent('Name must be between 2 and 16 characters.')}`); 
   }
 })
 

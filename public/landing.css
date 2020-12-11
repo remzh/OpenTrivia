@@ -6,14 +6,23 @@
 
 body{
   font-family: 'Raleway', 'Roboto', 'Arial', sans-serif; 
-  background: url(images/landing.jpg);
-  background-size: cover;
-  background-attachment: fixed;
-  background-position: center;
   overscroll-behavior: none;
   -webkit-user-select: none;
   user-select: none;
   cursor: default;
+}
+
+#bk{
+  position: fixed;
+  top: 0; 
+  left: 0; 
+  width: 100%;
+  height: 100%;
+  background: url(/images/landing.jpg);
+  background-size: cover;
+  background-attachment: fixed;
+  background-position: center;
+  z-index: -1;
 }
 
 #sq{
@@ -38,9 +47,10 @@ body{
   border-bottom: 1px solid #555;
   padding: 4px;
   transition: border 0.3s, box-shadow 0.3s; 
+  background-color: #ffffff9f;
 }
 
-#sq form input:focus, input:focus ~ button{
+#sq form input[type='text']:focus, input[type='text']:focus ~ button{
   outline: none; 
   border-bottom: 1px solid #008cff !important;
   box-shadow: 0 1px 0 0 #008cff;
@@ -54,7 +64,9 @@ body{
   border: none; 
   border-radius: 0; 
   border-bottom: 1px solid #555;
+  background-color: #ffffff9f;
   transition: border 0.3s, box-shadow 0.3s, background 0.15s; 
+  cursor: pointer;
 }
 
 #sq form button:focus{

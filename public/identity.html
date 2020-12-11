@@ -1,0 +1,44 @@
+<!-- b4/stable -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Identity • Open Trivia</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1, minimum-scale=1.0, maximum-scale=1.0'>
+    <link rel='stylesheet' href='landing.css'/>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/js/all.min.js' integrity='sha256-qM7QTJSlvtPSxVRjVWNM2OfTAz/3k5ovHOKmKXuYMO4=' crossorigin='anonymous'></script>
+  </head>
+  <body>
+    <div id='bk'></div>
+    <div id='sq' style='margin-top: 60px; margin-bottom: 40px'>
+      <h2>Welcome to Trivia Night!</h2>
+      <p id='failed' style='display: none'></p>
+      <p>Welcome<span id='span-tn'></span>!<br/>Please enter your <b>first name</b> to finish signing in.<br/></p>
+      <form action='/identity' method='post' style='display: block'>
+        <div style='display: flex;'>
+          <input id='name' name='name' style='width: 100%' maxlength='16' placeholder='First Name' type='text'/>
+        </div>
+        <p><b>Notice: </b><br/>By continuing, you are agreeing to the following: <ul><li>During rounds, you will not use any outside assistance to gain an unfair advantage.</li><li>Open Trivia may track your activity to deter cheating. This includes but is not limited to a) time spent on each question and b) if you open and/or switch between tabs.</li></ul></p>
+        <br/>
+        <button style='width: 185px' type='submit'>Accept and Continue <i class='fas fa-arrow-right'></i></button>
+      </form>
+    </div>
+    <div id='ft'>
+      OpenTrivia b27 <span style='float: right'>&copy; 2020 Ryan Zhang</span>
+    </div>
+  </body>
+  <script>
+    // if(location.search === '?failedLogin'){
+    //   document.getElementById('failed').style.display = 'block'}
+    // if(location.search === '?403'){
+    //   document.getElementById('failed').style.display = 'block'; 
+    //   document.getElementById('failed').innerText='Sign in using the Team ID field to continue.'}
+    const urlParams = new URLSearchParams(location.search);
+    if (urlParams.get('tn')) {
+      document.getElementById('span-tn').innerText = `, ${urlParams.get('tn')}`; 
+    }
+
+    window.onload = () => {
+      document.getElementById('name').focus(); 
+    }
+  </script>
+</html>

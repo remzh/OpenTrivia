@@ -8,17 +8,18 @@
     <script src='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/js/all.min.js' integrity='sha256-qM7QTJSlvtPSxVRjVWNM2OfTAz/3k5ovHOKmKXuYMO4=' crossorigin='anonymous'></script>
   </head>
   <body>
-    <div id='sq'>
+    <div id='bk'></div>
+    <div id='sq' style='z-index: 2;'>
       <h2>Welcome to Trivia Night!</h2>
       <p id='failed' style='display: none'>Invalid Team PIN. Please try again.</p>
       <p>Enter your <b>Team PIN</b> below to continue.<br/>Or, you can <a href='scores'>open the scoreboard</a>.</p>
       <form action='/auth' method='post'>
-        <input id='creds' name='creds' maxlength='16' placeholder='Team PIN'/>
+        <input id='creds' name='creds' maxlength='12' placeholder='Team PIN' type='text'/>
         <button type='submit'><i class='fas fa-arrow-right'></i></button>
       </form>
     </div>
     <div id='ft'>
-      OpenTrivia b27 <span style='float: right'>&copy; 2020 Ryan Zhang</span>
+      OpenTrivia b28 <span style='float: right'>&copy; 2020 Ryan Zhang</span>
     </div>
   </body>
   <script>
