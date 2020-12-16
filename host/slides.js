@@ -5,6 +5,7 @@ let secSocket = io.connect('/secure');
 let status = 0; 
 
 let curType = ''; 
+let imagePlaceholder = {}; 
 
 function showStatus(type, msg){
   let map = {
@@ -80,6 +81,7 @@ setInterval(ping, 7500);
 blurInterval = false; 
 function updateQuestion(data){
   curType = data.type; 
+  $('#scores').hide(); 
   // Render question
   if (data.type !== 'md') {
     $('#timer').show(); // show the timer
@@ -87,7 +89,7 @@ function updateQuestion(data){
     $('#timer').hide(); // unless it's an "are you ready" question
   }
   $('#q-details').show(); 
-  $('#question').css('font-size', '3.5rem'); 
+  $('#question').show().css('font-size', '3.5rem'); 
   if (data.question.indexOf('|') === -1) {
     $('#question').text(data.question); 
   } else {
@@ -127,12 +129,24 @@ function updateQuestion(data){
     $('#q-options').show(); 
     $('#q-stats').hide(); 
     let p = ['a', 'b', 'c', 'd', 'e']; 
+    let charCount = 0, lowestChar = 0; 
     for(let i = 0; i <= 4; i++){
       if(data.options[i]){
         $('#sp-'+p[i]).text(data.options[i]);
+        charCount += data.options[i].length; 
+        if (lowestChar < data.options[i].length) {
+          lowestChar = data.options[i].length; 
+        }
       } else{
         $('#sp-'+p[i]).text(`<i>(n/a)</i>`);
       }
+    }
+    if(charCount > 190) {
+      $('#q-options').css('flex', '2'); 
+    } else if (lowestChar < 30) {
+      $('#q-options').css('flex', (0.4 + (lowestChar/50)).toString()); 
+    } else {
+      $('#q-options').css('flex', '1'); 
     }
   }
   else{
@@ -150,28 +164,63 @@ function updateQuestion(data){
       $('#q-stats').hide(); 
     }
   }
-  $('#image').prop('style', `height: ${window.innerHeight - $('#question')[0].offsetHeight - 150}px`)
+  $('#q-details').css('height', `${window.innerHeight - $('#question')[0].offsetHeight - 130}px`); 
 }
 
 function displayAnnouncement(data) {
   $('#main').css('opacity', 0); 
   setTimeout(() => {
+    $('#scores').hide(); 
     $('#q-details').hide(); 
     $('#timer').hide(); 
-    $('#main').addClass('announcement'); 
+    $('#main').css('margin-top', '').addClass('announcement'); 
     $('#cat').text(''); 
     $('#qnum').text(data.title); 
-    $('#question').text(data.body); 
+    $('#question').show().text(data.body); 
     $('#main').css('opacity', 1); 
+  }, 400)
+}
+
+function numberWithCommas(x) {
+  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function displayScores(data) {
+  console.log(data); 
+  $('#main').css('opacity', 0); 
+  setTimeout(() => {
+    $('#q-details').hide(); 
+    $('#main').removeClass('announcement'); 
+    $('#main').addClass('showing-scores'); 
+    $('#main').css('margin-top', (window.innerHeight - 690)/2 + 'px');
+    $('#timer').hide(); 
+    $('#cat').text(data.title); 
+    $('#qnum').text('Top Teams'); 
+    $('#question').hide(); 
+    $('#main').css('opacity', 1); 
+    let showCor = (data.title === 'Overall' ? !1:!0); 
+    for (let i = 0; i < 5; i++) {
+      let team = data.scores.data[i]; 
+      if (team) {
+        $(`#scores-tn-${i}`).text(team.tn); 
+        if (i < 3) {
+          $(`#scores-det-${i}`).html(`<div><div>${team.tm.replace(/(?<=\w) /g, '&nbsp;')}</div></div><hr/>${showCor?`<span class='scores-cor'>${team.s.c} correct answer${team.s.c===1?'':'s'}</span>`:`<span class='scores-pts'>${numberWithCommas(Math.round(team.s.s))} points</span>`}<br/><span class='scores-tb scores-sm'>TB: ${numberWithCommas(team.s.tb)}</span>`)
+        } else {
+          $(`#scores-det-${i}`).html(`${showCor?`<span class='scores-cor'>${team.s.c} correct answer${team.s.c===1?'':'s'}</span>`:`<span class='scores-pts'>${numberWithCommas(Math.round(team.s.s))} points</span>`} | <span class='scores-tb'>TB: ${numberWithCommas(team.s.tb)}</span>`)
+        }
+      }
+    }
+    $('#scores').show(); 
   }, 400)
 }
 
 secSocket.on('announcement', displayAnnouncement);
 socket.on('announcement', displayAnnouncement); 
 
+secSocket.on('scores', displayScores); 
+
 secSocket.on('question-full', (data) => {
   logger.info('Recieved question: '+JSON.stringify(data));
-  $('#main').removeClass('announcement'); 
   if(!data.active){
     $('#timer').text('0');
     $('#timer').addClass('timer-low')}
@@ -180,13 +229,34 @@ secSocket.on('question-full', (data) => {
     $('#timer').removeClass('timer-low')}
   $('#main').css('opacity', 0); 
   $('.opt').removeClass('correct').removeClass('incorrect');
-  setTimeout(() => {
-    $('.opt-perc').remove(); 
-    $('.opt-bar').css('width', '0%');
-    updateQuestion(data); 
-    $('#main').css('opacity', 1); 
-  }, 400)
+  $('#q-stats-answer span').css('opacity', 0);
+
+  if(data.image){
+    imagePlaceholder = new Image; 
+    Promise.all([Promise.race([new Promise((res) => {
+      imagePlaceholder.onload = res; 
+    }), new Promise((res => {
+      setTimeout(res, 2400); 
+    }))]), new Promise((res => {
+      setTimeout(res, 400); 
+    }))]).then(() => {
+      prepareQuestion(data); 
+    })
+    imagePlaceholder.src = data.image;
+  } else {
+    setTimeout(() => {
+      prepareQuestion(data); 
+    }, 400); 
+  }
 })
+
+function prepareQuestion(data){
+  $('#main').css('margin-top', '').removeClass('announcement showing-scores'); 
+  $('.opt-perc').remove(); 
+  $('.opt-bar').css('width', '0%');
+  updateQuestion(data); 
+  $('#main').css('opacity', 1); 
+}
 
 secSocket.on('answer-stats', (data) => {
   logger.info('Recieved answers: '+JSON.stringify(data)); 
@@ -201,6 +271,8 @@ secSocket.on('answer-stats', (data) => {
     setTimeout(() => {
       $('.opt-perc').css('opacity', 1);
     }, 800);
+  } else if (data.type === 'sa' || data.type === 'bz'){
+    $('#q-stats-answer span').css('opacity', 1).text(data.ans); 
   }
 })
 
@@ -228,14 +300,19 @@ socket.on('timer', (t) => {
 }); 
 
 window.onresize = function(){
-  $('#image').prop('style', `height: ${window.innerHeight - $('#question')[0].offsetHeight - 150}px`)
+  $('#q-details').css('height', `${window.innerHeight - $('#question')[0].offsetHeight - 130}px`); 
+  if ($('#scores').css('display') === 'block'){
+    $('#main').css('margin-top', (window.innerHeight - 690)/2 + 'px')
+  }
 }
 
 let mhTimeout; 
 document.body.onmousemove = function() {
   clearTimeout(mhTimeout); 
   $('body').prop('style', 'cursor: default'); 
+  $('#footer').css('opacity', 1);
   mhTimeout = setTimeout(() => {
     $('body').prop('style', 'cursor: none'); 
+    $('#footer').css('opacity', 0);
   }, 1600); 
 }

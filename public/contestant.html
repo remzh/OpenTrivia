@@ -26,14 +26,20 @@
         <span id='s-ping-outer' style='display: none' class='right'>Ping: <span id='s-ping'>...</span>ms</span>
       </div>
     </div>
-    <div class='container'>
+    <div class='top container'>
       <div class='c-inner'>
         <h1 id='q-num' class='q'></h1>
-        <h1 id='q-stop' class='q'>Time's Up!</h1>
+        <div id='q-stop' class='q'><h1>Time's Up!</h1></div>
         <div id='q-timer' class='q q-ind'></div>
         <div id='q-msg' class='q'>
           <h1>Connecting...</h1>
           <p>Please wait as we connect you to the Open Trivia server.</p>
+        </div>
+        <div id='q-scores' class='q'>
+          <h1>Scores</h1>
+          <p>Scores have been published for this round!<br/>Click/tap below to see where your team stands.</p>
+          <p><i class='fas fa-lightbulb'></i> <b>Tip:</b><br class='hide-on-lg'/><i>You can reopen this scoreboard any time using the link at the bottom.</i></p>
+          <button class='blue' onclick='showScores()'>Open Scoreboard</button>
         </div>
         <div id='q-md' class='q'>
           <h2>Get ready!</h2>
@@ -66,11 +72,21 @@
         </div>
       </div>
     </div>
+    <div id='scores-overlay'>
+      <div id='scores-inner'>
+        <iframe id='scores-iframe' src='/scores?iframe=1'></iframe>
+        <div id='scores-actions'>
+          <a href='/scores?ref=contestant' tabindex='-1' target='_blank'><button title='Open in External Window'><i class='fas fa-fw fa-external-link-alt'></i></button></a>
+          <button title='Refresh Scoreboard' onclick='$("#scores-iframe")[0].contentDocument.location.reload()'><i class='fas fa-fw fa-sync'></i></button>
+          <button title='Hide Scoreboard' onclick='hideScores()'><i class='fas fa-fw fa-times'></i></button>
+        </div>
+      </div>
+    </div>
     <div id='snackbar' class='snackbar'></div>
     <div id='snackbar-sm' class='snackbar'></div>
     <div id='footer'>
+      <span class='right'><a href='#scores' onclick='showScores()'>Show Scoreboard</a><br class='hide-on-lg'/><span class='show-on-lg'> • </span><a href='#' onclick='logger.open()'>Open Console</a></span>
       OpenTrivia &copy; 2020 Ryan Zhang. <br class='hide-on-lg'/>OpenTrivia is <a target='_blank' href='https://github.com/Ryan778/opentrivia'>open source</a>!
-      <span class='right'><a href='#' onclick='logger.open()'>Open Console</a></span>
     </div>
   </body>
 </html>

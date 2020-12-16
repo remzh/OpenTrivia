@@ -1,8 +1,8 @@
-html {
+html, body {
   -moz-user-focus: none;
   -webkit-user-select: none;
   user-select: none;
-  overscroll-behavior: none;
+  overscroll-behavior: none !important;
 }
 
 @keyframes pulse {
@@ -36,8 +36,22 @@ html {
   padding: 8px 16px;
 }
 
-#q-num, #q-stop, #q-msg, #q-sp p, #q-md h2, #q-md p{
+#q-num, #q-stop, #q-msg, #q-sp p, #q-md h2, #q-md p, #q-scores *{
   text-shadow: 1px 1px 3px #444;
+}
+
+#q-stop{
+  margin: auto;
+  margin-top: 18px;
+  margin-bottom: 12px;
+  padding: 8px 4px;
+  width: 180px;
+  background: #ac5742af;
+  box-shadow: 3px 3px 2px #bb8b5eaf;
+}
+
+#q-stop h1{
+  margin: 0;
 }
 
 #q-num{
@@ -109,7 +123,7 @@ a button{
   background: #5e86bbaf; 
 }
 
-.btn-mc.selected:disabled{
+.btn-mc.selected:disabled, .blue{
   background: #4255acaf; 
 }
 
@@ -129,4 +143,100 @@ a button{
 #i-sa.incorrect{
   background: #f5d2ccaf;
   color: #300; 
+}
+
+/* Scoreboard */
+#q-scores button{
+  font-size: 1.4rem;
+  padding: 8px 12px;
+}
+
+#scores-overlay{
+  display: none;
+  position: fixed;
+  z-index: 4;
+}
+
+#scores-inner{
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: #726d6d;
+}
+
+#scores-iframe{
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+#scores-actions {
+  position: absolute;
+  top: 4px; 
+  right: 14px;
+}
+
+#scores-actions button{
+  width: 40px;
+  height: 32px;
+  font-size: 20px;
+  padding: 0;
+  background: none;
+}
+
+#scores-actions button:hover, #scores-actions button:focus{
+  background: #ffffff1f;
+}
+
+.scores-hide {
+  -webkit-animation-name: scores-hide;
+  animation-name: scores-hide;
+  animation-duration: 0.6s;
+}
+
+.scores-show {
+  -webkit-animation-name: scores-hide;
+  animation-name: scores-hide;
+  animation-direction: reverse;
+  animation-duration: 0.6s;
+}
+
+@media only screen and (min-width: 980px) {
+  #scores-overlay{
+    /* border: 1px solid #000;  */
+    box-shadow: 4px 4px 8px #333;
+    left: 7.5%; 
+    width: 85%; 
+    top: calc(60px + 5%); 
+    height: calc(85% - 60px);
+  }
+
+  @keyframes scores-hide {
+    from {
+      top: calc(60px + 5%);
+      opacity: 1;
+      transform: scale(1.0);
+    }
+    to {
+      top: calc(80%); 
+      opacity: 0;
+      transform: scale(0.5);
+    }
+  }
+}
+
+@media only screen and (max-width: 979px) {
+  #scores-overlay{
+    left: 0; 
+    width: 100%; 
+    top: 60px; 
+    height: calc(100% - 60px);
+  }
+
+  @keyframes scores-hide {
+    from {
+      top: 60px}
+    to {
+      top: 100%}
+  }
 }

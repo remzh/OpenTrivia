@@ -7,10 +7,22 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+::-webkit-scrollbar{
+  width: 8px;
+  background: #444;
+}
+
+::-webkit-scrollbar-thumb{
+  background: #927c80;
+}
+
+::-webkit-scrollbar-thumb:hover{
+  background: #be9da4;
+}
+
 .c-inner {
   background: rgba(0, 0, 0, 0.3); 
   padding: 12px 20px;
-  max-width: 1200px;
   margin: auto;
 }
 
@@ -141,10 +153,8 @@ td:focus-visible {
   }
 }
 
-@media only screen and (min-width: 800px) {
+@media only screen and (min-width: 600px) {
   .c-inner {
-    margin-top: 12px;
-    margin-bottom: 18px;
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
   }
@@ -154,7 +164,15 @@ td:focus-visible {
   }
 }
 
-@media only screen and (max-width: 799px) {
+@media only screen and (min-width: 1400px) {
+  .c-inner{
+    max-width: 1280px;
+    margin-top: 18px;
+    margin-bottom: 24px;
+  }
+}
+
+@media only screen and (max-width: 599px) {
   table {
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);

@@ -28,9 +28,9 @@
         <a data-target='scores' href='#scores'>Scores</a>
       </div>
     </div>
-    <div id='basic' class='container'>
+    <div id='basic' class='container top'>
       <div class='col-l'>
-        <h2>tbd: basic</h2>
+        <h2>Welcome!</h2>
         <button class='btn-auto' disabled>Wait for Question</button>
         <br/><br/>
         <p>
@@ -40,7 +40,7 @@
         </p>
       </div>
     </div>
-    <div id='advanced' class='container'>
+    <div id='advanced' class='container top'>
       <div class='col'>
         <h2>Control Panel:</h2>
         <h3>Override Defaults</h3>
@@ -61,6 +61,8 @@
         <textarea id='i-ann-body' placeholder='Body'></textarea>
         <br/>
         <button id='btn-ann'>Post</button>
+        <h2>Score Slides</h2>
+        <input type='number' id='i-scores-round' style='width: 40px' placeholder='0'/> <button id='btn-scores'>Show Score Slide</button>
         <h2>Answers/Scoring</h2>
         <br/>
         <button class='btn-lg' onclick='secSocket.emit("show-answer", 1)'>Show Answer</button> <button class='btn-lg' onclick='secSocket.emit("scores-save")'>Save Scores</button><br/><button class='btn' onclick='secSocket.emit("show-answer")' style='margin-top: 8px'>Show w/o saving</button>
@@ -78,12 +80,12 @@
         </div>
       </div>
     </div>
-    <div id='scores' class='container'>
+    <div id='scores' class='container top'>
       <div class='col-l'>
         <h2>Score Report</h2>
         <div class='left'>
           <div id='scores-outer'>
-            <input id='input-scoreLookup' placeholder='Rounds (def: all)'/> <button onclick='secSocket.emit("scores-compute", $("#input-scoreLookup").val())'>Query</button> <button onclick='secSocket.emit("scores-publish")'>Publish</button> <span style='float: right'>Last Queried: <span id='scores-lu'>n/a</span> • Last Published: <span id='scores-lp'>n/a</span></span>
+            <input id='input-scoreLookup' placeholder='Rounds (def: all)'/> <button onclick='secSocket.emit("scores-compute", $("#input-scoreLookup").val())'>Query</button> <button onclick='secSocket.emit("scores-publish", 1)'>Publish</button> <span style='float: right'>Last Queried: <span id='scores-lu'>n/a</span> • Last Published: <span id='scores-lp'>n/a</span></span>
             <br/>
             <table id='scores-table'>
               

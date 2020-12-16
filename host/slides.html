@@ -3,7 +3,6 @@
   <head>
     <title>Trivia Host</title>
     <link rel='stylesheet' href='../main.css'/>
-    <link rel='stylesheet' href='host.css'/>
     <link rel='stylesheet' href='slides.css'/>
     <script defer src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js' integrity='sha256-4iQZ6BVL4qNKlQ27TExEhBN1HFPvAvAMbFavKKosSWQ=' crossorigin='anonymous'></script>
     <script defer src='https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js' integrity='sha256-vrn14y7WH7zgEElyQqm2uCGSQrX/xjYDjniRUQx3NyU=' crossorigin='anonymous'></script>
@@ -42,7 +41,19 @@
             <p>
               <b id='q-stats-num'>0%</b> of teams <span id='q-stats-msg'>have correctly answered!</span>
             </p>
+            <div id='q-stats-answer'><span></span></div>
           </div>
+        </div>
+      </div>
+      <div id='scores' style='display: none'>
+        <div id='scores-upper'>
+          <div><b class='scores-rank scores-gold'>1<sup>st</sup></b><b id='scores-tn-0' class='scores-tn'></b><div id='scores-det-0' class='scores-det'></div></div>
+          <div><b class='scores-rank scores-silver'>2<sup>nd</sup></b><b id='scores-tn-1' class='scores-tn'></b><div id='scores-det-1' class='scores-det'></div></div>
+          <div><b class='scores-rank scores-bronze'>3<sup>rd</sup></b><b id='scores-tn-2' class='scores-tn'></b><div id='scores-det-2' class='scores-det'></div></div>
+        </div>
+        <div id='scores-lower'>
+          <div><b class='scores-rank scores-copper'>4<sup>th</sup></b><b id='scores-tn-3' class='scores-tn'></b><div id='scores-det-3' class='scores-det'></div></div>
+          <div><b class='scores-rank scores-tin'>5<sup>th</sup></b><b id='scores-tn-4' class='scores-tn'></b><div id='scores-det-4' class='scores-det'></div></div>
         </div>
       </div>
     </div>

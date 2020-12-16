@@ -22,6 +22,11 @@ function getGradient(dec, a) {
 }
 
 window.onload = async function() {
+  const urlParams = new URLSearchParams(location.search);
+  if (urlParams.get('iframe') === '1') {
+    $('#a-landing').hide(); 
+  }
+
   let scores = await fetch('/scores/data').then(r => r.json()); 
   if (!scores.ok) {
     $('#s-load').html(`<i class='fas fa-exclamation-triangle'></i> Failed to load: ` + scores.error); 

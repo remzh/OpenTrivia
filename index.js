@@ -338,6 +338,11 @@ let currentMessage = {
   body: `We'll begin the competition shortly.`
 }; 
 
+let currentTopScores = {
+  title: '', 
+  scores: {}
+}
+
 // End of messages
 // Question management
 
@@ -355,6 +360,16 @@ let question = {
   tb: {}, // tiebreak values (each timed question can gie up to 10.00 of TB)
   selections: {} // only used in SA questions to record answers
 }
+
+/**
+ * Custom (Negative) Question Indexes
+ * - Negative question indexes represent special states
+ * - Here's a list of them and what they mean: 
+ * 
+ * -1 (default): Announcement
+ * -2: Top Teams (but scoreboard not published yet)
+ * -3: Top Teams (and scoreboard is published)
+ */
 
 /**
  * Calculates a user's tiebreaker score for a question based on how much time they took to correctly answer it
@@ -552,7 +567,7 @@ function processAnswer(team, ans, socket){
       } else if(levenshtein(ans, cor) < 3  || levenshtein(ans, cor) === 3 && cor.length > 11){
         sentAck = true; 
         if (q.type === 'bz') {
-          question.scores[tid] = Math.max(Math.round(100*(1-0.065*Math.pow(question.numAnswered, 0.8)))/100, 0.25);
+          question.scores[tid] = Math.max(Math.round(100*(1-0.065*Math.pow(question.numAnswered, 0.8)))/100, 0.25); // where question.numAnswered is the number of teams who correctly answered before your team
           question.numAnswered ++; 
 
           let mult = scoring.roundMultiplier[scoring.countedRounds.indexOf(parseInt(q.round))]; 
@@ -563,7 +578,7 @@ function processAnswer(team, ans, socket){
             points: mult ? Math.round(mult*question.scores[tid]) : question.scores[tid]
           }); 
 
-          if (!question.timer.interval) {
+          if (!question.timer.interval || question.timer.end > Date.now() + 10000) {
             startTimer(10); 
           }
         } else {
@@ -671,10 +686,18 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
   }); 
 
   socket.on('status', function(){
-    if(question.curIndex !== -1){
+    if(question.curIndex > -1){
       socket.emit('question-full', getCurrentQuestion(1)); 
     } else {
-      socket.emit('announcement', currentMessage); 
+      switch (question.curIndex){
+        case -1: 
+          socket.emit('announcement', currentMessage); 
+          break; 
+        case -2: 
+        case -3: 
+          socket.emit('scores', currentTopScores); 
+          break;
+      }
     }
   })
 
@@ -690,6 +713,9 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
       switch (type) {
         case 'sa': 
           startTimer(20); 
+          break; 
+        case 'bz': 
+          startTimer(60); 
           break; 
         default: 
           startTimer(10); 
@@ -763,7 +789,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     })
   })
 
-  socket.on('scores-publish', async function(){
+  socket.on('scores-publish', async function(v){
     let scores = await computeOverallScores(); 
     if (!scores.ok) {
       socket.emit({type: 'scores-publish', ok: false, error: scores.error}); 
@@ -804,6 +830,10 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
       }); 
     }
     io.of('secure').emit('update', {type: 'scores-publish', ok: true, ts}); 
+    if (v === 1 && question.curIndex === -2) {
+      question.curIndex = -3; 
+      io.to('users').emit('scores-release');
+    }
   })
 
   socket.on('announce', function(msg) {
@@ -812,6 +842,22 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     currentMessage.body = msg.body; 
     if (question.active) question.active = false; 
     io.to('users').emit('announcement', currentMessage); 
+  })
+
+  socket.on('scores-slides', async function(round) {
+    let scores = round ? await computeOverallScores(round) : await computeOverallScores(); 
+    currentTopScores = {
+      title: round?`Round ${round}`:'Overall', 
+      scores
+    }
+    question.curIndex = -2; 
+    if (question.active) question.active = false; 
+    currentMessage = {
+      title: 'Scores', 
+      body: 'The current top teams are being announced now. The scoreboard will be updated shortly.'
+    }
+    io.emit('announcement', currentMessage); 
+    io.of('secure').emit('scores', currentTopScores); 
   })
 
   // socket.on('scores-tally', function(r){
@@ -864,10 +910,18 @@ io.of('/').use(function(socket, next){
       if (!mode) {
         socket.emit('status', {valid: true, user: socket.handshake.session.user})}
 
-      if(question.curIndex !== -1){
+      if(question.curIndex >= 0){
         socket.emit('question', getCurrentQuestion())}
       else {
-        socket.emit('announcement', currentMessage); 
+        switch (question.curIndex) {
+          case -1: 
+          case -2: 
+            socket.emit('announcement', currentMessage); 
+            return;
+          case -3: 
+            socket.emit('scores-release'); 
+            return; 
+        }
       }
 
       let sel = question.selections[socket.handshake.session.user.TeamID]; 
@@ -1029,6 +1083,10 @@ app.post('/identity', (req, res) => {
   if (!user) {
     res.status(302).redirect('/'); 
   } else if (typeof req.body.name === 'string' && req.body.name.length > 1) {
+    if (!req.body.name.match(/^[a-z]{2,16}$/i)) {
+      res.status(302).redirect(`/identity?tn=${encodeURIComponent(user.TeamName)}&err=${encodeURIComponent('Standard letters only.')}`);   
+      return; 
+    }
     user.name = req.body.name; 
     res.status(302).redirect('/contestant'); 
   } else {

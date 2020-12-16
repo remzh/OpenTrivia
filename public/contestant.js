@@ -79,6 +79,20 @@ function resetSA(){
   $('#i-sa').removeClass('correct').removeClass('incorrect');
 }
 
+function showScores(){
+  $('#scores-overlay').show().addClass('scores-show'); 
+  setTimeout(() => {
+    $('#scores-overlay').removeClass('scores-show'); 
+  }, 600); 
+}
+
+function hideScores(){
+  $('#scores-overlay').addClass('scores-hide'); 
+  setTimeout(() => {
+    $('#scores-overlay').hide().removeClass('scores-hide'); 
+  }, 600); 
+}
+
 $('.btn-mc').forEach((e) => {
   $(e).on('click', () => {
     resetMC(); 
@@ -214,6 +228,15 @@ socket.on('announcement', (data) => {
   $('#q-msg').show(); 
 })
 
+socket.on('scores-release', () => {
+  logger.info('received score release message'); 
+  $("#scores-iframe")[0].contentDocument.location.reload(); 
+  $('.q').hide(); 
+  $('#q-timer').css('background', ''); 
+
+  $('#q-scores').show(); 
+})
+
 socket.on('answer', (ans) => {
   logger.info('recieved question answer: '+ans); 
   if(qType === 'mc'){
@@ -248,11 +271,6 @@ socket.on('answer-ack', (ack) => {
   if(ack.ok){
     if(qType === 'mc') {
       resetMC(); 
-      // if ($('.btn-mc.pending')[0]) {
-      //   // remove pending icon
-      //   $('.btn-mc.pending').children('b').text($('.btn-mc.pending').prop('id').slice(4).toUpperCase());
-      //   $('.btn-mc.pending').removeClass('pending'); 
-      // } 
       $(`#btn-${ack.selected}`).prop('disabled', true).addClass('selected'); 
     } else if (qType === 'md') {
       $(`#btn-r`).prop('disabled', true).addClass('selected correct').children('b').html(`<i class='fas fa-check'></i>`); 
@@ -309,6 +327,7 @@ socket.on('answer-buzzer', (inp) => {
 
 socket.on('stop', () => {
   $('#q-num').hide(); 
+  $('#q-timer').hide(); 
   $('#q-stop').show(); 
   $('.btn-mc').prop('disabled', true); 
   $('#i-sa').prop('disabled', true); 

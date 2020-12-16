@@ -4,6 +4,19 @@
   background: #cde;
 }
 
+::-webkit-scrollbar{
+  width: 8px;
+  background: #444;
+}
+
+::-webkit-scrollbar-thumb{
+  background: #7c8692;
+}
+
+::-webkit-scrollbar-thumb:hover{
+  background: #9daebe;
+}
+
 body{
   overscroll-behavior-x: none;
   overscroll-behavior-y: none;
@@ -59,11 +72,17 @@ button:not([disabled]):active{
 }
 
 #nav{
+  position: fixed;
+  width: calc(100% - 16px);
   user-select: none;
+  top: 0;
   padding: 8px 8px 4px;
   border-bottom: 1px solid #000;
   background: #3333336f;
   color: #fff;
+  z-index: 2;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
 }
 
 #bk{
@@ -79,12 +98,12 @@ button:not([disabled]):active{
 
 .container{
   overflow: hidden;
-}
-
-.container{
   text-align: center;
 }
 
+.container.top{
+  margin-top: 60px;
+}
 
 .right{
   float: right;
@@ -100,20 +119,20 @@ button:not([disabled]):active{
 }
 
 #footer{
-  background: transparent;
+  background: none;
   position: fixed;
   font-size: 14px;
   color: #ddd;
   bottom: 0px;
   padding: 5px;
   width: calc(100% - 10px);
-  opacity: 0.3; 
+  /* opacity: 0.3;  */
   transition: all 0.14s
 }
 
 #footer:hover, #footer:focus-within{
   background: #1111117f;
-  opacity: 1;
+  /* opacity: 1; */
 }
 
 #snackbar{
@@ -150,8 +169,14 @@ button:not([disabled]):active{
   padding: 8px 3px;
 }
 
+.show-on-lg{
+  display: none;
+}
 @media only screen and (min-width: 980px) {
   .hide-on-lg{
     display: none;
+  }
+  .show-on-lg{
+    display: initial;
   }
 }

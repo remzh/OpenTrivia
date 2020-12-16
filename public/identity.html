@@ -36,6 +36,10 @@
     if (urlParams.get('tn')) {
       document.getElementById('span-tn').innerText = `, ${urlParams.get('tn')}`; 
     }
+    if (urlParams.get('err')) {
+      document.getElementById('failed').innerText = urlParams.get('err'); 
+      document.getElementById('failed').style.display = 'block';
+    }
 
     window.onload = () => {
       document.getElementById('name').focus(); 

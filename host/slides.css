@@ -40,13 +40,21 @@ html{
 
 /* Top "bar" (round info, category info, timer) */
 
-#catInfo{
+#catInfo, .topbar{
   font-size: 2.8rem;
 }
 
 #qnum{
   background: #1f2877fa; 
   padding: 2px 4px; 
+}
+
+#main.showing-scores div #qnum{
+  background: #278f41fa; 
+}
+
+#main.announcement div #qnum{
+  background: #511991fa; 
 }
 
 #timer{
@@ -176,17 +184,24 @@ h1 span{
 
 #q-options{
   min-width: 480px;
-  width: 100%;
+  flex: 1;
+}
+
+#q-image{
+  flex: 1;
+  text-align: center;
 }
 
 #q-image img{
   margin-left: 8px;
-  max-height: 560px;
-  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center top;
 }
 
 .img-fullWidth{
-  width: 100%; 
+  flex: 2;
   text-align: center;
 }
 
@@ -197,12 +212,31 @@ h1 span{
 }
 
 #q-stats{
-  width: 100%; 
+  flex: 0.7;
   text-align: center;
 }
 
 #q-stats p{
   font-size: 1.8rem;
+}
+
+#q-stats-answer span{
+  display: inline-block;
+  font-size: 1.8rem;
+  font-weight: 700;
+  background: #45ff935d;
+  box-shadow: 2px 2px 2px #4affc98c;
+  padding: 8px 12px;
+  opacity: 0;
+  transition: opacity 0.24s;
+}
+
+#q-stats-answer span::before{
+  font-size: 1.2rem;
+  font-weight: 400;
+  content: 'Correct Answer:'; 
+  color: #aaffd5;
+  display: block;
 }
 
 #q-pb-outer{
@@ -223,4 +257,130 @@ h1 span{
   height: 8px;
   background: #00ff6a8f;
   transition: width 0.24s;
+}
+
+/* Top Scores */
+
+#scores-upper > div, #scores-lower > div{
+  flex: 1; 
+  background: #ffffff1c;
+  border: 1px solid #ffffff63;
+  backdrop-filter: blur(4px);
+  padding: 16px;
+}
+
+#scores-upper{
+  padding-top: 20px;
+  display: flex;
+}
+
+#scores-upper > div{
+  margin-bottom: 12px;
+  text-align: center;
+  padding-top: 40px;
+  height: 420px;
+}
+
+#scores-upper > div:not(:nth-last-child(1)), #scores-lower > div:not(:nth-last-child(1)){
+  margin-right: 12px;
+}
+
+#scores-lower{
+  display: flex;
+}
+
+#scores-lower div{
+  text-align: left;
+}
+
+#scores-lower .scores-rank{
+  float: left;
+}
+
+.scores-rank{
+  display: inline-block;
+  width: 64px;
+  height: 64px;
+  border-radius: 32px;
+  box-shadow: 2px 2px 4px #333;
+  line-height: 2;
+  font-size: 1.7rem;
+  text-align: center;
+}
+
+.scores-gold{
+  background: linear-gradient(120deg, #f3de67, #b3990a);
+}
+
+.scores-silver{
+  background: linear-gradient(120deg, #dadada, #888888);
+}
+
+.scores-bronze{
+  background: linear-gradient(120deg, #bb674d, #8b4922);
+}
+
+.scores-copper{
+  background: linear-gradient(120deg, #754c30, #442d1e);
+}
+
+.scores-tin{
+  background: linear-gradient(120deg, #777777, #4e4e4e);
+}
+
+.scores-tn{
+  display: block;
+}
+
+#scores-upper .scores-tn{
+  margin-top: 36px;
+  font-size: 2.4rem;
+}
+
+#scores-upper .scores-det{
+  position: absolute;
+  top: 250px;
+  width: calc(100% - 32px);
+  font-size: 1.72rem;
+}
+
+#scores-upper .scores-det > div{
+  height: 92px;
+  overflow: hidden;
+  position: relative;
+}
+
+#scores-upper .scores-det > div div{
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+}
+
+.scores-cor{
+  color: #baf8bd; 
+  font-weight: bold;
+}
+
+.scores-tb{
+  color: #bdd4ff; 
+}
+
+.scores-pts{
+  color: #baf8ee; 
+  font-weight: bold;
+}
+
+.scores-sm{
+  font-size: 1.1rem;
+}
+
+#scores-lower .scores-tn{
+  margin-left: 80px;
+  font-size: 1.6rem;
+}
+
+#scores-lower .scores-det{
+  margin-left: 80px;
+  font-size: 1.2rem;
 }

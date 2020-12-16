@@ -105,6 +105,7 @@ secSocket.on('update', (msg) => {
 
 secSocket.on('question-full', (q) => {
   logger.info('[sec] got question: '+JSON.stringify(q)); 
+  $('#sel-questions').val(q.index); 
   $('.field-timer').text(`No timer active.`); 
   $('.field-q-num').text(`R${q.round}Q${q.num} • ${q.type.toUpperCase()}`);
   $('#q-cur-det').text(`R${q.round}Q${q.num} • ${q.type.toUpperCase()} • ${q.category}`);
@@ -140,13 +141,23 @@ secSocket.on('question-list', (l) => {
 })
 
 function updateAnn(val) {
+  $('.btn-auto').prop('disabled', true).text('Announcement');
   $('#q-cur-det').html(`<span class='scores-green'>SP: Announcement</span>`);
   $('.field-timer').text('Timer not applicable.'); 
   $('#q-cur').html(`<b>${val.title}</b><br><span>${val.body}</span>`);
 }
 
+function updateScores(val) {
+  $('.btn-auto').prop('disabled', true).text('Top Teams');
+  $('#q-cur-det').html(`<span class='scores-green'>SP: Top Teams ("Scores")</span>`);
+  $('.field-timer').text('Timer not applicable.'); 
+  $('#q-cur').html(`Top Teams shown for <b>${val.title}</b>`);
+}
+
 socket.on('announcement', updateAnn); // used in most cases
 secSocket.on('announcement', updateAnn); // used on initial connection
+
+secSocket.on('scores', updateScores); // used when top teams slide is shown
 
 $('#btn-loadQuestion').on('click', () => {
   secSocket.emit('load-question', parseInt($('#sel-questions').val())); 
@@ -243,6 +254,10 @@ $('#btn-ann').on('click', () => {
     body: $('#i-ann-body').val()
   }); 
 });
+
+$('#btn-scores').on('click', () => {
+  secSocket.emit("scores-slides", $('#i-scores-round').val() ? $('#i-scores-round').val():0); 
+})
 
 $('#nav-cat a').on('click', (e) => {
   let ele = e.srcElement; 
