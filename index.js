@@ -818,7 +818,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
       await scoreDB.insertOne({
         ts, 
         scores,
-        score_clean, 
+        scores_clean, 
         published: true
       }); 
     }

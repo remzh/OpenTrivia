@@ -253,7 +253,7 @@ secSocket.on('adm-sockets', (v) => {
   $('#admin-table').html(`<thead><tr><th>TID</th><th>SID / Name</th><th>Connected</th><th>ans/rf</th></tr></thead><tbody>${slist.map(r => {
     tlist.add(r.team); 
     if (r.ac) acList.push(r.ac); 
-    return `<tr><td>${r.team} - ${r.teamName}</td><td>${r.id} ${r.name?`<span class='yellowgreen'>(${r.name})</span>`:'<span class=\'yellow\'>(No Name)</span>'}</td><td>${r.connected}</td><td>${r.ac?`${r.ac.length} <a href='#' onclick='JSON.stringify(alert(acList[${acList.length-1}]))'>[+]</a>`:0}</td></tr>`
+    return `<tr><td>${r.team} - ${r.teamName}</td><td>${r.id} ${r.name?`<span class='yellowgreen'>(${r.name})</span>`:'<span class=\'yellow\'>(No Name)</span>'}</td><td>${r.connected}</td><td>${r.ac?`${r.ac.length} <a href='#' onclick='alert(JSON.stringify(acList[${acList.length-1}]))'>[+]</a>`:0}</td></tr>`
   }).join('')}</tbody>`);
   $('#admin-div-results').html(`${moment().format('hh:mm:ss a')} • getSockets<span class='right'>Total Hosts: ${v.hostCount} • Total users: ${v.userCount} (${tlist.size} team${tlist.size===1?'':'s'})</span>`);
   console.log(v); 
