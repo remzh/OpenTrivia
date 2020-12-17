@@ -151,6 +151,9 @@ td:focus-visible {
   #s-mobile.message {
     display: block;
   }
+  tbody tr td:nth-last-child(1) {
+    width: 88px;
+  }
 }
 
 @media only screen and (min-width: 600px) {
@@ -160,7 +163,7 @@ td:focus-visible {
   }
 
   tbody tr td:not(:nth-child(1)) {
-    width: 90px;
+    width: 88px;
   }
 }
 

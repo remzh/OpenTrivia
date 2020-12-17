@@ -343,6 +343,11 @@ let currentTopScores = {
   scores: {}
 }
 
+let currentBackground = {
+  slides: 'nature.jpg', 
+  users: 'bk.jpg'
+}; 
+
 // End of messages
 // Question management
 
@@ -771,18 +776,6 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     }
   })
 
-  // socket.on('scores-load', function(r){
-  //   loadScores(r).then(res => {
-  //     socket.emit('update', res); 
-  //   })
-  // })
-
-  // socket.on('scores-rank', function(r){
-  //   rankScores(r).then(res => {
-  //     socket.emit('update', res); 
-  //   })
-  // })
-
   socket.on('scores-compute', function(r){
     computeOverallScores(r?r:false, true).then(res => {
       socket.emit('scores-host', res); 
@@ -833,6 +826,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     if (v === 1 && question.curIndex === -2) {
       question.curIndex = -3; 
       io.to('users').emit('scores-release');
+      io.of('/secure').emit('scores-release');
     }
   })
 
@@ -842,6 +836,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     currentMessage.body = msg.body; 
     if (question.active) question.active = false; 
     io.to('users').emit('announcement', currentMessage); 
+    io.of('/secure').emit('announcement', currentMessage); 
   })
 
   socket.on('scores-slides', async function(round) {
@@ -859,6 +854,42 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     io.emit('announcement', currentMessage); 
     io.of('secure').emit('scores', currentTopScores); 
   })
+
+  socket.on('adm-getSockets', async function(){
+    let sockets = io.of('/').in('users').sockets; 
+    let hostSockets = io.of('/secure').sockets; 
+    // console.log(io.of('/').in('users').sockets);
+
+    let userCount = sockets.size;
+
+    let userList = []; 
+    sockets.forEach((s) => { // where s = socket
+      if (s.handshake.session.user) {
+        userList.push({
+          id: s.id, 
+          team: s.handshake.session.user.TeamID, 
+          teamName: s.handshake.session.user.TeamName, 
+          name: s.handshake.session.user.name, 
+          connected: s.connected, 
+          ac: (s.handshake.session.ac && s.handshake.session.ac.ans) ? s.handshake.session.ac.ans : false
+        })
+      } else {
+        if (s.handshake.session.host) {
+          userCount --; 
+          return; 
+        }
+        userList.push({
+          id: s.id, 
+          team: null, 
+          name: '(Unknown)', 
+          connected: s.connected
+        })
+      }
+    })
+
+    socket.emit('adm-sockets', {userCount, hostCount: hostSockets.size, socketList: userList}); 
+    // socket.emit('adm-sockets', io.sockets.sockets); 
+  }); 
 
   // socket.on('scores-tally', function(r){
   //   tallyScores(r).then(res => {
@@ -954,24 +985,70 @@ io.of('/').use(function(socket, next){
   socket.on('sec-login', function(){
     if(socket.handshake.session.host){
       logger.debug('[sec] authenticated: '+socket.id); 
-      socket.join('users'); 
+      // socket.join('users'); 
       socket.join('hosts'); 
       socket.emit('status', {valid: true}); 
     }
     else{
       socket.emit('status', {valid: false}); 
     }
-  })
+  });
 
   socket.on('answer', function(ans){
     if(socket.handshake.session.user){
       logger.debug('[std] recieved answer: '+ans);  
+      if (socket.handshake.session.ac && typeof socket.handshake.session.ac.ret_qi !== 'undefined') {
+        if (socket.handshake.session.ac.ret_qi === question.curIndex) {
+          let prev = socket.handshake.session.ac.prev[socket.handshake.session.ac.prev.length-1]; 
+          if (prev && prev.dur > 5500) {
+            socket.handshake.session.ac.ans.push({
+              qi: question.curIndex,
+              ans, 
+              ts: Date.now()
+            }); 
+            delete socket.handshake.session.ac.ret_qi; 
+          }
+        }
+      }
       processAnswer(socket.handshake.session.user, ans, socket);
       emitAnswerUpdate(); 
     } else{
       socket.emit('status', {valid: false});
     }
-  })
+  });
+  
+  socket.on('ac-blur', function(){
+    if (question.active) {
+      if (!socket.handshake.session.ac) {
+        socket.handshake.session.ac = {
+          prev: [], // previous instances of leaving
+          ans: [], // answers after leaving and returning during a question
+          cur: false
+        }; 
+      }
+      let ac = socket.handshake.session.ac; 
+      if (!ac.cur) {
+        ac.cur = {
+          qi: question.curIndex, 
+          ts: Date.now(), 
+          dur: 0
+        }
+      }
+    }
+  }); 
+
+  socket.on('ac-focus', function(){
+    let ac = socket.handshake.session.ac; 
+    if (ac && ac.cur) {
+      ac.cur.dur = Date.now() - ac.cur.ts; 
+      ac.prev.push(Object.assign({}, ac.cur)); 
+      if (question.active && question.curIndex === ac.cur.qi) {
+        ac.ret_qi = ac.cur.qi; 
+      }
+      delete ac.cur; 
+    }
+  }); 
+  
 });
 
 // End of Socket.io

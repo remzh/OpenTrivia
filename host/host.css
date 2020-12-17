@@ -70,13 +70,13 @@ input::placeholder {
 
 /* Scoring */
 
-#scores-outer {
+#scores-outer, #admin-outer {
   margin: auto;
   max-width: 1200px;
   /* border: 1px solid red;  */
 }
 
-#scores-table {
+#scores-table, #admin-table {
   margin-top: 8px;
   width: 100%;
   border-collapse: collapse;
@@ -101,7 +101,7 @@ th, td {
   padding: 2px 6px;
 }
 
-thead tr th:nth-child(2), tbody tr td:nth-child(2), thead tr th:nth-last-child(3), tbody tr td:nth-last-child(3) {
+#scores-table thead tr th:nth-child(2), tbody tr td:nth-child(2), thead tr th:nth-last-child(3), tbody tr td:nth-last-child(3) {
   border-right: 1px solid #aaa;
 }
 
@@ -118,6 +118,19 @@ thead tr th:nth-child(2), tbody tr td:nth-child(2), thead tr th:nth-last-child(3
 .scores-rank {
   float: right;
   font-weight: bold;
+}
+
+#admin-div-results{
+  margin-top: 12px;
+  color: #c3f1ff;
+}
+
+.yellowgreen{
+  color: #cff785;
+}
+
+.yellow{
+  color: #f7f792;
 }
 
 /* Specific CSS (for specific elements) */
@@ -165,11 +178,11 @@ thead tr th:nth-child(2), tbody tr td:nth-child(2), thead tr th:nth-last-child(3
 }
 
 @media only screen and (min-width: 980px) {
-  thead th.scores-round, thead tr th:nth-last-child(2) {
+  #scores-table thead th.scores-round, #scores-table thead tr th:nth-last-child(2) {
     width: 88px;
   }
   
-  thead tr th:nth-child(1), tbody tr td:nth-child(1), thead tr th:nth-last-child(1), tbody tr td:nth-last-child(1) {
+  #scores-table thead tr th:nth-child(1), #scores-table tbody tr td:nth-child(1), #scores-table thead tr th:nth-last-child(1), #scores-table tbody tr td:nth-last-child(1) {
     text-align: center;
     font-weight: bold;
     width: 54px;

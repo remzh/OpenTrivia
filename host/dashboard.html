@@ -26,6 +26,7 @@
         <a data-target='basic' href='#basic'>Basic</a>
         <a data-target='advanced' href='#advanced'>Advanced</a>
         <a data-target='scores' href='#scores'>Scores</a>
+        <a data-target='admin' href='#admin'>Admin</a>
       </div>
     </div>
     <div id='basic' class='container top'>
@@ -87,9 +88,19 @@
           <div id='scores-outer'>
             <input id='input-scoreLookup' placeholder='Rounds (def: all)'/> <button onclick='secSocket.emit("scores-compute", $("#input-scoreLookup").val())'>Query</button> <button onclick='secSocket.emit("scores-publish", 1)'>Publish</button> <span style='float: right'>Last Queried: <span id='scores-lu'>n/a</span> • Last Published: <span id='scores-lp'>n/a</span></span>
             <br/>
-            <table id='scores-table'>
-              
-            </table>
+            <table id='scores-table'></table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id='admin' class='container top'>
+      <div class='col-l'>
+        <h2>Admin</h2>
+        <div class='left'>
+          <div id='admin-outer'>
+            <button id='admin-btn-query'>Query Users</button>
+            <div id='admin-div-results'></div>
+            <table id='admin-table'></table>
           </div>
         </div>
       </div>

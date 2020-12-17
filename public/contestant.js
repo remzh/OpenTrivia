@@ -363,3 +363,11 @@ socket.on('timer', (v) => {
 //   console.log(msg);
 //   $('#log').append($('<li>').text(msg));
 // });
+
+window.onblur = function() {
+  socket.emit('ac-blur'); 
+}
+
+window.onfocus = function() {
+  socket.emit('ac-focus'); 
+}
