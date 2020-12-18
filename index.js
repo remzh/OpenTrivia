@@ -123,6 +123,7 @@ function loadSheets(){
     simpleSheet: true
   }).then((dt) => {
     userdb = dt; 
+    totalTeams = dt.length; 
     logger.info(`Loaded UserDB (${dt.length} entries)`)
   });
   tabletop.init({
@@ -348,6 +349,8 @@ let currentBackground = {
   users: 'bk.jpg'
 }; 
 
+let totalTeams = 0; 
+
 // End of messages
 // Question management
 
@@ -457,6 +460,8 @@ function loadQuestion(index, socket){
     socket.emit('update', {type: 'question', msg: `Question index ${index} does not exist`}); 
     return; 
   }
+
+  question.firstCorrectTaken = false; 
   question.active = true; 
   question.current = mapQuestionEntry(questiondb[index]);
   question.curIndex = index; 
@@ -470,6 +475,10 @@ function loadQuestion(index, socket){
 
   io.emit('question', getCurrentQuestion()); 
   io.of('secure').emit('question-full', getCurrentQuestion(1)); 
+
+  if (getCurrentQuestion().type === 'bz') {
+    startTimer(60); 
+  }
 }
 
 /**
@@ -550,6 +559,12 @@ function processAnswer(team, ans, socket){
         if (q.timed) {
           teamBroadcast(socket, 'answer-time', {time: Date.now() - question.timestamp, correct: true, tb: tbCalc(), answer: q.answer}); 
           question.tb[tid] = tbCalc(); 
+
+          if (!question.firstCorrectTaken) {
+            question.firstCorrectTaken = true; 
+            let user = socket.handshake.session.user; 
+            io.of('/secure').emit('answer-firstCorrect', user.name?`${user.name} from ${user.TeamName}` : user.TeamName); 
+          }
         }
         question.scores[tid] = 1;
         return true; 
@@ -583,6 +598,12 @@ function processAnswer(team, ans, socket){
             points: mult ? Math.round(mult*question.scores[tid]) : question.scores[tid]
           }); 
 
+          if (!question.firstCorrectTaken) {
+            question.firstCorrectTaken = true; 
+            let user = socket.handshake.session.user; 
+            io.of('/secure').emit('answer-firstCorrect', user.name?`${user.name} from ${user.TeamName}` : user.TeamName); 
+          }
+
           if (!question.timer.interval || question.timer.end > Date.now() + 10000) {
             startTimer(10); 
           }
@@ -591,6 +612,12 @@ function processAnswer(team, ans, socket){
           if (q.timed) {
             teamBroadcast(socket, 'answer-time', {time: Date.now() - question.timestamp, correct: true, tb: tbCalc(), answer: q.answer}); 
             question.tb[tid] = tbCalc(); 
+
+            if (!question.firstCorrectTaken) {
+              question.firstCorrectTaken = true; 
+              let user = socket.handshake.session.user; 
+              io.of('/secure').emit('answer-firstCorrect', user.name?`${user.name} from ${user.TeamName}` : user.TeamName); 
+            }
           }
         }
         return true; 
@@ -613,7 +640,7 @@ function emitAnswerUpdate(){
   io.of('secure').emit('answer-update', {
     attempted: Object.keys(question.scores).length, 
     correct: Object.values(question.scores).filter(r => r>0).length, 
-    total: userdb.length
+    total: totalTeams
   });  
 }
 
@@ -691,6 +718,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
   }); 
 
   socket.on('status', function(){
+    socket.emit('config-bk', currentBackground.slides); 
     if(question.curIndex > -1){
       socket.emit('question-full', getCurrentQuestion(1)); 
     } else {
@@ -746,7 +774,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
       question.scoresSaved = true; 
       let r = parseInt(getCurrentQuestion(true).round), n = parseInt(getCurrentQuestion(true).num); 
       if(scoring.countedRounds.indexOf(r) !== -1){
-        socket.emit('update', `Scores saved for R${r} Q${n}`);
+        socket.emit('update-scores', `Scores saved for R${r} Q${n}`);
         saveScores(r, n, question.scores, question.tb); 
       }
     }
@@ -770,7 +798,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     question.scoresSaved = true; 
     if(scoring.countedRounds.indexOf(r) !== -1){
       saveScores(r, n, question.scores, question.tb); 
-      socket.emit('update', `Scores saved for R${r} Q${n}`);
+      socket.emit('update-scores', `Scores saved for R${r} Q${n}`);
     } else{
       socket.emit('update', `Round (R${r}) not counted; no scores saved`);
     }
@@ -855,6 +883,22 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     io.of('secure').emit('scores', currentTopScores); 
   })
 
+  socket.on('adm-listImages', async function(){
+    let userImages = await fs.promises.readdir(path.join(__dirname, 'public', 'images')); 
+    let hostImages = await fs.promises.readdir(path.join(__dirname, 'host', 'images')); 
+    socket.emit('adm-images', {userImages, hostImages}); 
+  })
+
+  socket.on('adm-setBK', function(type, image){
+    if (type === 1) {
+      currentBackground.users = image; 
+      io.to('users').emit('config-bk', image); 
+    } else if (type === 2) {
+      currentBackground.slides = image; 
+      io.of('/secure').emit('config-bk', image); 
+    }
+  })
+
   socket.on('adm-getSockets', async function(){
     let sockets = io.of('/').in('users').sockets; 
     let hostSockets = io.of('/secure').sockets; 
@@ -888,14 +932,21 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     })
 
     socket.emit('adm-sockets', {userCount, hostCount: hostSockets.size, socketList: userList}); 
-    // socket.emit('adm-sockets', io.sockets.sockets); 
   }); 
 
-  // socket.on('scores-tally', function(r){
-  //   tallyScores(r).then(res => {
-  //     socket.emit('update', res); 
-  //   })
-  // })
+  socket.on('adm-setTeamCount', n => {
+    if (typeof n !== 'number') {
+      socket.emit('update', 'adm-setTeamCount failed: invalid parameter'); 
+    } else {
+      totalTeams = n; 
+      socket.emit('update', 'adm-setTeamCount success'); 
+    }
+  })
+
+  socket.on('adm-refreshSheets', () => {
+    loadSheets(); 
+    socket.emit('update', `Sheets reloaded. CAUTION: May cause system instability.`); 
+  })
 });
 
 /**
@@ -908,6 +959,9 @@ function teamBroadcast(socket, message, payload={}) {
   if (!socket.handshake.session.user) return false; 
   let teamID = socket.handshake.session.user.TeamID; 
   if (socket.rooms.has(`team-${teamID}`)) { 
+    if (socket.handshake.session.user.name) {
+      payload.senderName = socket.handshake.session.user.name; 
+    }
     socket.to(`team-${teamID}`).emit(message, payload); 
     payload.sender = true;
     socket.emit(message, payload); 
@@ -938,6 +992,8 @@ io.of('/').use(function(socket, next){
    */
   socket.on('status', function(mode){
     if(socket.handshake.session.user){
+      socket.emit('config-bk', currentBackground.users); 
+
       if (!mode) {
         socket.emit('status', {valid: true, user: socket.handshake.session.user})}
 

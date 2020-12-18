@@ -44,6 +44,7 @@
     <div id='advanced' class='container top'>
       <div class='col'>
         <h2>Control Panel:</h2>
+        <span style='background: #964c4c; padding: 4px 6px'><i class='fas fa-exclamation-triangle'></i> Do NOT use this page unless you know <b>exactly</b> what you're doing.</span>
         <h3>Override Defaults</h3>
         <select id='sel-questions'></select> <button id='btn-loadQuestion'>Load</button> <button id='btn-loadNextQuestion'>Load Next</button><br/><br/>
         <input type='number' id='i-timer' style='width: 40px'/> <button id='btn-startTimer'>Start Timer</button> <button id='btn-stopTimer'>Pause Timer</button>
@@ -77,7 +78,7 @@
           <p><b id='q-cur-det'></b></br><i class='fas fa-stopwatch'></i> <i class='field-timer'>No timer active.</i><br/></p>
           <p id='q-cur'><i>No question active.</i></p>
           <h3>Question Stats</h3>
-          <p><span id='q-ans'>0</span> Answered, <span id='q-cor'>0</span> Correct • <a id='q-ans-val' title='No question active.' href='#' onclick='alert(this.title)'>Answer</a></p>
+          <p><span id='q-ans'>0</span> Answered, <span id='q-cor'>0</span> Correct • <span id='q-total'>0</span> Total Teams • <a id='q-ans-val' title='No question active.' href='#' onclick='alert(this.title)'>Answer</a></p>
         </div>
       </div>
     </div>
@@ -98,6 +99,16 @@
         <h2>Admin</h2>
         <div class='left'>
           <div id='admin-outer'>
+            <button id='adm-bks-load' onclick='secSocket.emit("adm-listImages")'>Load BKs</button>
+            <select id='adm-bks-slides' class='adm-bks'></select>
+            <button onclick='secSocket.emit("adm-setBK", 2, $("#adm-bks-slides").val())' class='adm-bks'>Set BK (Slides)</button>
+            <select id='adm-bks-users' class='adm-bks'></select>
+            <button onclick='secSocket.emit("adm-setBK", 1, $("#adm-bks-users").val())' class='adm-bks'>Set BK (Users)</button>
+            <span class='right'>
+              <button id='btn-adm-uc'>UC</button>
+              <button id='btn-adm-rs'><i class='fas fa-exclamation-triangle'></i> RS</button>
+            </span>
+            <hr/>
             <button id='admin-btn-query'>Query Users</button>
             <div id='admin-div-results'></div>
             <table id='admin-table'></table>
@@ -106,8 +117,9 @@
       </div>
     </div>
     <br/><br/>
+    <div id='snackbar'></div>
     <div id='footer'>
-      OpenTrivia &copy; 2020 Ryan Zhang. <br class='hide-on-lg'/>OpenTrivia is <a target='_blank' href='https://github.com/Ryan778/opentrivia'>open source</a>!
+      <a target='_blank' href='https://github.com/Ryan778/opentrivia'>OpenTrivia</a> &copy; 2020 Ryan Zhang.
       <span class='right'><a href='#' onclick='logger.open()'>Open Console</a></span>
     </div>
   </body>

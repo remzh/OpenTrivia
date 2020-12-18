@@ -239,6 +239,12 @@ h1 span{
   display: block;
 }
 
+#q-stats-first{
+  display: inline-block;
+  margin-top: 8px;
+  color: #a8eeff;
+}
+
 #q-pb-outer{
   background: #c0c0c08f;
   margin: auto;

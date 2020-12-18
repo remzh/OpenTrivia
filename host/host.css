@@ -120,6 +120,8 @@ th, td {
   font-weight: bold;
 }
 
+/* Admin tab */
+
 #admin-div-results{
   margin-top: 12px;
   color: #c3f1ff;
@@ -131,6 +133,10 @@ th, td {
 
 .yellow{
   color: #f7f792;
+}
+
+.adm-bks{
+  display: none;
 }
 
 /* Specific CSS (for specific elements) */

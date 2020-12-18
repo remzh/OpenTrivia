@@ -278,7 +278,11 @@ socket.on('answer-ack', (ack) => {
     if (ack.sender) {
       showSnackbar('Answer Submitted!');
     } else {
-      showSnackbar('Your teammate submitted an answer!', 1);
+      if (ack.senderName) {
+        showSnackbar(`${ack.senderName} submitted an answer!`, 1); 
+      } else {
+        showSnackbar(`A teammate submitted an answer!`, 1); 
+      }
     }
   } else{
     alert(ack.msg); 
@@ -301,7 +305,11 @@ socket.on('answer-time', (inp) => {
       $('#sa-right-timed').removeClass('pulse');
     }, 600) 
     if (!inp.sender) {
-      showSnackbar(`A teammate got the answer!`, 1); 
+      if (inp.senderName) {
+        showSnackbar(`${inp.senderName} got the answer!`, 1); 
+      } else {
+        showSnackbar(`A teammate got the answer!`, 1); 
+      }
     }
   } else{
     if (inp.message) {
@@ -358,6 +366,10 @@ socket.on('timer', (v) => {
   $('#q-timer').css({'opacity': 1, 'background': `#${v>10?'00':(250 - v*25).toString(16).padStart(2, 0)}00007f`}); 
   $('#q-timer').html(`<i class='fas fa-stopwatch'></i> <b>${v} second${v!=1?'s':''}</b> remaining.`);
 }); 
+
+socket.on('config-bk', (i) => {
+  $('#bk').css('background-image', `url(images/${i})`);
+})
 
 // socket.on('chat', function(msg){
 //   console.log(msg);

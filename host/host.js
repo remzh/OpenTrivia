@@ -97,11 +97,48 @@ socket.on('timer', (t) => {
 // actual host stuff
 // basic/advanced tab
 
+let snkTimeout = false, snkType = 1; 
+/**
+ * Shows a temporary snackbar on the user's screen. 
+ * @param {string} msg 
+ * @param {boolean} [small=false] 
+ */
+function showSnackbar(msg, small){
+  let target = small?$('#snackbar-sm'):$('#snackbar'); 
+  let type = small?1:0; 
+  if (snkTimeout) {
+    clearTimeout(snkTimeout); 
+    if (type !== snkType) {
+      // hide existing snackbars
+      $('.snackbar').css({'bottom': '-40px', 'opacity': '0'}); 
+    } else {
+      // emphasize existing snackbar
+      snkTimeout = false; 
+      target.addClass('pulse');
+      setTimeout(() => {
+        target.removeClass('pulse');
+      }, 400) 
+    }
+  }
+  target.html(msg); 
+  target.css({'bottom': '40px', 'opacity': '1'}); 
+  snkType = type; 
+  snkTimeout = setTimeout(() => {
+    target.css({'bottom': '-40px', 'opacity': '0'}); 
+    snkTimeout = false;
+  }, 2100); 
+}
+
 secSocket.on('update', (msg) => {
   if(typeof msg === 'object') msg = JSON.stringify(msg);  
   logger.info('[server]' + msg); 
   alert(msg); 
 })
+
+secSocket.on('update-scores', (msg) => {
+  console.log(msg); 
+  showSnackbar(msg); 
+}); 
 
 secSocket.on('question-full', (q) => {
   logger.info('[sec] got question: '+JSON.stringify(q)); 
@@ -117,7 +154,11 @@ secSocket.on('question-full', (q) => {
 
   $('.btn-auto').prop('disabled', false); 
   if (q.active) {
-    $('.btn-auto').text('Start Timer')
+    if (q.type === 'md') {
+      $('.btn-auto').text('Next Question')
+    } else {
+      $('.btn-auto').text('Start Timer')
+    }
   } else if (!q.scoresSaved) {
     $('.btn-auto').text('Show Results')
   } else {
@@ -180,6 +221,7 @@ secSocket.on('answer-update', (dt) => {
   // let correct = Object.values(dt).filter(r => r==1).length; 
   $('#q-ans').text(dt.attempted); 
   $('#q-cor').text(dt.correct);
+  $('#q-total').text(dt.total);
 })
 
 // scoring
@@ -243,7 +285,7 @@ secSocket.on('answer-stats', (stats) => {
 
 $('#admin-btn-query').on('click', () => {
   secSocket.emit('adm-getSockets');
-})
+});
 
 let acList = []; 
 secSocket.on('adm-sockets', (v) => {
@@ -257,7 +299,31 @@ secSocket.on('adm-sockets', (v) => {
   }).join('')}</tbody>`);
   $('#admin-div-results').html(`${moment().format('hh:mm:ss a')} • getSockets<span class='right'>Total Hosts: ${v.hostCount} • Total users: ${v.userCount} (${tlist.size} team${tlist.size===1?'':'s'})</span>`);
   console.log(v); 
+});
+
+secSocket.on('adm-images', (v) => {
+  console.log(v); 
+  $('#adm-bks-slides').html(v.hostImages.map(r => `<option>${r}</option>`));
+  $('#adm-bks-users').html(v.userImages.map(r => `<option>${r}</option>`));
+  $('#adm-bks-load').hide(); 
+  $('.adm-bks').show(); 
 })
+
+$('#btn-adm-uc').on('click', () => {
+  let p = window.prompt('Enter new # of teams: '); 
+  if (p && p.length > 0 && parseInt(p).toString() === p) {
+    secSocket.emit('adm-setTeamCount', parseInt(p)); 
+  } else {
+    alert('Invalid input. ')
+  }
+});
+
+$('#btn-adm-rs').on('click', () => {
+  let c = window.confirm('Refresh Sheets\nWARNING: May cause instability. Continue?'); 
+  if (c) {
+    secSocket.emit('adm-refreshSheets'); 
+  }
+});
 
 // utilities + general (not socket.io-specific)
 

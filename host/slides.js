@@ -82,6 +82,14 @@ blurInterval = false;
 function updateQuestion(data){
   curType = data.type; 
   $('#scores').hide(); 
+  let duration = 9000; 
+  if (data.question.split('|').length <= 2) {
+    if (data.question.type === 'bz') {
+      duration = 30000; 
+    } else {
+      duration = 14000; 
+    }
+  }
   // Render question
   if (data.type !== 'md') {
     $('#timer').show(); // show the timer
@@ -102,7 +110,7 @@ function updateQuestion(data){
         clearInterval(blurInterval); 
         blurInterval = false; 
       }
-    }, 10000); 
+    }, duration); 
   }
 
   if ($('#question')[0].offsetHeight > 300) {
@@ -153,12 +161,13 @@ function updateQuestion(data){
     $('#q-image').addClass('img-fullWidth');
     if (data.type === 'sa' || data.type === 'bz' || data.type === 'md') {
       $('#q-stats').show(); 
+      $('#q-stats-first').hide(); 
       $('#q-pb-inner').css('width', '0%');
       $('#q-stats-num').text(`0%`); 
       if (data.type === 'md') {
         $('#q-stats-msg').text('are ready!'); 
       } else {
-        $('#q-stats-msg').text('have correctly answered!'); 
+        $('#q-stats-msg').text('have correctly answered.'); 
       }
     } else {
       $('#q-stats').hide(); 
@@ -284,6 +293,15 @@ secSocket.on('answer-update', (data) => {
     $('#q-stats-num').text(`${Math.round(100*correct/totalTeams)}%`);
     $('#q-pb-inner').css('width', `${Math.round(1000*correct/totalTeams)/10}%`);
   }
+})
+
+secSocket.on('answer-firstCorrect', (name) => {
+  $('#q-stats-first-name').text(name); 
+  $('#q-stats-first').show(); 
+})
+
+secSocket.on('config-bk', (image) => {
+  $('#bkimg').css('background-image', `url(images/${image})`);
 })
 
 socket.on('timer', (t) => {
