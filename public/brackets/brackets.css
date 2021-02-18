@@ -1,0 +1,39 @@
+#bracket-outer {
+  background: #555;
+  width: 100%;
+  height: 100%;
+  text-align: left;
+  position: relative;
+  padding: 1rem;
+  font-family: 'Roboto', sans-serif;
+}
+
+.bk-round {
+  display: inline-block;
+  width: 300px;
+  
+}
+
+.bk-match-outer {
+  /* position: absolute; */
+  background: #444;
+  height: 6.0rem;
+  width: 300px;
+  border: 1px solid #fff;
+  margin-bottom: 1.5rem;
+}
+
+.bk-match-outer .bk-match-top {
+  border-bottom: 1px solid #fff;
+}
+
+.bk-match-inner {
+  padding: 0.2rem;
+  height: 2.6rem;
+}
+.bk-match-inner-main {
+  font-size: 1.24rem;
+}
+.bk-match-inner-sub {
+  font-size: 0.96rem;
+}

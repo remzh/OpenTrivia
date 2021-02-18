@@ -16,6 +16,7 @@ const express = require('express');
 const app = require('express')();
 const path = require('path');
 const colors = require('colors');
+
 // const credentials = require(path.join(__dirname, 'secure', 'credentials.json')); // secure credentials
 // const scoring = require(path.join(__dirname, 'secure', 'scoring.json')); 
 let scoring = {
@@ -32,6 +33,13 @@ const cookieParser = require('cookie-parser');
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cookieParser());
+
+const brackets = require('./lib/brackets.js');
+app.use('/brackets/*', brackets.appHook); 
+let bracketSet = brackets.generateBrackets(5); 
+app.get('/brackets/data', (req, res) => {
+  res.json(bracketSet); 
+})
 
 const http = require('http').Server(app);
 const winston = require('winston');
@@ -1239,7 +1247,14 @@ app.get('/scores/data', async function(req, res) {
       team: false
     })
   } else {
-    if (req.session.user) {
+    if (req.session.host) {
+      res.status(200).json({
+        ok: true, 
+        scores: scores.scores, 
+        team: 'Host Account'
+      })
+    }
+    else if (req.session.user) {
       let tid = req.session.user.TeamID; 
       try {
         let teamIndex = scores.scores.data.findIndex(r => r.t === tid); 

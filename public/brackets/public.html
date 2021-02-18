@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Scores • Trivia Night</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1, minimum-scale=1.0, maximum-scale=1.0'>
+    <link rel='stylesheet' href='../main.css'/>
+    <link rel='stylesheet' href='brackets.css'/>
+    <script defer src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js' integrity='sha256-4iQZ6BVL4qNKlQ27TExEhBN1HFPvAvAMbFavKKosSWQ=' crossorigin='anonymous'></script>
+    <script defer src='https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js' integrity='sha256-vrn14y7WH7zgEElyQqm2uCGSQrX/xjYDjniRUQx3NyU=' crossorigin='anonymous'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/js/all.min.js' integrity='sha256-qM7QTJSlvtPSxVRjVWNM2OfTAz/3k5ovHOKmKXuYMO4=' crossorigin='anonymous'></script>
+    <script defer src='../logger.js'></script>
+    <script defer src='brackets.js'></script>
+  </head>
+  <body>
+    <div id='bk'></div>
+    <div id='nav'>
+      <div id='nav-top'>
+        <span id='s-team'>Brackets</span>
+      </div>
+      <div id='nav-btm'>
+        <span id='s-school'>16-Team Single Elimination • 5 Brackets</span>
+      </div>
+      <div id='nav-cat'>
+        <a data-target='0' href='#0' class='active'>First Bracket</a>
+        <a data-target='1' href='#1'>Second Bracket</a>
+        <a data-target='2' href='#2'>Third Bracket</a>
+        <a data-target='3' href='#3'>Fourth Bracket</a>
+        <a data-target='4' href='#4'>Fifth Bracket</a>
+      </div>
+    </div>
+    <div class='container' style='margin-top: 90px'>
+      <div class='c-inner'>
+        <!-- <h1 style='text-shadow: 1px 1px 3px #444'>Awesome</h1> -->
+        <div id='bracket-outer'>
+
+        </div>
+      </div>
+      <div style='text-align: left;' id='footer'>
+        OpenTrivia 
+        <span id='a-landing' class='right'><a href='..'>Landing Page</a></span>
+      </div>
+    </div>
+  </body>
+</html>

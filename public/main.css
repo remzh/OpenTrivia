@@ -76,13 +76,13 @@ button:not([disabled]):active{
   width: calc(100% - 16px);
   user-select: none;
   top: 0;
-  padding: 8px 8px 4px;
+  padding: 8px 8px 0px;
   border-bottom: 1px solid #000;
   background: #3333336f;
   color: #fff;
   z-index: 2;
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
 }
 
 #bk{
@@ -118,20 +118,39 @@ button:not([disabled]):active{
   color: #ddd;
 }
 
+#nav-cat{
+  padding-top: 4px;
+}
+
+#nav-cat a{
+  text-decoration: none;
+  display: inline-block; 
+  padding: 4px 8px;
+  border-bottom: 2px solid transparent; 
+  transition: all 0.2s; 
+}
+
+#nav-cat a.active{
+  background: #ffffff0f; 
+  border-color: #aac8ff;
+}
+
 #footer{
-  background: none;
+  background: #1111117f;
   position: fixed;
   font-size: 14px;
   color: #ddd;
   bottom: 0px;
   padding: 5px;
   width: calc(100% - 10px);
-  transition: all 0.14s
+  transition: all 0.14s;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
 }
 
-#footer:hover, #footer:focus-within{
+/* #footer:hover, #footer:focus-within{
   background: #1111117f;
-}
+} */
 
 #snackbar{
   z-index: 40; 
