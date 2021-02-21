@@ -8,7 +8,7 @@
 require('dotenv').config(); 
 const port = process.env.PORT || 8100;
 
-// Init variables and server
+// Init variables and server  
 
 const fs = require('fs');
 const moment = require('moment');

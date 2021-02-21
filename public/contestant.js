@@ -32,7 +32,7 @@ function showSnackbar(msg, small){
     }
   }
   target.html(msg); 
-  target.css({'bottom': '40px', 'opacity': '1'}); 
+  target.css({'bottom': '60px', 'opacity': '1'}); 
   snkType = type; 
   snkTimeout = setTimeout(() => {
     target.css({'bottom': '-40px', 'opacity': '0'}); 
@@ -160,7 +160,8 @@ socket.on('connect_error', (error) => {
 
 socket.on('status', (res) => {
   if(res.valid){
-    showStatus('success', 'Connected'); 
+    showStatus('success', ''); 
+    // showStatus('success', 'Connected'); 
     logger.info('recieved data: '+JSON.stringify(res.user))
     user = res.user; 
     $('#s-team').text(user.TeamName); 

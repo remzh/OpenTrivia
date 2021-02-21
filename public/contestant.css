@@ -5,6 +5,45 @@ html, body {
   overscroll-behavior: none !important;
 }
 
+/* Navbar and footer */
+
+#nav {
+  height: 52px;
+  overflow: hidden;
+}
+
+#nav-top {
+  height: 28px;
+  overflow: hidden;
+}
+
+#footer {
+  height: 36px;
+  font-size: 12px;
+}
+
+#footer-round {
+  display: inline-block;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+#s-team {
+  display: inline-block; 
+  width: calc(100% - 100px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Contestant body framework */
+
+#contestant-inner {
+  width: 80%;
+  max-width: 600px;
+  margin: auto;
+}
+
 @keyframes pulse {
   from {
     transform: scale(1)}
@@ -20,13 +59,15 @@ html, body {
   animation-duration: 0.6s;
 }
 
+/* Question details */
+
 .q:not(#q-msg) {
   display: none;
 }
 
 .btn-mc, #i-sa {
-  width: 80%; 
-  max-width: 600px;
+  width: 100%; 
+  /* max-width: 600px; */
   font-size: 24px;
   margin-top: 8px;
   text-align: left;
@@ -145,7 +186,8 @@ a button{
   color: #300; 
 }
 
-/* Scoreboard */
+/* Scoreboard iFrame */
+
 #q-scores button{
   font-size: 1.4rem;
   padding: 8px 12px;
