@@ -30,6 +30,10 @@ html {
   background-image: url(/images/bk2.jpg);
 }
 
+#nav {
+  height: 32px;
+}
+
 /* Messages at top */
 
 .message {

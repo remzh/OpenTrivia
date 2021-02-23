@@ -78,10 +78,11 @@ button:not([disabled]):active{
 
 #nav{
   position: fixed;
-  width: calc(100% - 16px);
+  box-sizing: border-box;
+  width: 100%;
   user-select: none;
   top: 0;
-  padding: 8px 8px 0px;
+  padding: 2px 6px 0px;
   border-bottom: 1px solid #000;
   background: #3333336f;
   color: #fff;
@@ -115,7 +116,7 @@ button:not([disabled]):active{
 }
 
 #nav-top span{
-  font-size: 24px;
+  font-size: 22px;
 }
 
 #nav-btm span{

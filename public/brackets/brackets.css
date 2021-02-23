@@ -48,7 +48,7 @@ html {
 
 .bk-round {
   display: inline-block;
-  width: calc(18.0rem + 2px);
+  width: 18.0rem;
 }
 
 .bk-spacer {
@@ -67,14 +67,15 @@ html {
 .bk-match-outer {
   /* position: absolute; */
   background: #444;
-  height: calc(6.0rem - 3px);
+  height: 6rem;
   width: 18.0rem;
   border: 1px solid #fff;
+  box-sizing: border-box;
   /* margin-bottom: 1.5rem; */
 }
 
 .bk-match-outer .bk-match-top {
-  border-bottom: 1px solid #fff;
+  border-bottom: 1px solid #aaa;
 }
 
 .bk-match-inner {
@@ -113,6 +114,7 @@ sup {
 /* Gaps and connectors */
 .bk-gap, .bk-connector {
   width: 3rem; 
+  box-sizing: border-box;
   /* display: inline-block; */
 }
 
@@ -120,7 +122,7 @@ sup {
   vertical-align: top;
   display: inline-block;
   width: 1.5rem;
-  height: calc(100% - 2px);
+  height: 100%;
   /* margin-top: 1px; */
   border-bottom: 1px solid #fff;
   /* padding-bottom: 1px; */

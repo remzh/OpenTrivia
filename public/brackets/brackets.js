@@ -16,7 +16,8 @@ function getOrdinal(i) {
 
 function formatName(n, index) {
   if (typeof n !== 'undefined') {
-    return `Team ${n} Fjalj FDjieo MEewio Faiww`; 
+    // return `<span class='fa-layers fa-fw'><i class='fas fa-circle' style='color: #fff000'></i><i class='fas fa-heart' style='color: tomato' data-fa-transform='shrink-6'></i></span> Team ${n} Fjalj FDjieo MEewio Faiww`; 
+    return `Team ${n}`; 
   }
   if (typeof index !== 'undefined') {
     // return `Game ${index+1}`;
@@ -70,11 +71,11 @@ function renderSpacingTemplate(item) {
     if (!type) {
       str += `<div class='bk-gap' style='height: ${connector*MATCH_BASE_HEIGHT}rem'></div>`; 
     } else if (type === 1) {
-      str += `<div class='bk-connector' style='height: calc(${connector*MATCH_BASE_HEIGHT}rem - 0px)'><div class='bk-cl'></div><div class='bk-cr'></div></div>`; 
+      str += `<div class='bk-connector' style='height: ${connector*MATCH_BASE_HEIGHT}rem'><div class='bk-cl'></div><div class='bk-cr'></div></div>`; 
     } else if (type === 2) {
-      str += `<div class='bk-connector' style='height: calc(${connector*MATCH_BASE_HEIGHT}rem - 2px)'><div class='bk-cl bk-nb bk-d'></div></div>`; 
+      str += `<div class='bk-connector' style='height: ${connector*MATCH_BASE_HEIGHT}rem'><div class='bk-cl bk-nb bk-d'></div></div>`; 
     } else if (type === 3) {
-      str += `<div class='bk-connector' style='height: calc(${connector*MATCH_BASE_HEIGHT}rem - 1px)'><div class='bk-cl bk-nb bk-d'></div><div class='bk-cr bk-db'></div></div>`; 
+      str += `<div class='bk-connector' style='height: ${connector*MATCH_BASE_HEIGHT}rem'><div class='bk-cl bk-nb bk-d'></div><div class='bk-cr bk-db'></div></div>`; 
     }
   }
   return str; 
