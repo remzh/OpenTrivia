@@ -1,39 +1,51 @@
 # Open Trivia
-Welcome to Open Trivia! This documentation is not fully completed yet, but it's enough to get one started. 
+Welcome to Open Trivia! 
 
 ## What is it? 
-Think of it like [Socrative](https://socrative.com/), except less test-like and more flexixble.  OpenTrivia is an all-in-one trivia server that handles a client interface, a host interface, and a slideshow interface (to be projected). It supports the following: 
+Think of it like [Socrative](https://socrative.com/), except less test-like and more flexixble.  OpenTrivia is an all-in-one trivia server that handles a client interface, a host interface, and a slideshow interface (intended to be projected/presented). It supports the following: 
 - (Technically) unlimited teams, rounds, and questions. Your mileage will vary based on the specs of your server 
-- Multimedia support with images, audio, and videos 
+- Image support and customizable backgrounds to liven up your "slides" 
 - Multiple choice, short answer, and third-party answering formats 
-- Easy and intuitive question bank editor, also known as Google Sheets (optional)
+- Easy and intuitive question bank editor, also known as Google Sheets (alternatively, JSON can also be used)
 
 ## Why? 
-Inspired by the lack of customizability in existing (free) platofrms like Kahoot, Open Trivia is fully customizable while still having everything you need right out of the go. 
+Inspired by the lack of customizability in existing (free) platofrms like Kahoot, Open Trivia is fully customizable while still having everything you need right out of the go. Because I'm not hosting for you, I don't need to charge monthly fees or paywall features!
 
 ## Quickstart
-**I'm in the progress of migrating variables from a mess of JSON files scattered around into a few environmental variables. The following will be updated once the configuration migration process is complete.**
+Open Trivia uses environment variables for setup and configuration. You can set them directly or place them in a `.env` file in the root directory of Open Trivia. 
 
-You'll need to create a `credentials.json` file under the `secure` folder, and provide three keys: `database`, `sessionKey`, and `hostPassword`. 
+Here's an example of a `.env` file along with descriptions of each key: 
 
-The `hostPassword` should begin with "host" and is used to give access to the slideshow and host dashboard. The `database` must be a MongoDB or MongoDB compatible database. 
+```bash
+# Database connection (must be a MongoDB or MongoDB compatible database)
+DB_URL=mongodb://localhost:27017/opentrivia
 
-Here's an example: 
-```json
-{
-  "database": "mongodb://localhost:27017/opentrivia", 
-  "sessionKey": "(random string)", 
-  "hostPassword": "host12345678"
-}
+# Session key (used for encrypting cookies)
+SESSION_KEY=aaaaaaaaaaaa
+
+# Password for accessing /host/* (slides and host controls)
+# Must start with "host" but can be anything after that
+HOST_KEY=host1234
+
+# Question and user database links (Google Sheets)
+OT_QUESTIONS=https://docs.google.com/spreadsheets/d/YOUR_URL/pubhtml
+OT_USERS=https://docs.google.com/spreadsheets/d/YOUR_URL/pubhtml
+
+# Scoring setup
+# OT_SCORING_ROUNDS represents an array of rounds that are scored and OT_SCORING_MULT is the point multiplier for each round (i.e., in the example below each correct answer in round 1 is worth 10 points)
+OT_SCORING_ROUNDS=1,2,3,4,5,6 
+OT_SCORING_MULT=10,11,12,13,14,40 
 ```
-Additionally, you'll need a `scoring.json` file under the `secure` folder as well. There's one key in it for now, `countedRounds`, which will determine which rounds are factored into the overall scoring/rank. 
 
-This feature exists in case you want to have a practice, unscored round before the main competition and/or rounds whose scores aren't tied into the overall rankings (i.e., a bonus round). 
-```json
-{
-  "countedRounds": [1, 2, 3, 4, 5, 6]
-}
-```
+The `OT_USERS` spreadsheet must have the following as column headers: 
+Key|Value
+-|-
+TeamID|A unique ID assigned to each team. Scores are tied to each team's unique ID. 
+TeamPIN|A unique password that allows each team to sign in. 
+TeamName|The name of that team. Publicly displayed.
+Members|A list of members present in that team. Displayed on scoreboards. 
+
+Check out the specifications section below for details on the column headers required in the `OT_QUESTIONS` spreadsheet.
 
 ## Specifications
 Open Trivia supports three types of questions: Multiple Choice (MC), Short Answer (SA), and External (SP). 
