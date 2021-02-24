@@ -2,39 +2,22 @@ html {
   cursor: default;
 }
 
-/* #bracket-outer {
-  display: block;
-  position: fixed;
-  background: #555;
-  width: inherit;
-  height: inherit;
-  text-align: left;
-  position: relative;
-  /* bottom: 40px; *//*
-  padding: 1rem;
-  font-family: 'Roboto', sans-serif;
-  /* background: blue;   *//*
-  overflow-x: scroll;
-  /* overflow-y: scroll; *//*
-} */
-
 #nav {
   height: 82px;
 }
 
 #footer {
-  height: 18px;
+  height: 22px;
 }
 
 #bracket-outer {
   font-family: 'Roboto', sans-serif;
   background: #555;
   text-align: left;
-
   position: absolute;
   width: 100%;
-  height: calc(100% - 118px);
-  top: 90px;
+  height: calc(100% - 104px);
+  top: 82px;
   padding: 0;
   /* background: blue;   */
   overflow: scroll;
@@ -122,10 +105,8 @@ sup {
   vertical-align: top;
   display: inline-block;
   width: 1.5rem;
-  height: 100%;
-  /* margin-top: 1px; */
+  height: calc(100% - 1px);
   border-bottom: 1px solid #fff;
-  /* padding-bottom: 1px; */
 }
 
 .bk-connector .bk-cl {

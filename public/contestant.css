@@ -19,8 +19,13 @@ html, body {
 }
 
 #footer {
-  height: 32px;
+  height: 40px;
+  padding: 0 4px; 
   font-size: 12px;
+}
+
+#footer-left {
+  padding-top: 4px;
 }
 
 #footer-round {
@@ -37,6 +42,27 @@ html, body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.btn-external {
+  height: 40px;
+  width: 64px;
+  box-sizing: border-box;
+  border: none;
+  background: none;
+}
+
+button.btn-external:hover, button.btn-external:focus {
+  background: #ffffff2f;
+}
+
+button.btn-external:active {
+  background: #b3ddff44;
+}
+
+.btn-external span:nth-child(1) {
+  display: block;
+  font-size: 16px;
 }
 
 /* Contestant body framework */
@@ -189,14 +215,14 @@ a button{
   color: #300; 
 }
 
-/* Scoreboard iFrame */
+/* External Pages / iFrame setup */
 
 #q-scores button{
   font-size: 1.4rem;
   padding: 8px 12px;
 }
 
-#scores-overlay{
+#ext-overlay{
   display: none;
   position: fixed;
   z-index: 4;
@@ -204,71 +230,94 @@ a button{
   resize: both;
 }
 
-#scores-inner{
+#ext-inner{
   position: relative;
   width: 100%;
   height: 100%;
   background-color: #726d6d;
 }
 
-#scores-iframe{
+#ext-iframe{
   width: 100%;
   height: 100%;
   border: none;
 }
 
-#scores-actions {
+#ext-draggable {
+  position: absolute;
+  top: 0px; 
+  left: 0px; 
+  width: calc(100% - 140px);
+  height: 32px;
+  cursor: move;
+}
+
+#ext-actions {
   position: absolute;
   top: 2px; 
   right: 12px;
 }
 
-#scores-actions button{
+#ext-actions button{
   width: 38px;
-  height: 28px;
+  height: 26px;
   font-size: 16px;
   padding: 0;
   background: none;
-  border: none;
+  border-color: transparent;
 }
 
-#scores-actions button:hover, #scores-actions button:focus{
+#ext-actions button:hover, #ext-actions button:focus{
   background: #ffffff1f;
 }
 
-.scores-hide {
-  -webkit-animation-name: scores-hide;
-  animation-name: scores-hide;
-  animation-duration: 0.64s;
+#ext-actions button:focus{
+  border-color: #93d4ff;
 }
 
-.scores-show {
-  -webkit-animation-name: scores-hide;
-  animation-name: scores-hide;
+#ext-resize{
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 12px; 
+  height: 12px; 
+  font-size: 12px;
+  text-align: right;
+}
+
+.ext-hide {
+  -webkit-animation-name: ext-hide;
+  animation-name: ext-hide;
+  animation-duration: 0.43s;
+}
+
+.ext-show {
+  -webkit-animation-name: ext-hide;
+  animation-name: ext-hide;
   animation-direction: reverse;
-  animation-duration: 0.6s;
+  animation-duration: 0.4s;
 }
 
 @media only screen and (min-width: 980px) {
-  #scores-overlay{
+  #ext-overlay{
     /* border: 1px solid #000;  */
     box-shadow: 4px 4px 8px #333;
     left: 7.5%; 
-    width: 85%; 
     top: calc(60px + 5%); 
+    width: 85%; 
     height: calc(85% - 60px);
+    min-width: 240px;
+    min-height: 400px;
   }
 
-  @keyframes scores-hide {
+  @keyframes ext-hide {
     from {
-      top: calc(60px + 5%);
       opacity: 1;
       transform: scale(1.0);
     }
     to {
-      top: calc(80%); 
       opacity: 0;
-      transform: scale(0.5);
+      transform: scale(0.8);
     }
   }
 }
@@ -280,18 +329,22 @@ a button{
     overflow: hidden;
   }
 
-  #scores-overlay{
-    left: 0; 
+  #ext-overlay{
+    left: 0 !important; 
     width: 100% !important; 
-    top: 50px; 
+    top: 50px !important; 
     height: calc(100% - 50px) !important;
     resize: none;
   }
 
-  @keyframes scores-hide {
+  #ext-resize, #ext-draggable{
+    display: none;
+  }
+
+  @keyframes ext-hide {
     from {
-      top: 60px}
+      transform: translateY(0px)}
     to {
-      top: 100%}
+      transform: translateY(100%)}
   }
 }

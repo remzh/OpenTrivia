@@ -54,7 +54,12 @@ body{
   outline: none; 
   border-bottom: 1px solid #008cff !important;
   box-shadow: 0 1px 0 0 #008cff;
-  /* border-bottom: 2px solid #008cff; */
+}
+
+#sq form input[type='password']:focus, input[type='password']:focus ~ button{
+  outline: none; 
+  border-bottom: 1px solid #8400ff !important;
+  box-shadow: 0 1px 0 0 #8400ff;
 }
 
 #sq form button{
@@ -74,13 +79,13 @@ body{
   background: #cdf3ffb2; 
 }
 
-#sq form button:focus-visible{
+#sq form button:active{
   background: #a5eaffb2; 
 }
 
 #failed{
   background: rgba(255, 105, 86, 0.3);
-  padding: 2px 4px;
+  padding: 2px 6px;
 }
 
 #ft{

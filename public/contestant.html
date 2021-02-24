@@ -18,12 +18,12 @@
     <div id='bk' style='background: linear-gradient(120deg, #b8b8b8, #585858)'></div>
     <div id='nav'>
       <div id='nav-top'>
-        <span id='s-team'>...</span>
-        <span id='status' class='right'><i class='fas fa-circle-notch fa-spin'></i> Loading...</span>
+        <span id='s-team'>Connecting...</span>
+        <span id='s-name' class='right'></span>
       </div>
       <div id='nav-btm'>
-        <span id='s-school'>...</span>
-        <span id='s-ping-outer' style='display: none' class='right'>Ping: <span id='s-ping'>...</span>ms</span>
+        <span id='s-status-outer'><span id='s-status'></span><span id='s-ping'></span></span>
+        <span id='s-tid' class='right'></span>
       </div>
     </div>
     <div class='top container'>
@@ -72,25 +72,34 @@
         </div>
       </div>
     </div>
-    <div id='scores-overlay'>
-      <div id='scores-inner'>
-        <iframe id='scores-iframe' src='/scores?iframe=1'></iframe>
-        <div id='scores-actions'>
-          <a href='/scores?ref=contestant' tabindex='-1' target='_blank'><button title='Open in External Window'><i class='fas fa-fw fa-external-link-alt'></i></button></a>
-          <button title='Refresh Scoreboard' onclick='$("#scores-iframe")[0].contentDocument.location.reload()'><i class='fas fa-fw fa-sync'></i></button>
-          <button title='Hide Scoreboard' onclick='hideScores()'><i class='fas fa-fw fa-times'></i></button>
+    <div id='ext-overlay'>
+      <div id='ext-inner'>
+        <iframe id='ext-iframe' src='/scores?iframe=1'></iframe>
+        <div id='ext-draggable'></div>
+        <div id='ext-actions'>
+          <a id='ext-link' tabindex='-1' target='_blank'><button title='Open in External Window'><i class='fas fa-fw fa-external-link-alt'></i></button></a>
+          <button title='Refresh Scoreboard' onclick='$("#ext-iframe")[0].contentDocument.location.reload()'><i class='fas fa-fw fa-sync'></i></button>
+          <button title='Hide Window' onclick='hideExternal()'><i class='fas fa-fw fa-times'></i></button>
+        </div>
+        <div id='ext-resize'>
+          <i class='fas fa-chevron-right' data-fa-transform='rotate-45'></i>
         </div>
       </div>
     </div>
     <div id='snackbar' class='snackbar'></div>
     <div id='snackbar-sm' class='snackbar'></div>
     <div id='footer'>
-      <span class='right'><a href='#scores' onclick='showScores()'>Show Scoreboard</a>
+      <span class='right'>
+        <button class='btn-external' onclick='showScores()'><span><i class='fas fa-fw fa-list-ol'></i></span><span>Scores</span></button>
+        <button class='btn-external' onclick='showBrackets()'><span><i class='fas fa-fw fa-medal'></i></span><span>Brackets</span></button>
+        <!-- <a href='#scores' onclick='showScores()'>Show Scoreboard</a> -->
         <!-- <br class='hide-on-lg'/><span class='show-on-lg'> • </span><a href='#' onclick='logger.open()'>Open Console</a> -->
       </span>
-      <span id='footer-round'>Round 1</span>
-      <br/>
-      <span id='footer-logo'>Open Trivia</span>
+      <div id='footer-left'>
+        <span id='footer-round'>Round 1</span>
+        <br/>
+        <span id='footer-logo'>Open Trivia</span>
+      </div>
     </div>
   </body>
 </html>

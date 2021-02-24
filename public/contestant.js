@@ -46,9 +46,73 @@ function showStatus(type, msg){
     'pending': ['fa-circle-notch fa-spin', 'st-yellow'], 
     'success': ['fa-wifi', 'st-green']
   }
-  $('#status').html(`<i class='fas ${map[type][0]}'></i> ${msg}`); 
+  $('#s-status').html(`<i class='fas ${map[type][0]}'></i> ${msg}`); 
 }
 
+/**
+ * Information Rendering
+ */
+
+/**
+ * Makes an element draggable
+ * @param {object} ele - element to make draggable
+ */
+function makeDraggable(ele) {
+  let xdiff = 0, ydiff = 0, xorg = 0, yorg = 0;
+  ele.onmousedown = dragMouseDown;
+
+  function dragMouseDown(e) {
+    e = e || window.event;
+    e.preventDefault();
+    // Get initial mouse location
+    xorg = e.clientX;
+    yorg = e.clientY;
+    window.onmouseup = closeDragElement;
+    window.onmousemove = elementDrag;
+  }
+
+  function elementDrag(e) {
+    // console.log(e); 
+    e = e || window.event;
+    e.preventDefault();
+    // Calculate shift
+    xdiff = xorg - e.clientX;
+    ydiff = yorg - e.clientY;
+    xorg = e.clientX;
+    yorg = e.clientY;
+
+    // Check boundaries and set new position
+    let parent = ele.parentElement.parentElement; 
+    let xfinal = parent.offsetLeft - xdiff, yfinal = parent.offsetTop - ydiff; 
+
+    if (xfinal < 0) {
+      xfinal = 0; 
+    } else if (xfinal > window.innerWidth - 60) {
+      xfinal = window.innerWidth - 60; 
+    }
+    if (yfinal < 0) {
+      yfinal = 0; 
+    } else if (yfinal > window.innerHeight - 40) {
+      yfinal = window.innerHeight - 40; 
+    }
+
+    parent.style.top = yfinal + 'px';
+    parent.style.left = xfinal + 'px';
+  }
+
+  function closeDragElement() {
+    window.onmouseup = null;
+    window.onmousemove = null;
+  }
+}
+
+
+/**
+ * Checks whether an answer submitted would've been marked as "correct" or not. 
+ * @param {string} a - answer that was submitted 
+ * @param {string} b - correct answer
+ * @returns {boolean}
+ */
 function checkSA(a, b){
   let ans = a.toLowerCase().trim(); 
   let cor = b.toLowerCase().trim(); 
@@ -80,17 +144,28 @@ function resetSA(){
 }
 
 function showScores(){
-  $('#scores-overlay').show().addClass('scores-show'); 
+  $('#ext-iframe').prop('src', '/scores?iframe=1'); 
+  $('#ext-link').prop('href', '/scores?ref=contestant'); 
+  $('#ext-overlay').show().addClass('ext-show'); 
   setTimeout(() => {
-    $('#scores-overlay').removeClass('scores-show'); 
-  }, 600); 
+    $('#ext-overlay').removeClass('ext-show'); 
+  }, 400); 
 }
 
-function hideScores(){
-  $('#scores-overlay').addClass('scores-hide'); 
+function showBrackets(){
+  $('#ext-iframe').prop('src', '/brackets/public.html?iframe=1'); 
+  $('#ext-link').prop('href', '/brackets/public.html?ref=contestant'); 
+  $('#ext-overlay').show().addClass('ext-show'); 
   setTimeout(() => {
-    $('#scores-overlay').hide().removeClass('scores-hide'); 
-  }, 600); 
+    $('#ext-overlay').removeClass('ext-show'); 
+  }, 400); 
+}
+
+function hideExternal(){
+  $('#ext-overlay').addClass('ext-hide'); 
+  setTimeout(() => {
+    $('#ext-overlay').hide().removeClass('ext-hide'); 
+  }, 400); 
 }
 
 $('.btn-mc').forEach((e) => {
@@ -119,6 +194,10 @@ $('#i-sa').on('keyup', (e) => {
   }
 })
 
+/**
+ * Socket.io
+ */
+
 socket.on('connect', () => {
   logger.info('socket connected; id: '+socket.id)
   if(!user){
@@ -140,7 +219,7 @@ socket.on('disconnect', (reason) => {
     showStatus('error', 'Kicked by Server'); 
     alert('Disconnected by server. ')
   } else {
-    $('#s-ping-outer').hide(); 
+    $('#s-ping').text(''); 
     lastConnected = Date.now(); 
     showStatus('pending', 'Reconnecting...'); 
   }
@@ -160,12 +239,14 @@ socket.on('connect_error', (error) => {
 
 socket.on('status', (res) => {
   if(res.valid){
-    showStatus('success', ''); 
-    // showStatus('success', 'Connected'); 
+    // showStatus('success', ''); 
+    showStatus('success', 'Connected'); 
     logger.info('recieved data: '+JSON.stringify(res.user))
     user = res.user; 
     $('#s-team').text(user.TeamName); 
-    $('#s-school').text(`${user.TeamID} • ${user.School}`)
+    $('#s-tid').text(`${user.TeamID}`);
+    $('#s-name').text(`${user['First Name']}`);
+    // $('#s-school').text(`${user.TeamID} • ${user.School}`)
   }
   else{
     showStatus('error', 'Not Authenticated'); 
@@ -231,7 +312,7 @@ socket.on('announcement', (data) => {
 
 socket.on('scores-release', () => {
   logger.info('received score release message'); 
-  $("#scores-iframe")[0].contentDocument.location.reload(); 
+  $("#ext-iframe")[0].contentDocument.location.reload(); 
   $('.q').hide(); 
   $('#q-timer').css('background', ''); 
 
@@ -350,8 +431,8 @@ function ping() {
   }
 }
 socket.on('pong', () => {
-  $('#s-ping-outer').show(); 
-  $('#s-ping').text(Date.now() - ping_ds); 
+  // $('#s-ping-outer').show(); 
+  $('#s-ping').text(` • Ping: ${Date.now() - ping_ds}ms`); 
 })
 setInterval(ping, 4000); 
 socket.connect(); 
@@ -383,4 +464,13 @@ window.onblur = function() {
 
 window.onfocus = function() {
   socket.emit('ac-focus'); 
+}
+
+window.onload = function () {
+  makeDraggable($('#ext-draggable')[0]);
+  // $('#ext-link').on('click', e => {
+  //   e.preventDefault(); 
+  //   let ele = $('#ext-overlay')[0]; 
+  //   window.open($('#ext-link').prop('href'), 'customWindow', `width=900,height=400,top=${ele.offsetTop},left=${ele.offsetLeft}`)
+  // })
 }

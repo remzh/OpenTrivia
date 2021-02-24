@@ -53,7 +53,6 @@ const MATCH_OFFSET_HEIGHT = {
 
 function calcMatchOffset(i, index) {
   if (MATCH_OFFSET_HEIGHT.expanded[i]) {
-    console.log(i, index);
     let baseMod = MATCH_OFFSET_HEIGHT.expanded[i][index] * MATCH_BASE_HEIGHT; 
     return `calc(${baseMod}rem)`;
   }
@@ -101,14 +100,19 @@ function renderBracket(data, names) {
       out += `<section id='bk-spacer-${i+1}' class='bk-spacer'>${renderSpacingTemplate(SPACING_TEMPLATES.expanded[i])}</section>`; 
     }
   }
-  console.log(out); 
   $('#bracket-inner').html(out); 
 }
 
 async function getBrackets() {
+  const urlParams = new URLSearchParams(location.search);
+  if (urlParams.get('iframe') === '1') {
+    $('#footer').hide(); 
+    $('#bracket-outer').css('height', 'calc(100% - 82px)');
+  }
+
   let res = await fetch('data').then(r => r.json()); 
   renderBracket(res[0]);
-  console.log(res); 
+  // console.log(res); 
 }
 
 window.onload = getBrackets; 
