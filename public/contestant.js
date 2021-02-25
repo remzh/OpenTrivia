@@ -69,10 +69,12 @@ function makeDraggable(ele) {
     yorg = e.clientY;
     window.onmouseup = closeDragElement;
     window.onmousemove = elementDrag;
+    // Overlay iframe (so that moving the mouse out doesn't stop the drag)
+    ele.style.width = '100%';
+    ele.style.height = '100%';
   }
 
   function elementDrag(e) {
-    // console.log(e); 
     e = e || window.event;
     e.preventDefault();
     // Calculate shift
@@ -103,6 +105,8 @@ function makeDraggable(ele) {
   function closeDragElement() {
     window.onmouseup = null;
     window.onmousemove = null;
+    ele.style.width = '';
+    ele.style.height = '';
   }
 }
 
@@ -143,18 +147,9 @@ function resetSA(){
   $('#i-sa').removeClass('correct').removeClass('incorrect');
 }
 
-function showScores(){
-  $('#ext-iframe').prop('src', '/scores?iframe=1'); 
-  $('#ext-link').prop('href', '/scores?ref=contestant'); 
-  $('#ext-overlay').show().addClass('ext-show'); 
-  setTimeout(() => {
-    $('#ext-overlay').removeClass('ext-show'); 
-  }, 400); 
-}
-
-function showBrackets(){
-  $('#ext-iframe').prop('src', '/brackets/public.html?iframe=1'); 
-  $('#ext-link').prop('href', '/brackets/public.html?ref=contestant'); 
+function showExternal(path){
+  $('#ext-iframe').prop('src', `${path}?iframe=1`); 
+  $('#ext-link').prop('href', `${path}?ref=contestant`); 
   $('#ext-overlay').show().addClass('ext-show'); 
   setTimeout(() => {
     $('#ext-overlay').removeClass('ext-show'); 

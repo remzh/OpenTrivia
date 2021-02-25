@@ -306,8 +306,8 @@ a button{
     top: calc(60px + 5%); 
     width: 85%; 
     height: calc(85% - 60px);
-    min-width: 240px;
-    min-height: 400px;
+    min-width: 280px;
+    min-height: 320px;
   }
 
   @keyframes ext-hide {

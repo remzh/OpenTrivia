@@ -39,7 +39,7 @@
           <h1>Scores</h1>
           <p>Scores have been published for this round!<br/>Click/tap below to see where your team stands.</p>
           <p><i class='fas fa-lightbulb'></i> <b>Tip:</b><br class='hide-on-lg'/><i>You can reopen this scoreboard any time using the link at the bottom.</i></p>
-          <button class='blue' onclick='showScores()'>Open Scoreboard</button>
+          <button class='blue' onclick='showExternal("/scores")'>Open Scoreboard</button>
         </div>
         <div id='q-md' class='q'>
           <h2>Get ready!</h2>
@@ -90,8 +90,9 @@
     <div id='snackbar-sm' class='snackbar'></div>
     <div id='footer'>
       <span class='right'>
-        <button class='btn-external' onclick='showScores()'><span><i class='fas fa-fw fa-list-ol'></i></span><span>Scores</span></button>
-        <button class='btn-external' onclick='showBrackets()'><span><i class='fas fa-fw fa-medal'></i></span><span>Brackets</span></button>
+        <button class='btn-external' onclick='showExternal("/scores")'><span><i class='fas fa-fw fa-list-ol'></i></span><span>Scores</span></button>
+        <button class='btn-external' onclick='showExternal("/brackets/public.html")'><span><i class='fas fa-fw fa-medal'></i></span><span>Brackets</span></button>
+        <button class='btn-external' onclick='showExternal("/about")'><span><i class='fas fa-fw fa-info-circle'></i></span><span>About</span></button>
         <!-- <a href='#scores' onclick='showScores()'>Show Scoreboard</a> -->
         <!-- <br class='hide-on-lg'/><span class='show-on-lg'> • </span><a href='#' onclick='logger.open()'>Open Console</a> -->
       </span>

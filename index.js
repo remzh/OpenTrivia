@@ -1134,6 +1134,10 @@ app.get('/scores', (req, res) => {
   res.status(200).sendFile(path.join(__dirname, 'public', 'scores.html'))
 })
 
+app.get('/about', (req, res) => {
+  res.status(200).sendFile(path.join(__dirname, 'public', 'about.html'))
+})
+
 app.get('/identity', (req, res) => {
   if(req.session.user) {
     res.status(200).sendFile(path.join(__dirname, 'public', 'identity.html'))
