@@ -5,7 +5,7 @@ let status = 0; // 0 = offline,
 let lastConnected = 0; 
 let user = false; 
 
-let multiSelect = true; 
+let canChange = true; 
 let qType = ''; 
 
 let snkTimeout = false, snkType = 1; 
@@ -168,7 +168,7 @@ $('.btn-mc').forEach((e) => {
     resetMC(); 
     let target = e;  
     $(target).addClass('pending');
-    if(multiSelect){
+    if(canChange){
       $(target).prop('disabled', true)}
     else{
       $('.btn-mc').prop('disabled', true)}
@@ -181,8 +181,6 @@ $('.btn-mc').forEach((e) => {
 $('#i-sa').on('keyup', (e) => {
   if(e.key === 'Enter'){
     logger.info(`submitted "${$('#i-sa').val()}" as answer`)
-    // $('#sa-recent').show(); 
-    // $('#sa-rec-val').text($('#i-sa').val());
     $('#i-sa').prop('placeholder', $('#i-sa').val());
     socket.emit('answer', $('#i-sa').val()); 
     $('#i-sa').val('');
@@ -204,6 +202,7 @@ socket.on('connect', () => {
     // check if question has since changed
     socket.emit('status', 1); 
   }
+  $('.banner-reconnection').remove(); 
   showStatus('success', 'Connected'); 
   ping(); 
 });
@@ -217,6 +216,7 @@ socket.on('disconnect', (reason) => {
     $('#s-ping').text(''); 
     lastConnected = Date.now(); 
     showStatus('pending', 'Reconnecting...'); 
+    $('.container.top').prepend(`<div class="banner banner-reconnection"><i class='fas fa-exclamation-triangle'></i> <b>Connection lost.</b> Attempting to reconnect...</div>`);
   }
 })
 
@@ -448,11 +448,6 @@ socket.on('config-bk', (i) => {
   $('#bk').css('background-image', `url(images/${i})`);
 })
 
-// socket.on('chat', function(msg){
-//   console.log(msg);
-//   $('#log').append($('<li>').text(msg));
-// });
-
 window.onblur = function() {
   socket.emit('ac-blur'); 
 }
@@ -463,9 +458,8 @@ window.onfocus = function() {
 
 window.onload = function () {
   makeDraggable($('#ext-draggable')[0]);
-  // $('#ext-link').on('click', e => {
-  //   e.preventDefault(); 
-  //   let ele = $('#ext-overlay')[0]; 
-  //   window.open($('#ext-link').prop('href'), 'customWindow', `width=900,height=400,top=${ele.offsetTop},left=${ele.offsetLeft}`)
-  // })
+  if (localStorage.ot_devmode) {
+    $('.dev-mode-only').show(); 
+    logger.logToConsole = true; 
+  } 
 }

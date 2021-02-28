@@ -55,7 +55,6 @@
         </div>
         <div id='q-sa' class='q'>
           <input id='i-sa' maxlength='48' placeholder='Type here...'/>
-          <p id='sa-recent' class='q'><span class='q-sa'>Most recent submission: <b id='sa-rec-val'></b></span></p>
           <p id='sa-wrong-timed' class='q'><span class='q-sa incorrect'><b>Incorrect</b>, <span id='q-sa-incorrect-msg'>try again</span>.</span></p>
           <p id='sa-right-timed' class='q'><span class='q-sa correct'><i class='fas fa-check'></i> <b>Correct!</b> Time: <span id='sa-time'></span></span></p>
           <p id='sa-wrong' class='q'><span class='q-sa incorrect'><b>Oops.</b> Next time!</span></p>
@@ -74,7 +73,7 @@
     </div>
     <div id='ext-overlay'>
       <div id='ext-inner'>
-        <iframe id='ext-iframe' src='/scores?iframe=1'></iframe>
+        <iframe id='ext-iframe'></iframe>
         <div id='ext-draggable'></div>
         <div id='ext-actions'>
           <a id='ext-link' tabindex='-1' target='_blank'><button title='Open in External Window'><i class='fas fa-fw fa-external-link-alt'></i></button></a>
@@ -93,8 +92,7 @@
         <button class='btn-external' onclick='showExternal("/scores")'><span><i class='fas fa-fw fa-list-ol'></i></span><span>Scores</span></button>
         <button class='btn-external' onclick='showExternal("/brackets/public.html")'><span><i class='fas fa-fw fa-medal'></i></span><span>Brackets</span></button>
         <button class='btn-external' onclick='showExternal("/about")'><span><i class='fas fa-fw fa-info-circle'></i></span><span>About</span></button>
-        <!-- <a href='#scores' onclick='showScores()'>Show Scoreboard</a> -->
-        <!-- <br class='hide-on-lg'/><span class='show-on-lg'> • </span><a href='#' onclick='logger.open()'>Open Console</a> -->
+        <button class='btn-external dev-mode-only' onclick='logger.open()'><span><i class='fas fa-fw fa-terminal'></i></span><span>Console</span></button>
       </span>
       <div id='footer-left'>
         <span id='footer-round'>Round 1</span>

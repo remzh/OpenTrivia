@@ -1,8 +1,9 @@
 let logs = []; 
 window.logger = {
   version: '1.0.0 (b2)',
+  logToConsole: false, 
   info: function(msg) {
-    console.info(msg); 
+    if (this.logToConsole) console.info(msg); 
     this.push({
       ts: Date.now(), 
       t: 'info', 
@@ -10,7 +11,7 @@ window.logger = {
     })
   }, 
   warn: function(msg) {
-    console.warn(msg); 
+    if (this.logToConsole) console.warn(msg); 
     this.push({
       ts: Date.now(), 
       t: 'warn', 
@@ -18,7 +19,7 @@ window.logger = {
     })
   }, 
   error: function(msg) {
-    console.error(msg); 
+    if (this.logToConsole) console.error(msg); 
     this.push({
       ts: Date.now(), 
       t: 'error', 
@@ -66,8 +67,8 @@ window.logger = {
         this.info('> '+ out)}
       this.logw.scrollTo(0, 1E10); 
     } catch (e){
-      this.logw.scrollTo(0, 1E10); 
       this.error('> '+e.stack) 
+      this.logw.scrollTo(0, 1E10); 
     }
   }
 }

@@ -2,8 +2,13 @@ html {
   cursor: default;
 }
 
+#bk {
+  background-image: url(../images/bk.jpg);
+}
+
 #nav {
   height: 82px;
+  background: #333333af
 }
 
 #footer {
@@ -12,7 +17,7 @@ html {
 
 #bracket-outer {
   font-family: 'Roboto', sans-serif;
-  background: #555;
+  background: #555555af;
   text-align: left;
   position: absolute;
   width: 100%;
@@ -49,7 +54,7 @@ html {
 
 .bk-match-outer {
   /* position: absolute; */
-  background: #444;
+  background: #444444af;
   height: 6rem;
   width: 18.0rem;
   border: 1px solid #fff;
@@ -64,6 +69,11 @@ html {
 .bk-match-inner {
   padding: 0.24rem;
   height: calc(50% - 0.48rem);
+  transition: background 0.14s;
+}
+.bk-match-inner:hover {
+  background: #ffffff1f;
+  cursor: pointer;
 }
 .bk-match-inner-main {
   display: inline-block;
