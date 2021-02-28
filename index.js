@@ -362,11 +362,23 @@ let totalTeams = 0;
 // End of messages
 // Question management
 
+/**
+ * The question object stores all the information about the current question being presented. Scalable? Absolutely not. However, it works well for what it's used for (running one game on one server w/o any load balancing), so it's being kept like this. 
+ * Each key is commented with what that key represents/does. 
+ * 
+ * Information on Custom (Negative) Question Indexes
+ * - Negative question indexes represent special states
+ * - Here's a list of them and what they mean: 
+ * 
+ * -1 (default): Announcement
+ * -2: Top Teams (but scoreboard not published yet)
+ * -3: Top Teams (and scoreboard is published)
+ */
 let question = {
   active: false, // whether answers can be submitted or not
   timer: {
-    interval: null,  
-    end: 0
+    interval: null, // value returned by setInterval function so that it can be cleared if needed
+    end: 0 // what time (js timestamp) that the question's timer will hit zero
   }, 
   current: {}, // current question taken from array
   curIndex: -1, // index of question in array
@@ -376,16 +388,6 @@ let question = {
   tb: {}, // tiebreak values (each timed question can gie up to 10.00 of TB)
   selections: {} // only used in SA questions to record answers
 }
-
-/**
- * Custom (Negative) Question Indexes
- * - Negative question indexes represent special states
- * - Here's a list of them and what they mean: 
- * 
- * -1 (default): Announcement
- * -2: Top Teams (but scoreboard not published yet)
- * -3: Top Teams (and scoreboard is published)
- */
 
 /**
  * Calculates a user's tiebreaker score for a question based on how much time they took to correctly answer it
@@ -408,6 +410,11 @@ function tbCalc(){
   return v; 
 }
 
+/**
+ * Fetches information on the current active question. 
+ * @param {boolean} full - 1 to include all question data, 0 to only include question data presented to contestants
+ * @returns {object} question
+ */
 function getCurrentQuestion(full){
   let obj = question.current; 
   try {
@@ -418,6 +425,9 @@ function getCurrentQuestion(full){
     }
     if(obj.type === 'MC'){
       out.options = [obj.optA, obj.optB, obj.optC, obj.optD, obj.optE]
+      if (obj.answer.length > 1) {
+        out.selectMultiple = true; 
+      }
     }
     else if(obj.type === 'SP'){
       out.url = obj.question; 
@@ -443,6 +453,14 @@ function getCurrentQuestion(full){
   }
 }
 
+/**
+ * Maps a raw question entry (from a row in Sheets) to one that follows camel case.
+ * 
+ * Is this good code? No. Was it easier to do this than to redo the Google Sheets that was all set up? Yes. 
+ * Plus, this function can be easily edited to accomodate different types column names in your own spreadsheet. 
+ * @param {object} inp - input object
+ * @returns {object} formatted question object
+ */
 function mapQuestionEntry(inp){
   return {
     round: inp.Round, // (string)
@@ -462,6 +480,12 @@ function mapQuestionEntry(inp){
   }
 }
 
+/**
+ * Loads a new question and broadcasts it to everyone. 
+ * @param {number} index - index of question in array of questions to load
+ * @param {object} socket - socket.io object of sender
+ * @returns {undefined}
+ */
 function loadQuestion(index, socket){
   stopTimer(); // if currently active
   if (!questiondb[index]) {
@@ -1267,7 +1291,7 @@ app.get('/scores/data', async function(req, res) {
           input.t = input.t.slice(0, 1); 
           input.hl = true; 
           scores.scores_clean.data.splice(teamIndex, 1, input); 
-        } 
+        }  
         res.status(200).json({
           ok: true, 
           scores: scores.scores_clean, 

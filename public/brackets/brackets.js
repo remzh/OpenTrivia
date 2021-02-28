@@ -100,6 +100,7 @@ function renderBracket(data, names) {
       out += `<section id='bk-spacer-${i+1}' class='bk-spacer'>${renderSpacingTemplate(SPACING_TEMPLATES.expanded[i])}</section>`; 
     }
   }
+  out += `<section class='bk-spacer'></section>`
   $('#bracket-inner').html(out); 
 }
 

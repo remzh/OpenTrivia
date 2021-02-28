@@ -108,10 +108,6 @@ button:not([disabled]):active{
   text-align: center;
 }
 
-.container.top{
-  margin-top: 60px;
-}
-
 .right{
   float: right;
 }
@@ -155,10 +151,6 @@ button:not([disabled]):active{
   -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
 }
-
-/* #footer:hover, #footer:focus-within{
-  background: #1111117f;
-} */
 
 #snackbar{
   z-index: 40; 
@@ -204,4 +196,8 @@ button:not([disabled]):active{
   .show-on-lg{
     display: initial;
   }
+}
+
+.dev-mode-only{
+  display: none;
 }
