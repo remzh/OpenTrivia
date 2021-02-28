@@ -445,6 +445,7 @@ socket.on('timer', (v) => {
 }); 
 
 socket.on('config-bk', (i) => {
+  $('#bk').css('background', '');
   $('#bk').css('background-image', `url(images/${i})`);
 })
 
