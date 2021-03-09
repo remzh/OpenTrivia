@@ -1,3 +1,13 @@
+/**
+ * core.js
+ * Main components necessary for making the contestant page functional. 
+ * Includes all of the following: 
+ *  - Websocket connection to server
+ *    - Connection/disconnection/handshake handling
+ *  - Submitting answers, receiving answer status updates
+ *  - Dynamic GUI components (snackbar, resizable window, interactive MC options)
+ */
+
 let socket = io({
   transports: ['websocket']
 });
@@ -164,7 +174,7 @@ function hideExternal(){
 }
 
 $('.btn-mc').forEach((e) => {
-  $(e).on('click', () => {
+  $(e).on('mousedown', () => {
     resetMC(); 
     let target = e;  
     $(target).addClass('pending');
@@ -178,7 +188,7 @@ $('.btn-mc').forEach((e) => {
   })
 })
 
-$('#i-sa').on('keyup', (e) => {
+$('#i-sa').on('keydown', (e) => {
   if(e.key === 'Enter'){
     logger.info(`submitted "${$('#i-sa').val()}" as answer`)
     $('#i-sa').prop('placeholder', $('#i-sa').val());
@@ -255,6 +265,7 @@ socket.on('status', (res) => {
 socket.on('question', (data) => {
   logger.info('recieved question: '+JSON.stringify(data));
   $('.q').hide(); 
+  $('#q-header-wrapper').show(); 
   $('#q-timer').css('background', ''); 
   qType = data.type; 
   if(data.num){

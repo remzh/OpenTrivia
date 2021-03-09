@@ -27,6 +27,7 @@
         <a data-target='advanced' href='#advanced'>Advanced</a>
         <a data-target='scores' href='#scores'>Scores</a>
         <a data-target='admin' href='#admin'>Admin</a>
+        <a data-target='brackets' href='#brackets'>Brackets</a>
       </div>
     </div>
     <div id='basic' class='container top'>
@@ -113,6 +114,20 @@
             <div id='admin-div-results'></div>
             <table id='admin-table'></table>
           </div>
+        </div>
+      </div>
+    </div>
+    <div id='brackets' class='container top'>
+      <div class='col'>
+        <h2>Bracket Controls</h2>
+        <button onclick='secSocket.emit("adm-initBrackets")'>Create Brackets</button>
+        <button onclick='secSocket.emit("adm-startBracketRound")'>Start Round</button>
+      </div>
+      <div class='col'>
+        <h2>Bracket Info</h2>
+        <div class='left'>
+          <!-- <p>5 brackets formed, 78 teams assigned<br/>Yay!</p> -->
+          <p>No updates yet.</p>
         </div>
       </div>
     </div>

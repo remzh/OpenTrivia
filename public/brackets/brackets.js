@@ -15,7 +15,7 @@ function getOrdinal(i) {
 }
 
 function formatName(n, index) {
-  if (typeof n !== 'undefined') {
+  if (n !== -1 && typeof n !== 'undefined') {
     // return `<span class='fa-layers fa-fw'><i class='fas fa-circle' style='color: #fff000'></i><i class='fas fa-heart' style='color: tomato' data-fa-transform='shrink-6'></i></span> Team ${n} Fjalj FDjieo MEewio Faiww`; 
     return `Team ${n}`; 
   }
@@ -26,8 +26,31 @@ function formatName(n, index) {
   return 'TBD'; 
 }
 
+/**
+ * Pulls the score of a particular team in a particular match, and color codes it accordingly.
+ * @param {object} match - match object from /brackets/data
+ * @param {*} n - which one to return (1=upper, 2=lower)
+ */
+function formatScore(match, n) {
+  let sel, other; 
+  if (!match.scores) {
+    sel = -1, other = -1; 
+  } else if (n === 1) {
+    sel = match.scores[0]; 
+    other = match.scores[1]; 
+  } else {
+    sel = match.scores[0]; 
+    other = match.scores[1]; 
+  }
+  if (sel === -1 || typeof sel === 'undefined') {
+    return `<span class='text-gray'>-</span>`
+  } else {
+    return `<span class='text-accent-win'>${sel}</span>`
+  }
+}
+
 function formatPos(n) {
-  if (typeof n !== 'undefined') {
+  if (n !== -1 && typeof n !== 'undefined') {
     return getOrdinal(n+1) + ' seed'; 
   } else {
     return '';
@@ -91,8 +114,8 @@ function renderBracket(data, names) {
     let round = data[i]; 
     let matchups = round.map((match, index) => {
       return `<div class='bk-match-outer' style='margin-top: ${calcMatchOffset(i, index)}'>\
-      <div class='bk-match-inner bk-match-top'><div class='bk-match-inner-main'>${formatName(match.t1, index)}</div><div class='bk-match-inner-score'>${24}</div><div class='bk-match-inner-sub'>${formatPos(match.t1)}</div></div>\
-      <div class='bk-match-inner bk-match-btm'><div class='bk-match-inner-main'>${formatName(match.t2, index)}</div><div class='bk-match-inner-score'>${24}</div><div class='bk-match-inner-sub'>${formatPos(match.t2)}</div></div>\
+      <div class='bk-match-inner bk-match-top'><div class='bk-match-inner-main'>${formatName(match.seeds[0], index)}</div><div class='bk-match-inner-score'>${formatScore(match, 1)}</div><div class='bk-match-inner-sub'>${formatPos(match.seeds[0])}</div></div>\
+      <div class='bk-match-inner bk-match-btm'><div class='bk-match-inner-main'>${formatName(match.seeds[1], index)}</div><div class='bk-match-inner-score'>${formatScore(match, 2)}</div><div class='bk-match-inner-sub'>${formatPos(match.seeds[1])}</div></div>\
       </div>`
     })
     out += `<section id='bk-round-${i+1}' class='bk-round'>${matchups.join('')}</section>`; 

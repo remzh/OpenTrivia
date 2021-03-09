@@ -36,9 +36,18 @@ app.use(cookieParser());
 
 const brackets = require('./lib/brackets.js');
 app.use('/brackets/*', brackets.appHook); 
-let bracketSet = brackets.generateBrackets(5); 
+
+let bracketSet = brackets.generateNewBrackets(5); 
 app.get('/brackets/data', (req, res) => {
   res.json(bracketSet); 
+})
+app.get('/brackets/data/matches', (req, res) => {
+  // console.log(bracketSet); 
+  res.json(brackets.listRoundMatchups(bracketSet)); 
+})
+app.get('/brackets/data/test', (req, res) => {
+  // console.log(bracketSet); 
+  res.json(brackets.generateBrackets(5, brackets.listRoundMatchups(bracketSet))); 
 })
 
 const http = require('http').Server(app);
@@ -155,7 +164,7 @@ function lookupUser(teamPIN){
 // End of UserDB
 // Scoring management
 
-let scoreDB; 
+let scoreDB, bracketDB; 
 function saveScores(round, question, data, tb){
   let dt = {d: data}
     if(tb) dt.tb = tb; 
@@ -340,7 +349,7 @@ async function computeOverallScores(input, showAllInfo=true){
 }
 
 // End of scoring management
-// Message
+// Messages
 
 let currentMessage = {
   title: 'Welcome!', 
@@ -521,6 +530,14 @@ function getNumberWithOrdinal(n) {
   var s = ["th", "st", "nd", "rd"],
       v = n % 100;
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
+/**
+ * Calculates 
+ * @param {string} tid - Team ID, used during bracket rounds to see if the team answered first
+ */
+function calcPoints(tid) {
+  
 }
 
 /**
@@ -979,6 +996,38 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     loadSheets(); 
     socket.emit('update', `Sheets reloaded. CAUTION: May cause system instability.`); 
   })
+
+  socket.on('adm-initBrackets', async () => {
+    let numToCreate = 3; 
+    await mdb.collection('brackets').drop(); 
+    let newBrackets = brackets.generateNewBrackets(numToCreate); 
+    let seeds = await computeOverallScores('1'); 
+    // Insert the initial metadata document
+    await mdb.collection('brackets').insertOne({
+      _md: true, 
+      numBrackets: numToCreate, 
+      numRounds: 4, 
+      seeds: seeds.data.map(r => {return {t: r.t, tn: r.tn, tm: r.tm, r: r.r}})
+    }); 
+    await mdb.collection('brackets').insertMany(brackets.listRoundMatchups(newBrackets)); 
+    socket.emit('update', 'Brackets created.')
+  }); 
+
+  socket.on('adm-startBracketRound', async (round=0) => {
+    let metadata = await mdb.collection('brackets').findOne({
+      _md: true
+    }); 
+    if (!metadata) {
+      socket.emit('update', 'Brackets: Missing bracket metadata, cancelled.'); 
+      return; 
+    }
+    let matchups = await mdb.collection('brackets').find({
+      round
+    }).toArray(); 
+    // Broadcast matchups, offset rounds by 1 so that the first game is "game 1"
+    let res = brackets.broadcastMatchups(metadata.seeds, matchups, {round: round+1}, io); 
+    socket.emit('update', `Brackets: Multicasted ${matchups.length} matchups to ${metadata.seeds.length} teams (${res} multicasts)`);
+  }); 
 });
 
 /**
@@ -1008,7 +1057,7 @@ io.of('/').use(function(socket, next){
   if (socket.handshake.session && (socket.handshake.session.user || socket.handshake.session.host)){ // authorized users only
     logger.debug('[std] authenticated: '+socket.id);
     if (socket.handshake.session.user && socket.handshake.session.user.TeamID) {
-      socket.join(`team-${socket.handshake.session.user.TeamID}`); 
+      socket.join(`team-${socket.handshake.session.user.TeamID}`); // used to identify all sockets in a specified team ID
     }
     socket.join('users'); 
     next(); 

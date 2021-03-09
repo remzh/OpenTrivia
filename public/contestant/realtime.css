@@ -1,0 +1,112 @@
+/* Buzzer CSS */
+.buzzer {
+  position: relative;
+  width: 90px; 
+  height: 50px;
+  transition: box-shadow 0.18s;
+}
+
+.buzzer div {
+  position: absolute;
+  width: 90px;
+  height: 50px;
+  opacity: 0;
+  transition: opacity 0.18s;
+}
+
+.buzzer span {
+  position: absolute;
+  width: 90px;
+  height: 50px;
+  vertical-align: middle;
+}
+
+#buzzer-blue {
+  background-color: hsl(210, 12%, 45%);
+  background: radial-gradient(hsl(210, 45%, 60%), hsl(210, 15%, 48%)); 
+  float: left;
+}
+
+#buzzer-blue.active {
+  box-shadow: 0px 0px 6px 2px hsl(210, 80%, 65%);
+}
+
+#buzzer-blue.active div {
+  background: radial-gradient(hsl(210, 100%, 80%), hsla(210, 80%, 65%));
+  opacity: 1;
+}
+
+#buzzer-red {
+  background-color: hsla(0, 12%, 45%, 0.6);
+  background: radial-gradient(hsl(0, 45%, 60%), hsl(0, 15%, 48%)); 
+  float: right;
+}
+
+#buzzer-red.active {
+  box-shadow: 0px 0px 6px 2px hsl(0, 80%, 65%);
+}
+
+#buzzer-red.active div {
+  background: radial-gradient(hsl(0, 100%, 80%), hsl(0, 80%, 65%)); 
+  opacity: 1;
+}
+
+#buzzers-outer {
+  height: 50px;
+  margin-top: 15px;
+  display: none;
+}
+
+#buzzer-score {
+  text-align: center;
+  background: #00000050;
+  width: 100%;
+  height: 42px;
+  margin: auto;
+  font-size: 26px;
+  padding-top: 8px;
+  /* text-shadow: 1px 1px 4px #000; */
+}
+
+#buzzer-score-blue {
+  color: hsl(210, 100%, 90%);
+  font-weight: 700;
+}
+
+#buzzer-score-red {
+  color: hsl(0, 100%, 90%);
+  font-weight: 700;
+}
+
+/* Bracket Overlay */
+#bracket-overlay {
+  z-index: 5; 
+  position: fixed;
+  left: 0; 
+  top: 0; 
+  width: 100%;
+  height: 100%;
+  background: #00000090; 
+  backdrop-filter: blur(6px);
+  transition: opacity 0.32s; 
+  /* opacity: 0; */
+  /* display: none; */
+}
+
+#bracket-overlay-inner {
+  margin: auto;
+  width: 100%; 
+  max-width: 600px;
+  text-align: center;
+  padding-top: 20px;
+}
+
+#bracket-overlay-inner h2 {
+  font-weight: 400;
+}
+
+#bracket-overlay-inner h1 {
+  margin: 0;
+}
+
+/* Chatbox CSS */

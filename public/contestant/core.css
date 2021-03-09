@@ -87,6 +87,7 @@ button.btn-external:active {
   width: 80%;
   max-width: 600px;
   margin: auto;
+  padding-bottom: 50px;
 }
 
 @keyframes pulse {
@@ -112,7 +113,7 @@ button.btn-external:active {
 
 .btn-mc, #i-sa {
   width: 100%; 
-  /* max-width: 600px; */
+  box-sizing: border-box;
   font-size: 24px;
   margin-top: 8px;
   text-align: left;
@@ -122,14 +123,19 @@ button.btn-external:active {
   padding: 8px 16px;
 }
 
+#q-header-wrapper {
+  height: 72px;
+  margin-top: 18px;
+}
+
 #q-num, #q-stop, #q-msg, #q-sp p, #q-md h2, #q-md p, #q-scores *{
   text-shadow: 1px 1px 3px #444;
 }
 
 #q-stop{
   margin: auto;
-  margin-top: 18px;
-  margin-bottom: 12px;
+  /* margin-top: 4px; */
+  /* margin-bottom: 12px; */
   padding: 8px 4px;
   width: 180px;
   background: #ac5742af;
@@ -141,7 +147,7 @@ button.btn-external:active {
 }
 
 #q-num{
-  margin: 0.5em 0 0.2em;
+  margin: 0;
 }
 
 #q-sa {
