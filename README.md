@@ -2,7 +2,7 @@
 Welcome to Open Trivia! 
 
 ## What is it? 
-Think of it like [Socrative](https://socrative.com/), except less test-like and more flexixble.  OpenTrivia is an all-in-one trivia server that handles a client interface, a host interface, and a slideshow interface (intended to be projected/presented). It supports the following: 
+Think of it like [Socrative](https://socrative.com/), except less test-like and more flexible.  OpenTrivia is an all-in-one trivia server that handles a client interface, a host interface, and a slideshow interface (intended to be projected/presented). It supports the following: 
 - (Technically) unlimited teams, rounds, and questions. Your mileage will vary based on the specs of your server 
 - Image support and customizable backgrounds to liven up your "slides" 
 - Multiple choice, short answer, and third-party answering formats 
