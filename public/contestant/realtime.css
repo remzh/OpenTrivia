@@ -89,8 +89,8 @@
   background: #00000090; 
   backdrop-filter: blur(6px);
   transition: opacity 0.32s; 
-  /* opacity: 0; */
-  /* display: none; */
+  opacity: 0;
+  display: none;
 }
 
 #bracket-overlay-inner {

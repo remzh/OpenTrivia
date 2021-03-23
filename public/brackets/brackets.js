@@ -1,3 +1,13 @@
+/**
+ * brackets.js - Client Side
+ * (C) 2021 Ryan Zhang
+ */
+
+/**
+ * Adds an ordinal suffix to a number
+ * @param {number} i - input number
+ * @returns {string} 
+ */
 function getOrdinal(i) {
   if (!i) i = 0;
   var j = i % 10,

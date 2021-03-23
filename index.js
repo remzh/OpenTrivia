@@ -19,10 +19,10 @@ const colors = require('colors');
 
 // const credentials = require(path.join(__dirname, 'secure', 'credentials.json')); // secure credentials
 // const scoring = require(path.join(__dirname, 'secure', 'scoring.json')); 
-let scoring = {
-  countedRounds: process.env.OT_SCORING_ROUNDS.split(',').map(r => parseInt(r)), 
-  roundMultiplier: process.env.OT_SCORING_MULT?process.env.OT_SCORING_MULT.split(',').map(r => parseFloat(r)):process.env.SCORING_ROUNDS.split(',').fill(1)
-}
+// let scoring = {
+//   countedRounds: process.env.OT_SCORING_ROUNDS.split(',').map(r => parseInt(r)), 
+//   // roundMultiplier: process.env.OT_SCORING_MULT?process.env.OT_SCORING_MULT.split(',').map(r => parseFloat(r)):process.env.SCORING_ROUNDS.split(',').fill(1)
+// }
 
 const levenshtein = require('js-levenshtein');
 const tabletop = require('tabletop');
@@ -34,6 +34,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cookieParser());
 
+const scoring = require('./lib/scoring.js');
 const brackets = require('./lib/brackets.js');
 app.use('/brackets/*', brackets.appHook); 
 
@@ -294,13 +295,12 @@ async function computeOverallScores(input, showAllInfo=true){
         if (selTeam) {
           let scoreRaw = selTeam.s.s ? selTeam.s.s : 0; 
           let numCorrect = selTeam.s.c ? selTeam.s.c : 0; 
-          let multiplier = scoring.roundMultiplier[scoring.countedRounds.indexOf(roundNum)]; 
-          if (isNaN(multiplier)) multiplier = 1; 
+          let multiplier = scoring.getMultiplier(roundNum); 
           points += scoreRaw * multiplier; 
           correct += numCorrect; 
           tb += (selTeam.s.tb ? selTeam.s.tb : 0);
           indiv.push({
-            s: Math.round(scoreRaw*multiplier), 
+            s: Math.round(scoreRaw * multiplier), 
             c: numCorrect, 
             m: multiplier, 
             tb: selTeam.s.tb ? Math.round(selTeam.s.tb*1000)/1000 : 0,
@@ -639,13 +639,17 @@ function processAnswer(team, ans, socket){
           question.scores[tid] = Math.max(Math.round(100*(1-0.065*Math.pow(question.numAnswered, 0.8)))/100, 0.25); // where question.numAnswered is the number of teams who correctly answered before your team
           question.numAnswered ++; 
 
-          let mult = scoring.roundMultiplier[scoring.countedRounds.indexOf(parseInt(q.round))]; 
+          // let mult = scoring.roundMultiplier[scoring.countedRounds.indexOf(parseInt(q.round))]; 
 
           teamBroadcast(socket, 'answer-time', {time: Date.now() - question.timestamp, correct: true, answer: q.answer}); 
           teamBroadcast(socket, 'answer-buzzer', {
             message: `Your team was ${getNumberWithOrdinal(question.numAnswered)} to answer correctly${question.numAnswered > 5 ? '.':'!'}`, 
-            points: mult ? Math.round(mult*question.scores[tid]) : question.scores[tid]
+            points: question.scores[tid]
           }); 
+          // teamBroadcast(socket, 'answer-buzzer', {
+          //   message: `Your team was ${getNumberWithOrdinal(question.numAnswered)} to answer correctly${question.numAnswered > 5 ? '.':'!'}`, 
+          //   points: mult ? Math.round(mult*question.scores[tid]) : question.scores[tid]
+          // }); 
 
           if (!question.firstCorrectTaken) {
             question.firstCorrectTaken = true; 
@@ -856,6 +860,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
   socket.on('scores-compute', function(r){
     computeOverallScores(r?r:false, true).then(res => {
       socket.emit('scores-host', res); 
+      console.log(res); 
     })
   })
 

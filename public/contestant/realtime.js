@@ -57,3 +57,10 @@ socket.on('brackets-newMatch', (data) => {
     $('#bracket-overlay').css('opacity', 1); 
   }, 100); 
 })
+
+function hideBracketOverlay() {
+  $('#bracket-overlay').css('opacity', 0); 
+  setTimeout(() => {
+    $('#bracket-overlay').hide(); 
+  }, 320); 
+}

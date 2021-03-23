@@ -228,7 +228,7 @@ secSocket.on('answer-update', (dt) => {
 secSocket.on('scores-host', (res) => {
   console.log(res); 
   if (!res.ok) {
-    $('#scores-table').text(`Failed to load: ${res.error}`); 
+    $('#scores-table').text(`Failed to load: ${JSON.stringify(res.error)}`); 
     return; 
   }
   // <tr><th colspan='2'>Team</th><th colspan='${res.rounds.length}'>Rounds</th><th colspan='2'>Overall</th></tr>

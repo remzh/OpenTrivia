@@ -4,11 +4,6 @@ html{
 
 /* General CSS */
 
-.btn-lg{
-  font-size: 18px; 
-  padding: 6px 12px;
-}
-
 .container.top{
   display: none;
   flex-wrap: wrap;

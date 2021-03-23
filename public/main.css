@@ -76,6 +76,11 @@ button:not([disabled]):active{
   background: #2a3875af; 
 }
 
+.btn-lg{
+  font-size: 18px; 
+  padding: 6px 12px;
+}
+
 #nav{
   position: fixed;
   box-sizing: border-box;
