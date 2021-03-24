@@ -361,9 +361,11 @@ let currentTopScores = {
   scores: {}
 }
 
-let currentBackground = {
-  slides: 'nature.jpg', 
-  users: 'bk.jpg'
+let round = {
+  background: {
+    slides: 'nature.jpg', 
+    users: 'bk.jpg'
+  }
 }; 
 
 let totalTeams = 0; 
@@ -476,6 +478,7 @@ function mapQuestionEntry(inp){
     num: parseInt(inp.Q), 
     type: inp.Type, 
     timed: inp.Timed === 'TRUE' ? true : false, 
+    instantFeedback: inp.InstantFeedback === 'TRUE' ? true : false, 
     category: inp.Category, 
     question: inp.Question,
     answer: inp.Answer,  
@@ -502,7 +505,7 @@ function loadQuestion(index, socket){
     return; 
   }
 
-  question.firstCorrectTaken = false; 
+  question.firstCorrectTaken = false; // SA only - first correct answer is announced to everyone
   question.active = true; 
   question.current = mapQuestionEntry(questiondb[index]);
   question.curIndex = index; 
@@ -543,18 +546,48 @@ function calcPoints(tid) {
 /**
  * Processes a contestant's answer by scoring it and sending feedback
  * @param {object} team - team object from client session
- * @param {*} ans - the answer a contestant selected
+ * @param {*} submission - the answer a contestant selected
  * @param {*} socket - the socket.io instance of the contestant
  */
-function processAnswer(team, ans, socket){
+function processAnswer(team, submission, socket){
+  // Validate that a question is active and the submission is readable before processing the answer
   if(!question.active){
     socket.emit('answer-ack', {ok: false, msg: 'Question not active'})
     return; 
+  } else if (typeof submission !== 'string' || !team.TeamID){
+    socket.emit('answer-ack', {ok: false, msg: 'No answer provided'})
+    // logger.warn('Unable to process answer: Missing data'); 
+    // io.of('secure').emit('update', 'processAnswer error: missing required data'); 
+    return; 
+  } 
+
+  // Processs the answer
+  let q = getCurrentQuestion(1), tid = team.TeamID; 
+
+  let {valid, correct, msg} = scoring.isCorrect(submission, q); 
+  if (valid) {
+    question.selections[tid] = submission; 
+  } else {
+    socket.emit('answer-ack', {ok: false, msg: 'Invalid/malformed answer. Try reloading the page.'})
   }
 
-  let q = getCurrentQuestion(1), sentAck = false, tid = team.TeamID; 
+  let response = {
+    ok: true, 
+    selected: submission
+  }
 
-  if(typeof ans !== 'string' || !team.TeamID){
+  if (correct) {
+    question.scores[tid] = calcPoints(tid); 
+  }
+
+  if (q.instantFeedback) {
+    response.correct = correct; 
+  } 
+  
+  teamBroadcast(socket, 'answer-ack', response);
+
+  return; 
+  if(typeof submission !== 'string' || !team.TeamID){
     socket.emit('answer-ack', {ok: false, msg: 'No answer provided'})
     logger.warn('Unable to process answer: Missing data'); 
     io.of('secure').emit('update', 'processAnswer error: missing required data'); 
@@ -562,7 +595,7 @@ function processAnswer(team, ans, socket){
   }
   else if(!q.answer || q.type === 'md'){
     if (q.type === 'md') { // "are you ready" screen
-      if (ans.toLowerCase() === 'r') {
+      if (submission.toLowerCase() === 'r') {
         question.scores[tid] = 1; 
         question.selections[tid] = 'r'; 
         teamBroadcast(socket, 'answer-ack', {ok: true, selected: 'r'});
@@ -576,14 +609,14 @@ function processAnswer(team, ans, socket){
     return false;
   }
   if(q.type === 'mc'){
-    if (['a', 'b', 'c', 'd', 'e'].indexOf(ans.toLowerCase()) === -1) {
+    if (['a', 'b', 'c', 'd', 'e'].indexOf(submission.toLowerCase()) === -1) {
       socket.emit('answer-ack', {ok: false, msg: 'Invalid multiple choice option'})
-      io.of('secure').emit('update', `processAnswer error: invalid MC option (${ans.toLowerCase()}) [${tid}]`); 
+      io.of('secure').emit('update', `processAnswer error: invalid MC option (${submission.toLowerCase()}) [${tid}]`); 
       return; 
     }
-    question.selections[tid] = ans.toLowerCase(); 
-    teamBroadcast(socket, 'answer-ack', {ok: true, selected: ans.toLowerCase()});
-    if(ans.toLowerCase() === q.answer.toLowerCase()){
+    question.selections[tid] = submission.toLowerCase(); 
+    teamBroadcast(socket, 'answer-ack', {ok: true, selected: submission.toLowerCase()});
+    if(submission.toLowerCase() === q.answer.toLowerCase()){
       question.scores[tid] = 1; 
       return true; 
     } else{
@@ -591,8 +624,8 @@ function processAnswer(team, ans, socket){
       return false; 
     }
   } else if(q.type === 'sa' || q.type === 'bz'){
-    question.selections[tid] = ans; 
-    ans = ans.toLowerCase().trim(); 
+    question.selections[tid] = submission; 
+    submission = submission.toLowerCase().trim(); 
     let cor = q.answer.toLowerCase().trim(); // correct answer
     if(!q.timed) {
         socket.emit('answer-ack', {ok: true})}
@@ -602,7 +635,7 @@ function processAnswer(team, ans, socket){
     }
 
     if(parseFloat(cor).toString() === cor) { // numerical answer
-      let input = parseFloat(ans.replace(/,/g, '')), actual = parseFloat(cor); 
+      let input = parseFloat(submission.replace(/,/g, '')), actual = parseFloat(cor); 
       if (input === actual) {
         sentAck = true; 
         if (q.timed) {
@@ -628,12 +661,12 @@ function processAnswer(team, ans, socket){
         socket.emit('answer-time', {time: Date.now() - question.timestamp, correct: false, message: 'should be a number'}); 
       }
     } else {
-      if(ans.slice(0, 1) !== cor.slice(0, 1)){ // non-numerical answer
+      if(submission.slice(0, 1) !== cor.slice(0, 1)){ // non-numerical answer
         question.scores[tid] = 0; // first letter must match
         sentAck = true; 
         socket.emit('answer-time', {time: Date.now() - question.timestamp, correct: false}); 
         return false; 
-      } else if(levenshtein(ans, cor) < 3  || levenshtein(ans, cor) === 3 && cor.length > 11){
+      } else if(levenshtein(submission, cor) < 3  || levenshtein(submission, cor) === 3 && cor.length > 11){
         sentAck = true; 
         if (q.type === 'bz') {
           question.scores[tid] = Math.max(Math.round(100*(1-0.065*Math.pow(question.numAnswered, 0.8)))/100, 0.25); // where question.numAnswered is the number of teams who correctly answered before your team
@@ -771,7 +804,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
   }); 
 
   socket.on('status', function(){
-    socket.emit('config-bk', currentBackground.slides); 
+    socket.emit('config-bk', round.background.slides); 
     if(question.curIndex > -1){
       socket.emit('question-full', getCurrentQuestion(1)); 
     } else {
@@ -945,10 +978,10 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
 
   socket.on('adm-setBK', function(type, image){
     if (type === 1) {
-      currentBackground.users = image; 
+      round.background.users = image; 
       io.to('users').emit('config-bk', image); 
     } else if (type === 2) {
-      currentBackground.slides = image; 
+      round.background.slides = image; 
       io.of('/secure').emit('config-bk', image); 
     }
   })
@@ -1078,7 +1111,7 @@ io.of('/').use(function(socket, next){
    */
   socket.on('status', function(mode){
     if(socket.handshake.session.user){
-      socket.emit('config-bk', currentBackground.users); 
+      socket.emit('config-bk', round.background.users); 
 
       if (!mode) {
         socket.emit('status', {valid: true, user: socket.handshake.session.user})}
