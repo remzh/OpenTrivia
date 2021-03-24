@@ -43,11 +43,9 @@ app.get('/brackets/data', (req, res) => {
   res.json(bracketSet); 
 })
 app.get('/brackets/data/matches', (req, res) => {
-  // console.log(bracketSet); 
   res.json(brackets.listRoundMatchups(bracketSet)); 
 })
 app.get('/brackets/data/test', (req, res) => {
-  // console.log(bracketSet); 
   res.json(brackets.generateBrackets(5, brackets.listRoundMatchups(bracketSet))); 
 })
 
@@ -365,6 +363,9 @@ let round = {
   background: {
     slides: 'nature.jpg', 
     users: 'bk.jpg'
+  }, 
+  brackets: {
+    active: false
   }
 }; 
 
@@ -893,7 +894,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
   socket.on('scores-compute', function(r){
     computeOverallScores(r?r:false, true).then(res => {
       socket.emit('scores-host', res); 
-      console.log(res); 
+      // console.log(res); 
     })
   })
 
@@ -1051,7 +1052,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     socket.emit('update', 'Brackets created.')
   }); 
 
-  socket.on('adm-startBracketRound', async (round=0) => {
+  socket.on('adm-startBracketRound', async (roundNum=0) => {
     let metadata = await mdb.collection('brackets').findOne({
       _md: true
     }); 
@@ -1059,11 +1060,16 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
       socket.emit('update', 'Brackets: Missing bracket metadata, cancelled.'); 
       return; 
     }
+    round.brackets = {
+      active: true, 
+      round: roundNum, 
+      seeds: metadata.seeds
+    }
     let matchups = await mdb.collection('brackets').find({
-      round
+      round: roundNum
     }).toArray(); 
     // Broadcast matchups, offset rounds by 1 so that the first game is "game 1"
-    let res = brackets.broadcastMatchups(metadata.seeds, matchups, {round: round+1}, io); 
+    let res = brackets.broadcastMatchups(io, metadata.seeds, matchups, {round: roundNum+1}); 
     socket.emit('update', `Brackets: Multicasted ${matchups.length} matchups to ${metadata.seeds.length} teams (${res} multicasts)`);
   }); 
 });
@@ -1169,7 +1175,7 @@ io.of('/').use(function(socket, next){
     }
   });
 
-  socket.on('answer', function(ans){
+  socket.on('answer', async function(ans){
     if(socket.handshake.session.user){
       logger.debug('[std] recieved answer: '+ans);  
       if (socket.handshake.session.ac && typeof socket.handshake.session.ac.ret_qi !== 'undefined') {
@@ -1186,6 +1192,17 @@ io.of('/').use(function(socket, next){
         }
       }
       processAnswer(socket.handshake.session.user, ans, socket);
+      if (round.brackets.active) {
+        let bracketMsg = await brackets.routeMessage(io, mdb.collection('brackets'), {
+          tid: socket.handshake.session.user.TeamID, 
+          round: round.brackets.round
+        }, {
+          type: 'answerSubmit'
+        }); 
+        if (!bracketMsg.ok) {
+          logger.warn('brackets.routeMessage failed: ' + bracketMsg.msg); 
+        }
+      }
       emitAnswerUpdate(); 
     } else{
       socket.emit('status', {valid: false});

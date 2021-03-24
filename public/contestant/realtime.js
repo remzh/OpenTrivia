@@ -64,3 +64,15 @@ function hideBracketOverlay() {
     $('#bracket-overlay').hide(); 
   }, 320); 
 }
+
+socket.on('brackets-msg', (data) => {
+  logger.info(`[brackets] msg: ${JSON.stringify(data)}`); 
+  switch (data.type) {
+    case 'answerSubmit': 
+      if (data.fromTeam) {
+        buzz(1); 
+      } else {
+        buzz(0); 
+      }
+  }
+})
