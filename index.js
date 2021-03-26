@@ -164,30 +164,34 @@ function lookupUser(teamPIN){
 // Scoring management
 
 let scoreDB, bracketDB; 
-function saveScores(round, question, data, tb){
+function saveScores(roundNum, questionNum, data, tb){
   let dt = {d: data}
     if(tb) dt.tb = tb; 
   scoreDB.findOne({
-    r: round,
-    q: question
+    r: roundNum,
+    q: questionNum
   }).then(r => {
     if(r){
       scoreDB.updateOne({
-        r: round, 
-        q: question
+        r: roundNum, 
+        q: questionNum
       }, {
         $set: dt
       }).then(() => {
-        logger.info(`[Scores] Updated: R${round} Q${question}`);
+        logger.info(`[Scores] Updated: R${roundNum} Q${questionNum}`);
       })
     } else{
-      dt.r = round; 
-      dt.q = question; 
+      dt.r = roundNum; 
+      dt.q = questionNum; 
       scoreDB.insertOne(dt).then(() => {
-        logger.info(`[Scores] Saved: R${round} Q${question}`);
+        logger.info(`[Scores] Saved: R${roundNum} Q${questionNum}`);
       })
     }
-  })
+  }); 
+
+  if (round.brackets.active) {
+    brackets.updateScores(io, mdb.collection('brackets'), round.brackets.round, question.scores); 
+  }
 }
 
 async function loadScores(round){
@@ -366,7 +370,7 @@ let round = {
   }, 
   brackets: {
     active: false
-  }
+  }, 
 }; 
 
 let totalTeams = 0; 
@@ -540,8 +544,22 @@ function getNumberWithOrdinal(n) {
  * Calculates 
  * @param {string} tid - Team ID, used during bracket rounds to see if the team answered first
  */
-function calcPoints(tid) {
-  
+async function calcPoints(tid) {
+  if (round.brackets) {
+    // 10 points for first to answer correctly, 3 points for second to answer correctly
+    let matchData = await brackets.findMatch(mdb.collection('brackets'), {
+      tid, 
+      round: round.brackets.round
+    }); 
+    if (matchData.opponent) {
+      let opponentTID = matchData.opponent.t; 
+      if (question.scores[opponentTID] === 10) {
+        return 4; 
+      }
+    }
+    return 10; 
+  }
+  return 10; 
 }
 
 /**
@@ -550,7 +568,7 @@ function calcPoints(tid) {
  * @param {*} submission - the answer a contestant selected
  * @param {*} socket - the socket.io instance of the contestant
  */
-function processAnswer(team, submission, socket){
+async function processAnswer(team, submission, socket){
   // Validate that a question is active and the submission is readable before processing the answer
   if(!question.active){
     socket.emit('answer-ack', {ok: false, msg: 'Question not active'})
@@ -578,7 +596,8 @@ function processAnswer(team, submission, socket){
   }
 
   if (correct) {
-    question.scores[tid] = calcPoints(tid); 
+    question.scores[tid] = await calcPoints(tid); 
+    console.log('gave score: ', question.scores[tid])
   }
 
   if (q.instantFeedback) {
@@ -980,7 +999,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
   socket.on('adm-setBK', function(type, image){
     if (type === 1) {
       round.background.users = image; 
-      io.to('users').emit('config-bk', image); 
+      io.to('users').emit('config', round); 
     } else if (type === 2) {
       round.background.slides = image; 
       io.of('/secure').emit('config-bk', image); 
@@ -1117,7 +1136,7 @@ io.of('/').use(function(socket, next){
    */
   socket.on('status', function(mode){
     if(socket.handshake.session.user){
-      socket.emit('config-bk', round.background.users); 
+      socket.emit('config', round); 
 
       if (!mode) {
         socket.emit('status', {valid: true, user: socket.handshake.session.user})}

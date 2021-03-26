@@ -18,6 +18,10 @@ let user = false;
 let canChange = true; 
 let qType = ''; 
 
+let roundConfig = {
+  brackets: false
+}
+
 let snkTimeout = false, snkType = 1; 
 /**
  * Shows a temporary snackbar on the user's screen. 
@@ -264,6 +268,11 @@ socket.on('status', (res) => {
 
 socket.on('question', (data) => {
   logger.info('recieved question: '+JSON.stringify(data));
+
+  if (roundConfig.brackets) {
+    resetBuzzer(); 
+  }
+
   $('.q').hide(); 
   $('#q-header-wrapper').show(); 
   $('#q-timer').css('background', ''); 
@@ -455,10 +464,20 @@ socket.on('timer', (v) => {
   $('#q-timer').html(`<i class='fas fa-stopwatch'></i> <b>${v} second${v!=1?'s':''}</b> remaining.`);
 }); 
 
-socket.on('config-bk', (i) => {
-  $('#bk').css('background', '');
-  $('#bk').css('background-image', `url(images/${i})`);
-})
+socket.on('config', (data) => {
+  logger.info(`[core] recieved config: ${JSON.stringify(data)}`); 
+  if (data.background && data.background.users) {
+    $('#bk').css('background', ''); 
+    $('#bk').css('background-image', `url(images/${data.background.users})`);
+  }
+  if (data.brackets.active) {
+    roundConfig.brackets = true; 
+    showBuzzer(); 
+  } else {
+    roundConfig.brackets = false; 
+    hideBuzzer(); 
+  }
+}); 
 
 window.onblur = function() {
   socket.emit('ac-blur'); 

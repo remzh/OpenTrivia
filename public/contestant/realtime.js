@@ -21,6 +21,9 @@ function buzz(type) {
   sound.play(); 
 }
 
+/**
+ * Turns off both buzzer "lights", resetting them for another "buzz"
+ */
 function resetBuzzer() {
   $('.buzzer').removeClass('active'); 
 }
@@ -48,6 +51,7 @@ function hideBuzzer() {
 socket.on('brackets-newMatch', (data) => {
   logger.info(`[brackets] newMatch: ${JSON.stringify(data)}`); 
   showBuzzer(); 
+  roundConfig.brackets = true; 
   console.log(data); 
 
   $('#bracket-overlay').show(); 
