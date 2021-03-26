@@ -35,6 +35,7 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 
 const scoring = require('./lib/scoring.js');
+const scoringPolicy = require('./lib/scoringPolicy.json');
 const brackets = require('./lib/brackets.js');
 app.use('/brackets/*', brackets.appHook); 
 
@@ -546,7 +547,7 @@ function getNumberWithOrdinal(n) {
  */
 async function calcPoints(tid) {
   if (round.brackets) {
-    // 10 points for first to answer correctly, 3 points for second to answer correctly
+    // 10 points for first to answer correctly, 4 points for second to answer correctly
     let matchData = await brackets.findMatch(mdb.collection('brackets'), {
       tid, 
       round: round.brackets.round
@@ -1375,7 +1376,7 @@ app.post('/identity', (req, res) => {
   if (!user) {
     res.status(302).redirect('/'); 
   } else if (typeof req.body.name === 'string' && req.body.name.length > 1) {
-    if (!req.body.name.match(/^[a-z]{2,16}$/i)) {
+    if (!req.body.name.match(/^[a-z\.\s]{2,16}$/i)) {
       res.status(302).redirect(`/identity?tn=${encodeURIComponent(user.TeamName)}&err=${encodeURIComponent('Standard letters only.')}`);   
       return; 
     }

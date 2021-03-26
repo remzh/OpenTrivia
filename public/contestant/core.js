@@ -22,6 +22,11 @@ let roundConfig = {
   brackets: false
 }
 
+let questionConfig = {
+  canChange: true, // All types of questions - whether the answer can be changed after submission
+  selectMultiple: false // MC questions only
+}
+
 let snkTimeout = false, snkType = 1; 
 /**
  * Shows a temporary snackbar on the user's screen. 
@@ -144,14 +149,22 @@ function checkSA(a, b){
   }
 }
 
-function resetMC(){
+/**
+ * 
+ * @param {boolean} type - true for select multiple (boxes), false for select one (letters)
+ */
+function resetMC(type){
   $('.btn-mc').prop('disabled', false);
   $('.btn-mc.correct').removeClass('correct'); 
   $('.btn-mc.incorrect').removeClass('incorrect');  
   $('.btn-mc.selected').removeClass('selected'); 
   $('.btn-mc.pending').removeClass('pending'); 
   $('.btn-mc').forEach((e) => {
-    $(e).children('b').text(e.id.slice(4).toUpperCase()); // reset letters
+    if (type) {
+      $(e).children('b').html(`<i class='far fa-square fa-fw' style='font-size: 20px'></i>`);
+    } else {
+      $(e).children('b').text(e.id.slice(4).toUpperCase()); // reset letters
+    }
   })
 }
 
@@ -254,7 +267,8 @@ socket.on('status', (res) => {
     user = res.user; 
     $('#s-team').text(user.TeamName); 
     $('#s-tid').text(`${user.TeamID}`);
-    $('#s-name').text(`${user['First Name']}`);
+    // $('#s-name').text(`${user['First Name']}`);
+    $('#s-name').text(`${user.name}`);
     // $('#s-school').text(`${user.TeamID} • ${user.School}`)
   }
   else{
@@ -283,7 +297,7 @@ socket.on('question', (data) => {
   }
   switch(data.type){
     case 'mc': 
-      resetMC();
+      resetMC(data.selectMultiple);
       $('.q-ind').css('opacity', 0).show(); // timer indicator
       $('#q-mc').show(); 
       for(let i = 0; i < data.options.length; i++){

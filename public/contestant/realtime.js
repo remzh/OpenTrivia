@@ -78,5 +78,9 @@ socket.on('brackets-msg', (data) => {
       } else {
         buzz(0); 
       }
+      break; 
+    case 'scoreUpdate': 
+      $('#buzzer-score-blue').text(data.teamScore[1]); 
+      $('#buzzer-score-red').text(data.opponentScore[1]); 
   }
 })
