@@ -111,7 +111,7 @@ button.btn-external:active {
   display: none;
 }
 
-.btn-mc, #i-sa {
+.btn-mc, #i-sa, #btn-mc-submit{
   width: 100%; 
   box-sizing: border-box;
   font-size: 24px;
@@ -195,7 +195,7 @@ a button{
   padding: 8px 14px;
 }
 
-.btn-mc{
+.btn-mc, #btn-mc-submit{
   overflow: hidden;
   word-wrap: none;
   white-space: nowrap;
@@ -203,7 +203,7 @@ a button{
   padding: 8px 16px 8px 12px;
 }
 
-.btn-mc b{
+.btn-mc b, #btn-mc-submit b{
   display: inline-block; 
   width: 24px; 
   vertical-align: bottom;
@@ -211,16 +211,28 @@ a button{
   text-align: center;
 }
 
+.btn-mc:not(.selected):disabled{
+  color: #aaa; 
+}
+
 .btn-mc.pending:disabled, .light-blue{
   background: #5e86bbaf; 
 }
 
-.btn-mc.selected:disabled, .blue{
+.btn-mc.selected, .btn-mc.selected:disabled, .blue{
   background: #4255acaf; 
+}
+
+.btn-mc.selected:not([disabled]):hover{
+  background: #435294af; 
 }
 
 .btn-mc.correct:disabled, .correct{
   background: #219139af; 
+}
+
+#btn-mc-submit {
+  background: #83479baf;
 }
 
 #i-sa.correct{

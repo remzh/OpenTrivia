@@ -15,16 +15,18 @@ let status = 0; // 0 = offline,
 let lastConnected = 0; 
 let user = false; 
 
-let canChange = true; 
-let qType = ''; 
+// let canChange = true; 
 
 let roundConfig = {
   brackets: false
 }
 
-let questionConfig = {
+let question = {
+  qType: '', 
+  active: false, 
   canChange: true, // All types of questions - whether the answer can be changed after submission
-  selectMultiple: false // MC questions only
+  selectMultiple: false, // MC questions only
+  mc_selected: []
 }
 
 let snkTimeout = false, snkType = 1; 
@@ -150,22 +152,51 @@ function checkSA(a, b){
 }
 
 /**
- * 
- * @param {boolean} type - true for select multiple (boxes), false for select one (letters)
+ * Updates MC button classes and whether they're disabled or not. 
  */
-function resetMC(type){
+function updateMC(){
+  let type = question.selectMultiple; 
   $('.btn-mc').prop('disabled', false);
   $('.btn-mc.correct').removeClass('correct'); 
   $('.btn-mc.incorrect').removeClass('incorrect');  
   $('.btn-mc.selected').removeClass('selected'); 
   $('.btn-mc.pending').removeClass('pending'); 
   $('.btn-mc').forEach((e) => {
+    let letter = e.id.slice(4); 
     if (type) {
-      $(e).children('b').html(`<i class='far fa-square fa-fw' style='font-size: 20px'></i>`);
+      if (question.mc_selected.indexOf(letter) !== -1) {
+        $(e).addClass('selected').children('b').html(`<i class='fas fa-check-square fa-fw' style='font-size: 20px'></i>`);
+      } else {
+        $(e).children('b').html(`<i class='far fa-square fa-fw' style='font-size: 20px'></i>`);
+      }
     } else {
-      $(e).children('b').text(e.id.slice(4).toUpperCase()); // reset letters
+      $(e).children('b').text(letter.toUpperCase()); // reset letters
+      if (question.mc_selected[0] === letter) {
+        $(e).addClass('selected'); 
+      }
     }
-  })
+  }); 
+  if (type) {
+    $('#btn-mc-submit').show(); 
+  } else {
+    $('#btn-mc-submit').hide(); 
+  }
+
+  if (!question.active) {
+    disableSubmissions(); 
+  }
+}
+
+/**
+ * Resets MC (clears selected choices) and adjusts for "select all" / "select one" as needed
+ * @param {boolean} selectMultiple - true for select multiple (boxes), false for select one (letters)
+ */
+function resetMC(selectMultiple) {
+  question.mc_selected = []; 
+  if (typeof selectMultiple !== 'undefined') {
+    question.selectMultiple = selectMultiple; 
+  }
+  updateMC(); 
 }
 
 function resetSA(){
@@ -190,20 +221,84 @@ function hideExternal(){
   }, 400); 
 }
 
-$('.btn-mc').forEach((e) => {
-  $(e).on('mousedown', () => {
-    resetMC(); 
-    let target = e;  
-    $(target).addClass('pending');
-    if(canChange){
-      $(target).prop('disabled', true)}
-    else{
-      $('.btn-mc').prop('disabled', true)}
-    $(target).children('b').html(`<i class='fas fa-circle-notch fa-spin' style='font-size: 20px'></i>`); 
-    logger.info(`submitted "${target.id.slice(4)}" as answer`);
-    socket.emit('answer', target.id.slice(4)); 
-  })
-})
+/**
+ * Processes a user interaction on a multiple choice option
+ * @param {HTMLElement} ele - target button element
+ */
+function processMC(ele) {
+  if (question.selectMultiple) {
+    let opts = question.mc_selected; 
+    let sel = ele.id.slice(4); 
+    if (opts.indexOf(sel) === -1) {
+      // Select the option
+      // $(ele).addClass('selected'); 
+      // $(ele).children('b').html(`<i class='fas fa-check-square' style='font-size: 20px'></i>`); 
+      opts = opts.push(sel); 
+      question.mc_selected.sort(); 
+    } else {
+      // Unselect the option
+      opts.splice(opts.indexOf(sel), 1);
+      // $(ele).removeClass('selected'); 
+      // $(ele).children('b').html(`<i class='far fa-square' style='font-size: 20px'></i>`); 
+    }
+    updateMC(); 
+  } else {
+    // updateMC(); 
+    question.mc_selected = [ele.id.slice(4)]; 
+    $(ele).addClass('pending');
+    // if(canChange){
+    //   $(target).prop('disabled', true)}
+    // else{
+    //   $('.btn-mc').prop('disabled', true)}
+    $('.btn-mc').prop('disabled', true); 
+    $(ele).children('b').html(`<i class='fas fa-circle-notch fa-spin' style='font-size: 20px'></i>`); 
+    processMCSubmit(); 
+  }
+}
+
+/**
+ * Submits a MC question. 
+ * @param {boolean} fromBtn - whether this function was called from the "submit response" button or not
+ */
+function processMCSubmit(fromBtn) {
+  let submission = question.mc_selected.join(''); 
+  if (submission === '') {
+    showSnackbar('You must select at least one option.', 1)
+  } else {
+    if (fromBtn) {
+      $('#btn-mc-submit').children('b').html(`<i class='fas fa-circle-notch fa-spin' style='font-size: 20px'></i>`); 
+    }
+    logger.info(`submitted "${submission}" as answer`);
+    socket.emit('answer', submission); 
+  }
+}
+
+function disableSubmissions() {
+  question.active = false; 
+  if (question.qType === 'mc' || question.qType === 'md') {
+    $('.btn-mc').prop('disabled', true);
+    $('#btn-mc-submit').hide();
+  } else if (question.qType === 'sa') {
+    $('.i-sa').prop('disabled', true);
+  }
+}
+
+// Add event listeners to each MC option and the submit button
+$('.btn-mc').forEach((ele) => {
+  $(ele).on('mousedown', () => processMC(ele)); 
+  $(ele).on('keydown', (e) => {
+    if (e.code === 'Enter' || e.code === 'Space') {
+      processMC(ele); 
+    }
+  }); 
+}); 
+
+$('#btn-mc-submit').on('mousedown', processMCSubmit); 
+$('#btn-mc-submit').on('keyDown', (e) => {
+  if (e.code === 'Enter' || e.code === 'Space') {
+    processMCSubmit(1); 
+  }
+}); 
 
 $('#i-sa').on('keydown', (e) => {
   if(e.key === 'Enter'){
@@ -290,14 +385,15 @@ socket.on('question', (data) => {
   $('.q').hide(); 
   $('#q-header-wrapper').show(); 
   $('#q-timer').css('background', ''); 
-  qType = data.type; 
+  question.qType = data.type; 
+  question.active = true; 
   if(data.num){
     $('#q-num').show(); 
     $('#q-num').text('Question ' + data.num); 
   }
   switch(data.type){
     case 'mc': 
-      resetMC(data.selectMultiple);
+      resetMC(data.selectMultiple ? true : false);
       $('.q-ind').css('opacity', 0).show(); // timer indicator
       $('#q-mc').show(); 
       for(let i = 0; i < data.options.length; i++){
@@ -324,8 +420,9 @@ socket.on('question', (data) => {
   if(!data.active){
     $('#q-num').hide(); 
     $('#q-stop').show(); 
-    $('.btn-mc').prop('disabled', true); 
-    $('#i-sa').prop('disabled', true); 
+    // $('.btn-mc').prop('disabled', true); 
+    // $('#i-sa').prop('disabled', true); 
+    disableSubmissions(); 
   }
 })
 
@@ -350,20 +447,37 @@ socket.on('scores-release', () => {
 
 socket.on('answer', (ans) => {
   logger.info('recieved question answer: '+ans); 
-  if(qType === 'mc'){
-    let sel = $('.selected')[0].id.slice(4); 
-    if(sel === ans){
-      $('.selected').addClass('correct');
-      $('.selected').children('b').html(`<i class='fas fa-check'></i>`); 
-    } else{
-      $('.selected').addClass('incorrect'); 
-      $('.selected').children('b').html(`<i class='fas fa-times'></i>`); 
-      if ($('#btn-'+ans)[0]) {
-        $('#btn-'+ans).children('b').html(`<i class='fas fa-check'></i>`); 
+  disableSubmissions(); 
+  if(question.qType === 'mc'){
+    let answer = ans.toLowerCase().split(''), selected = question.mc_selected, all = ['a', 'b', 'c', 'd', 'e']; 
+    for (let letter of all) {
+      let ele = $(`#btn-${letter}`);
+      if (answer.indexOf(letter) !== -1) {
+        if (selected.indexOf(letter) !== -1) {
+          ele.addClass('correct'); 
+        }
+        ele.children('b').html(`<i class='fas fa-check'></i>`); 
+      } else {
+        if (selected.indexOf(letter) !== -1) {
+          ele.addClass('incorrect'); 
+          ele.children('b').html(`<i class='fas fa-times'></i>`); 
+        }
       }
     }
-  } else if(qType === 'sa' || qType === 'bz'){
-    $('#i-sa').prop('disabled', true); 
+
+    // let sel = $('.selected')[0].id.slice(4); 
+    // if(sel === ans){
+    //   $('.selected').addClass('correct');
+    //   $('.selected').children('b').html(`<i class='fas fa-check'></i>`); 
+    // } else{
+    //   $('.selected').addClass('incorrect'); 
+    //   $('.selected').children('b').html(`<i class='fas fa-times'></i>`); 
+    //   if ($('#btn-'+ans)[0]) {
+    //     $('#btn-'+ans).children('b').html(`<i class='fas fa-check'></i>`); 
+    //   }
+    // }
+  } else if(question.qType === 'sa' || question.qType === 'bz'){
+    // $('#i-sa').prop('disabled', true); 
     $('#i-sa').val($('#i-sa').prop('placeholder')); 
     if($('#sa-right-timed').css('display') === 'block' || $('#sa-right').css('display') === 'block' || checkSA(ans, $('#i-sa').prop('placeholder'))){
       $('#i-sa').addClass('correct'); 
@@ -380,20 +494,27 @@ socket.on('answer', (ans) => {
 socket.on('answer-ack', (ack) => {
   logger.info('recieved answer ack: '+JSON.stringify(ack)); 
   if(ack.ok){
-    if(qType === 'mc') {
-      resetMC(); 
-      $(`#btn-${ack.selected}`).prop('disabled', true).addClass('selected'); 
-    } else if (qType === 'md') {
+    if(question.qType === 'mc') {
+      question.mc_selected = ack.selected ? ack.selected.split('') : []; 
+      updateMC(); 
+      // $(`#btn-${ack.selected}`).prop('disabled', true).addClass('selected'); 
+    } else if (question.qType === 'md') {
       $(`#btn-r`).prop('disabled', true).addClass('selected correct').children('b').html(`<i class='fas fa-check'></i>`); 
     }
     if (ack.sender) {
-      showSnackbar('Answer Submitted!');
+      $('#btn-mc-submit').children('b').html(`<i class='fas fa-paper-plane' style='font-size: 20px'></i>`); 
+      showSnackbar(`Answer ${ack.firstSubmission?'Submitted':'Changed'}!`);
     } else {
       if (ack.senderName) {
-        showSnackbar(`${ack.senderName} submitted an answer!`, 1); 
-      } else {
-        showSnackbar(`A teammate submitted an answer!`, 1); 
-      }
+        showSnackbar(`${ack.senderName} ${ack.firstSubmission?'submitted':'changed'} an answer!`, 1); 
+      } else if (!ack.previousAnswer) {
+        // previousAnswer key is set to true only if the user just reloaded the page -- that is, the answer wasn't actually changed
+        showSnackbar(`A teammate ${ack.firstSubmission?'submitted':'changed'} an answer!`, 1); 
+      } 
+    }
+
+    if (!ack.canChangeAnswer) {
+      disableSubmissions(); 
     }
   } else{
     alert(ack.msg); 
@@ -448,8 +569,9 @@ socket.on('stop', () => {
   $('#q-num').hide(); 
   $('#q-timer').hide(); 
   $('#q-stop').show(); 
-  $('.btn-mc').prop('disabled', true); 
-  $('#i-sa').prop('disabled', true); 
+  // $('.btn-mc').prop('disabled', true); 
+  // $('#i-sa').prop('disabled', true); 
+  disableSubmissions(); 
 })
 
 let ping_ds = 0; 

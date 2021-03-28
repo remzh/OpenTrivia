@@ -393,6 +393,7 @@ let totalTeams = 0;
  */
 let question = {
   active: false, // whether answers can be submitted or not
+  canChangeAnswer: true, // whether teams can change their answer after their initial submission or not
   timer: {
     interval: null, // value returned by setInterval function so that it can be cleared if needed
     end: 0 // what time (js timestamp) that the question's timer will hit zero
@@ -581,9 +582,17 @@ async function processAnswer(team, submission, socket){
     return; 
   } 
 
-  // Processs the answer
+  // Process the answer
   let q = getCurrentQuestion(1), tid = team.TeamID; 
+  let canChangeAnswer = question.canChangeAnswer || q.timed; // if timed=true, teams can always change their answer (due to its design)
 
+  // Make sure it's not an answer change if answer changes are disabled
+  if (!canChangeAnswer && typeof question.scores[tid] !== 'undefined') {
+    socket.emit('answer-ack', {ok: false, msg: 'Answer already submitted, cannot change'})
+  }
+  let firstSubmission = (typeof question.scores[tid] === 'undefined'); 
+
+  // Score and process the answer
   let {valid, correct, msg} = scoring.isCorrect(submission, q); 
   if (valid) {
     question.selections[tid] = submission; 
@@ -593,12 +602,16 @@ async function processAnswer(team, submission, socket){
 
   let response = {
     ok: true, 
-    selected: submission
+    selected: submission, 
+    canChangeAnswer, 
+    firstSubmission
   }
 
   if (correct) {
     question.scores[tid] = await calcPoints(tid); 
     console.log('gave score: ', question.scores[tid])
+  } else {
+    question.scores[tid] = 0; 
   }
 
   if (q.instantFeedback) {
@@ -755,17 +768,32 @@ function getAnswerStats(){
   if(question.current.type === 'MC'){
     let resp = Object.values(question.selections);
     let t = resp.length; 
-    return {
-      type: 'mc', 
-      ans: question.current.answer.toLowerCase(), 
-      correct: Object.values(question.scores).filter(r => r==1).length, 
-      total: Object.values(question.scores).length, 
-      a: Math.round(resp.filter(i => i=='a').length/t*1000)/1000, 
-      b: Math.round(resp.filter(i => i=='b').length/t*1000)/1000, 
-      c: Math.round(resp.filter(i => i=='c').length/t*1000)/1000, 
-      d: Math.round(resp.filter(i => i=='d').length/t*1000)/1000, 
-      e: Math.round(resp.filter(i => i=='e').length/t*1000)/1000, 
-      scoresSaved: question.scoresSaved
+    if (question.current.answer.length === 1) {
+      return {
+        type: 'mc', 
+        ans: question.current.answer.toLowerCase(), 
+        correct: Object.values(question.scores).filter(r => r==1).length, 
+        total: Object.values(question.scores).length, 
+        a: Math.round(resp.filter(i => i=='a').length/t*1000)/1000, 
+        b: Math.round(resp.filter(i => i=='b').length/t*1000)/1000, 
+        c: Math.round(resp.filter(i => i=='c').length/t*1000)/1000, 
+        d: Math.round(resp.filter(i => i=='d').length/t*1000)/1000, 
+        e: Math.round(resp.filter(i => i=='e').length/t*1000)/1000, 
+        scoresSaved: question.scoresSaved
+      }
+    } else {
+      return {
+        type: 'mc', 
+        ans: question.current.answer.toLowerCase(), 
+        correct: Object.values(question.scores).filter(r => r==1).length, 
+        total: Object.values(question.scores).length, 
+        a: Math.round(resp.filter(i => i.indexOf('a')!==-1).length/t*1000)/1000, 
+        b: Math.round(resp.filter(i => i.indexOf('b')!==-1).length/t*1000)/1000, 
+        c: Math.round(resp.filter(i => i.indexOf('c')!==-1).length/t*1000)/1000, 
+        d: Math.round(resp.filter(i => i.indexOf('d')!==-1).length/t*1000)/1000, 
+        e: Math.round(resp.filter(i => i.indexOf('e')!==-1).length/t*1000)/1000, 
+        scoresSaved: question.scoresSaved
+      }
     }
   } else if(question.current.type === 'SA' || question.current.type === 'BZ'){
     return {
@@ -1161,13 +1189,13 @@ io.of('/').use(function(socket, next){
         // send saved answer if applicable
         let {type, answer, timed} = getCurrentQuestion(1);
         if (type === 'mc' || type === 'md') {
-          socket.emit('answer-ack', {ok: true, selected: sel}); 
+          socket.emit('answer-ack', {ok: true, selected: sel, previousAnswer: true, canChangeAnswer: question.canChangeAnswer}); 
         } else if ((type === 'sa' && timed) || type === 'bz') {
           if (question.scores[socket.handshake.session.user.TeamID] > 0) {
             socket.emit('answer-time', {correct: true, answer: answer}); 
           }
         } else if (type === 'sa') {
-          socket.emit('answer-ack', {ok: true, selected: sel}); 
+          socket.emit('answer-ack', {ok: true, selected: sel, previousAnswer: true, canChangeAnswer: question.canChangeAnswer}); 
         }
       }
     } else{

@@ -271,7 +271,13 @@ secSocket.on('answer-stats', (data) => {
   logger.info('Recieved answers: '+JSON.stringify(data)); 
   if(data.type === 'mc'){
     $('.opt').addClass('incorrect'); 
-    $('#opt-'+data.ans).removeClass('incorrect').addClass('correct'); 
+    if (data.ans.length === 1) {
+      $('#opt-'+data.ans).removeClass('incorrect').addClass('correct'); 
+    } else {
+      for (let ans of data.ans.split('')) {
+        $('#opt-'+ans).removeClass('incorrect').addClass('correct'); 
+      }
+    }
     $('.opt-perc').remove(); 
     let p = ['a', 'b', 'c', 'd', 'e']; 
     for(let i = 0; i <= 4; i++){
