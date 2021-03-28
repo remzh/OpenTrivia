@@ -1,0 +1,36 @@
+[{
+  "round": 0, 
+  "roundName": "1", 
+  "brackets": false, 
+  "multiplier": 10
+}, {
+  "round": 1, 
+  "roundName": "2A", 
+  "brackets": true, 
+  "multiplier": 1
+}, {
+  "round": 2, 
+  "roundName": "2B", 
+  "brackets": true, 
+  "multiplier": 1
+}, {
+  "round": 3, 
+  "roundName": "2C", 
+  "brackets": true, 
+  "multiplier": 1
+}, {
+  "round": 4, 
+  "roundName": "2D", 
+  "brackets": true, 
+  "multiplier": 1
+}, {
+  "round": 5, 
+  "roundName": "3", 
+  "brackets": false, 
+  "multiplier": 10
+}, {
+  "round": 6, 
+  "roundName": "4 (Finals)", 
+  "brackets": false, 
+  "multiplier": 1
+}]

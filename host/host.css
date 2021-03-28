@@ -2,35 +2,7 @@ html{
   cursor: default; 
 }
 
-/* Navbar */
-
-#nav{
-  padding-bottom: 0;
-}
-
-#nav-cat{
-  padding-top: 4px;
-}
-
-#nav-cat a{
-  text-decoration: none;
-  display: inline-block; 
-  padding: 4px 8px;
-  border-bottom: 2px solid transparent; 
-  transition: all 0.2s; 
-}
-
-#nav-cat a.active{
-  background: #ffffff0f; 
-  border-color: #aac8ff;
-}
-
 /* General CSS */
-
-.btn-lg{
-  font-size: 18px; 
-  padding: 6px 12px;
-}
 
 .container.top{
   display: none;

@@ -1,0 +1,384 @@
+html, body {
+  -moz-user-focus: none;
+  -webkit-user-select: none;
+  user-select: none;
+  overscroll-behavior: none !important;
+}
+
+/* Navbar and footer */
+
+#nav {
+  padding: 4px 8px 0px;
+  height: 52px;
+  overflow: hidden;
+}
+
+#nav-top {
+  height: 24px;
+  overflow: hidden;
+}
+
+#footer {
+  height: 40px;
+  padding: 0 4px; 
+  font-size: 12px;
+}
+
+#footer-left {
+  padding-top: 4px;
+}
+
+#footer-round {
+  display: inline-block;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+#s-team {
+  display: inline-block; 
+  width: calc(100% - 100px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-external {
+  height: 40px;
+  width: 64px;
+  box-sizing: border-box;
+  border: none;
+  background: none;
+}
+
+button.btn-external:hover, button.btn-external:focus {
+  background: #ffffff2f;
+}
+
+button.btn-external:active {
+  background: #b3ddff44;
+}
+
+.btn-external span:nth-child(1) {
+  display: block;
+  font-size: 16px;
+}
+
+/* Container and messages */
+
+.container.top{
+  margin-top: 50px;
+}
+
+.banner{
+  box-sizing: border-box;
+  padding: 4px 4px;
+  width: 100%; 
+  height: 24px; 
+  background: #011191a1;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* Contestant body framework */
+
+#contestant-inner {
+  width: 80%;
+  max-width: 600px;
+  margin: auto;
+  padding-bottom: 50px;
+}
+
+@keyframes pulse {
+  from {
+    transform: scale(1)}
+  50% {
+    transform: scale(1.05)}
+  to {
+    transform: scale(1)}
+}
+
+.pulse {
+  -webkit-animation-name: pulse;
+  animation-name: pulse;
+  animation-duration: 0.6s;
+}
+
+/* Question details */
+
+.q:not(#q-msg) {
+  display: none;
+}
+
+.btn-mc, #i-sa, #btn-mc-submit{
+  width: 100%; 
+  box-sizing: border-box;
+  font-size: 24px;
+  margin-top: 8px;
+  text-align: left;
+}
+
+#i-sa {
+  padding: 8px 16px;
+}
+
+#q-header-wrapper {
+  height: 72px;
+  margin-top: 18px;
+}
+
+#q-num, #q-stop, #q-msg, #q-sp p, #q-md h2, #q-md p, #q-scores *{
+  text-shadow: 1px 1px 3px #444;
+}
+
+#q-stop{
+  margin: auto;
+  /* margin-top: 4px; */
+  /* margin-bottom: 12px; */
+  padding: 8px 4px;
+  width: 180px;
+  background: #ac5742af;
+  box-shadow: 3px 3px 2px #bb8b5eaf;
+}
+
+#q-stop h1{
+  margin: 0;
+}
+
+#q-num{
+  margin: 0;
+}
+
+#q-sa {
+  padding-bottom: 4px;
+}
+
+.q-sa, .q-ind{
+  /* question-short answer, question-indicator */
+  padding: 4px 8px;
+  font-size: 1.0em; 
+  background: #0000007f;
+  border: 1px solid #fff; 
+}
+
+#q-timer {
+  width: fit-content;
+  max-width: 200px;
+  margin: auto;
+  transition: opacity 0.2s, background 1.0s;
+}
+
+#i-sa{
+  padding: 8px;
+  transition: all 0.14s;
+  border: none; 
+  background: #ffffffaf;
+  color: #000;
+  border-radius: 0; 
+  border-bottom: 1px solid #555;
+}
+
+#i-sa:hover{
+  border-color: #4040cc;
+}
+
+#i-sa:focus{
+  outline: none;
+  background: #d5e2ffaf;
+  border-color: #4040cc;
+  box-shadow: 0 1px 0 0 #4040cc;
+}
+
+a button{
+  font-size: 24px; 
+  padding: 8px 14px;
+}
+
+.btn-mc, #btn-mc-submit{
+  overflow: hidden;
+  word-wrap: none;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding: 8px 16px 8px 12px;
+}
+
+.btn-mc b, #btn-mc-submit b{
+  display: inline-block; 
+  width: 24px; 
+  vertical-align: bottom;
+  display: inline-block;
+  text-align: center;
+}
+
+.btn-mc:not(.selected):disabled{
+  color: #aaa; 
+}
+
+.btn-mc.pending:disabled, .light-blue{
+  background: #5e86bbaf; 
+}
+
+.btn-mc.selected, .btn-mc.selected:disabled, .blue{
+  background: #4255acaf; 
+}
+
+.btn-mc.selected:not([disabled]):hover{
+  background: #435294af; 
+}
+
+.btn-mc.correct:disabled, .correct{
+  background: #219139af; 
+}
+
+#btn-mc-submit {
+  background: #83479baf;
+}
+
+#i-sa.correct{
+  background: #ccf5ceaf;
+  color: #030; 
+}
+
+.btn-mc.incorrect:disabled, .incorrect{
+  background: #ac4242af; 
+}
+
+#i-sa.incorrect{
+  background: #f5d2ccaf;
+  color: #300; 
+}
+
+/* External Pages / iFrame setup */
+
+#q-scores button{
+  font-size: 1.4rem;
+  padding: 8px 12px;
+}
+
+#ext-overlay{
+  display: none;
+  position: fixed;
+  z-index: 4;
+  overflow: hidden;
+  resize: both;
+}
+
+#ext-inner{
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: #726d6d;
+}
+
+#ext-iframe{
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+#ext-draggable {
+  position: absolute;
+  top: 0px; 
+  left: 0px; 
+  width: calc(100% - 140px);
+  height: 32px;
+  cursor: move;
+}
+
+#ext-actions {
+  position: absolute;
+  top: 2px; 
+  right: 12px;
+}
+
+#ext-actions button{
+  width: 38px;
+  height: 26px;
+  font-size: 16px;
+  padding: 0;
+  background: none;
+  border-color: transparent;
+}
+
+#ext-actions button:hover, #ext-actions button:focus{
+  background: #ffffff1f;
+}
+
+#ext-actions button:focus{
+  border-color: #93d4ff;
+}
+
+#ext-resize{
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 12px; 
+  height: 12px; 
+  font-size: 12px;
+  text-align: right;
+}
+
+.ext-hide {
+  -webkit-animation-name: ext-hide;
+  animation-name: ext-hide;
+  animation-duration: 0.43s;
+}
+
+.ext-show {
+  -webkit-animation-name: ext-hide;
+  animation-name: ext-hide;
+  animation-direction: reverse;
+  animation-duration: 0.4s;
+}
+
+@media only screen and (min-width: 980px) {
+  #ext-overlay{
+    /* border: 1px solid #000;  */
+    box-shadow: 4px 4px 8px #333;
+    left: 7.5%; 
+    top: calc(60px + 5%); 
+    width: 85%; 
+    height: calc(85% - 60px);
+    min-width: 280px;
+    min-height: 320px;
+  }
+
+  @keyframes ext-hide {
+    from {
+      opacity: 1;
+      transform: scale(1.0);
+    }
+    to {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+  }
+}
+
+@media only screen and (max-width: 979px) {
+  #nav {
+    padding: 4px 5px 0px;
+    height: 50px;
+    overflow: hidden;
+  }
+
+  #ext-overlay{
+    left: 0 !important; 
+    width: 100% !important; 
+    top: 50px !important; 
+    height: calc(100% - 50px) !important;
+    resize: none;
+  }
+
+  #ext-resize, #ext-draggable{
+    display: none;
+  }
+
+  @keyframes ext-hide {
+    from {
+      transform: translateY(0px)}
+    to {
+      transform: translateY(100%)}
+  }
+}

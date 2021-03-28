@@ -8,7 +8,7 @@
 require('dotenv').config(); 
 const port = process.env.PORT || 8100;
 
-// Init variables and server
+// Init variables and server  
 
 const fs = require('fs');
 const moment = require('moment');
@@ -16,12 +16,13 @@ const express = require('express');
 const app = require('express')();
 const path = require('path');
 const colors = require('colors');
+
 // const credentials = require(path.join(__dirname, 'secure', 'credentials.json')); // secure credentials
 // const scoring = require(path.join(__dirname, 'secure', 'scoring.json')); 
-let scoring = {
-  countedRounds: process.env.OT_SCORING_ROUNDS.split(',').map(r => parseInt(r)), 
-  roundMultiplier: process.env.OT_SCORING_MULT?process.env.OT_SCORING_MULT.split(',').map(r => parseFloat(r)):process.env.SCORING_ROUNDS.split(',').fill(1)
-}
+// let scoring = {
+//   countedRounds: process.env.OT_SCORING_ROUNDS.split(',').map(r => parseInt(r)), 
+//   // roundMultiplier: process.env.OT_SCORING_MULT?process.env.OT_SCORING_MULT.split(',').map(r => parseFloat(r)):process.env.SCORING_ROUNDS.split(',').fill(1)
+// }
 
 const levenshtein = require('js-levenshtein');
 const tabletop = require('tabletop');
@@ -32,6 +33,22 @@ const cookieParser = require('cookie-parser');
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cookieParser());
+
+const scoring = require('./lib/scoring.js');
+const scoringPolicy = require('./lib/scoringPolicy.json');
+const brackets = require('./lib/brackets.js');
+app.use('/brackets/*', brackets.appHook); 
+
+let bracketSet = brackets.generateNewBrackets(5); 
+app.get('/brackets/data', (req, res) => {
+  res.json(bracketSet); 
+})
+app.get('/brackets/data/matches', (req, res) => {
+  res.json(brackets.listRoundMatchups(bracketSet)); 
+})
+app.get('/brackets/data/test', (req, res) => {
+  res.json(brackets.generateBrackets(5, brackets.listRoundMatchups(bracketSet))); 
+})
 
 const http = require('http').Server(app);
 const winston = require('winston');
@@ -147,31 +164,35 @@ function lookupUser(teamPIN){
 // End of UserDB
 // Scoring management
 
-let scoreDB; 
-function saveScores(round, question, data, tb){
+let scoreDB, bracketDB; 
+function saveScores(roundNum, questionNum, data, tb){
   let dt = {d: data}
     if(tb) dt.tb = tb; 
   scoreDB.findOne({
-    r: round,
-    q: question
+    r: roundNum,
+    q: questionNum
   }).then(r => {
     if(r){
       scoreDB.updateOne({
-        r: round, 
-        q: question
+        r: roundNum, 
+        q: questionNum
       }, {
         $set: dt
       }).then(() => {
-        logger.info(`[Scores] Updated: R${round} Q${question}`);
+        logger.info(`[Scores] Updated: R${roundNum} Q${questionNum}`);
       })
     } else{
-      dt.r = round; 
-      dt.q = question; 
+      dt.r = roundNum; 
+      dt.q = questionNum; 
       scoreDB.insertOne(dt).then(() => {
-        logger.info(`[Scores] Saved: R${round} Q${question}`);
+        logger.info(`[Scores] Saved: R${roundNum} Q${questionNum}`);
       })
     }
-  })
+  }); 
+
+  if (round.brackets.active) {
+    brackets.updateScores(io, mdb.collection('brackets'), round.brackets.round, question.scores); 
+  }
 }
 
 async function loadScores(round){
@@ -277,13 +298,12 @@ async function computeOverallScores(input, showAllInfo=true){
         if (selTeam) {
           let scoreRaw = selTeam.s.s ? selTeam.s.s : 0; 
           let numCorrect = selTeam.s.c ? selTeam.s.c : 0; 
-          let multiplier = scoring.roundMultiplier[scoring.countedRounds.indexOf(roundNum)]; 
-          if (isNaN(multiplier)) multiplier = 1; 
+          let multiplier = scoring.getMultiplier(roundNum); 
           points += scoreRaw * multiplier; 
           correct += numCorrect; 
           tb += (selTeam.s.tb ? selTeam.s.tb : 0);
           indiv.push({
-            s: Math.round(scoreRaw*multiplier), 
+            s: Math.round(scoreRaw * multiplier), 
             c: numCorrect, 
             m: multiplier, 
             tb: selTeam.s.tb ? Math.round(selTeam.s.tb*1000)/1000 : 0,
@@ -332,7 +352,7 @@ async function computeOverallScores(input, showAllInfo=true){
 }
 
 // End of scoring management
-// Message
+// Messages
 
 let currentMessage = {
   title: 'Welcome!', 
@@ -344,9 +364,14 @@ let currentTopScores = {
   scores: {}
 }
 
-let currentBackground = {
-  slides: 'nature.jpg', 
-  users: 'bk.jpg'
+let round = {
+  background: {
+    slides: 'nature.jpg', 
+    users: 'bk.jpg'
+  }, 
+  brackets: {
+    active: false
+  }, 
 }; 
 
 let totalTeams = 0; 
@@ -354,11 +379,24 @@ let totalTeams = 0;
 // End of messages
 // Question management
 
+/**
+ * The question object stores all the information about the current question being presented. Scalable? Absolutely not. However, it works well for what it's used for (running one game on one server w/o any load balancing), so it's being kept like this. 
+ * Each key is commented with what that key represents/does. 
+ * 
+ * Information on Custom (Negative) Question Indexes
+ * - Negative question indexes represent special states
+ * - Here's a list of them and what they mean: 
+ * 
+ * -1 (default): Announcement
+ * -2: Top Teams (but scoreboard not published yet)
+ * -3: Top Teams (and scoreboard is published)
+ */
 let question = {
   active: false, // whether answers can be submitted or not
+  canChangeAnswer: true, // whether teams can change their answer after their initial submission or not
   timer: {
-    interval: null,  
-    end: 0
+    interval: null, // value returned by setInterval function so that it can be cleared if needed
+    end: 0 // what time (js timestamp) that the question's timer will hit zero
   }, 
   current: {}, // current question taken from array
   curIndex: -1, // index of question in array
@@ -368,16 +406,6 @@ let question = {
   tb: {}, // tiebreak values (each timed question can gie up to 10.00 of TB)
   selections: {} // only used in SA questions to record answers
 }
-
-/**
- * Custom (Negative) Question Indexes
- * - Negative question indexes represent special states
- * - Here's a list of them and what they mean: 
- * 
- * -1 (default): Announcement
- * -2: Top Teams (but scoreboard not published yet)
- * -3: Top Teams (and scoreboard is published)
- */
 
 /**
  * Calculates a user's tiebreaker score for a question based on how much time they took to correctly answer it
@@ -400,6 +428,11 @@ function tbCalc(){
   return v; 
 }
 
+/**
+ * Fetches information on the current active question. 
+ * @param {boolean} full - 1 to include all question data, 0 to only include question data presented to contestants
+ * @returns {object} question
+ */
 function getCurrentQuestion(full){
   let obj = question.current; 
   try {
@@ -410,6 +443,9 @@ function getCurrentQuestion(full){
     }
     if(obj.type === 'MC'){
       out.options = [obj.optA, obj.optB, obj.optC, obj.optD, obj.optE]
+      if (obj.answer.length > 1) {
+        out.selectMultiple = true; 
+      }
     }
     else if(obj.type === 'SP'){
       out.url = obj.question; 
@@ -435,12 +471,21 @@ function getCurrentQuestion(full){
   }
 }
 
+/**
+ * Maps a raw question entry (from a row in Sheets) to one that follows camel case.
+ * 
+ * Is this good code? No. Was it easier to do this than to redo the Google Sheets that was all set up? Yes. 
+ * Plus, this function can be easily edited to accomodate different types column names in your own spreadsheet. 
+ * @param {object} inp - input object
+ * @returns {object} formatted question object
+ */
 function mapQuestionEntry(inp){
   return {
     round: inp.Round, // (string)
     num: parseInt(inp.Q), 
     type: inp.Type, 
     timed: inp.Timed === 'TRUE' ? true : false, 
+    instantFeedback: inp.InstantFeedback === 'TRUE' ? true : false, 
     category: inp.Category, 
     question: inp.Question,
     answer: inp.Answer,  
@@ -454,6 +499,12 @@ function mapQuestionEntry(inp){
   }
 }
 
+/**
+ * Loads a new question and broadcasts it to everyone. 
+ * @param {number} index - index of question in array of questions to load
+ * @param {object} socket - socket.io object of sender
+ * @returns {undefined}
+ */
 function loadQuestion(index, socket){
   stopTimer(); // if currently active
   if (!questiondb[index]) {
@@ -461,7 +512,7 @@ function loadQuestion(index, socket){
     return; 
   }
 
-  question.firstCorrectTaken = false; 
+  question.firstCorrectTaken = false; // SA only - first correct answer is announced to everyone
   question.active = true; 
   question.current = mapQuestionEntry(questiondb[index]);
   question.curIndex = index; 
@@ -492,20 +543,111 @@ function getNumberWithOrdinal(n) {
 }
 
 /**
+ * Calculates 
+ * @param {string} tid - Team ID, used during bracket rounds to see if the team answered first
+ */
+async function calcPoints(tid) {
+  if (round.brackets) {
+    // 10 points for first to answer correctly, 4 points for second to answer correctly
+    let matchData = await brackets.findMatch(mdb.collection('brackets'), {
+      tid, 
+      round: round.brackets.round
+    }); 
+    if (matchData.opponent) {
+      let opponentTID = matchData.opponent.t; 
+      if (question.scores[opponentTID] === 10) {
+        return 4; 
+      }
+    }
+    return 10; 
+  }
+  return 10; 
+}
+
+/**
  * Processes a contestant's answer by scoring it and sending feedback
  * @param {object} team - team object from client session
- * @param {*} ans - the answer a contestant selected
+ * @param {*} submission - the answer a contestant selected
  * @param {*} socket - the socket.io instance of the contestant
  */
-function processAnswer(team, ans, socket){
+async function processAnswer(team, submission, socket){
+  // Validate that a question is active and the submission is readable before processing the answer
   if(!question.active){
     socket.emit('answer-ack', {ok: false, msg: 'Question not active'})
     return; 
+  } else if (typeof submission !== 'string' || !team.TeamID){
+    socket.emit('answer-ack', {ok: false, msg: 'No answer provided'})
+    // logger.warn('Unable to process answer: Missing data'); 
+    // io.of('secure').emit('update', 'processAnswer error: missing required data'); 
+    return; 
+  } 
+
+  // Process the answer
+  let q = getCurrentQuestion(1), tid = team.TeamID; 
+  let canChangeAnswer = question.canChangeAnswer || q.timed; // if timed=true, teams can always change their answer (due to its design)
+
+  // Make sure it's not an answer change if answer changes are disabled
+  if (!canChangeAnswer && typeof question.scores[tid] !== 'undefined') {
+    socket.emit('answer-ack', {ok: false, msg: 'Answer already submitted, cannot change'}); 
+    return; 
+  }
+  let firstSubmission = (typeof question.scores[tid] === 'undefined'); 
+
+  // Score and process the answer
+  let {valid, correct, msg} = scoring.isCorrect(submission, q); 
+  if (valid) {
+    question.selections[tid] = submission; 
+  } else {
+    socket.emit('answer-ack', {ok: false, msg: 'Invalid/malformed answer. Try reloading the page.'})
   }
 
-  let q = getCurrentQuestion(1), sentAck = false, tid = team.TeamID; 
+  let response = {
+    ok: true, 
+    selected: submission, 
+    canChangeAnswer, 
+    firstSubmission
+  }
 
-  if(typeof ans !== 'string' || !team.TeamID){
+  if (correct) {
+    question.scores[tid] = await calcPoints(tid); 
+    console.log('gave score: ', question.scores[tid])
+  } else {
+    question.scores[tid] = 0; 
+  }
+
+  if (q.instantFeedback || q.timed) {
+    response.correct = correct; 
+  } 
+  
+  if (q.timed) {
+    if (correct) {
+      let tb = tbCalc(); 
+      question.tb[tid] = tb; 
+      Object.assign(response, {
+        time: Date.now() - question.timestamp, 
+        tb
+      });
+
+      // Announce which team got the correct answer first on the slides
+      if (!question.firstCorrectTaken) {
+        question.firstCorrectTaken = true; 
+        let user = socket.handshake.session.user; 
+        io.of('/secure').emit('answer-firstCorrect', user.name?`${user.name} from ${user.TeamName}` : user.TeamName); 
+      }
+    }
+    if (msg) {
+      response.message = msg; 
+    }
+    teamBroadcast(socket, 'answer-time', response);
+  } else {
+    teamBroadcast(socket, 'answer-ack', response);
+  }
+
+  return {
+    ok: true, 
+    correct
+  }; 
+  if(typeof submission !== 'string' || !team.TeamID){
     socket.emit('answer-ack', {ok: false, msg: 'No answer provided'})
     logger.warn('Unable to process answer: Missing data'); 
     io.of('secure').emit('update', 'processAnswer error: missing required data'); 
@@ -513,7 +655,7 @@ function processAnswer(team, ans, socket){
   }
   else if(!q.answer || q.type === 'md'){
     if (q.type === 'md') { // "are you ready" screen
-      if (ans.toLowerCase() === 'r') {
+      if (submission.toLowerCase() === 'r') {
         question.scores[tid] = 1; 
         question.selections[tid] = 'r'; 
         teamBroadcast(socket, 'answer-ack', {ok: true, selected: 'r'});
@@ -527,14 +669,14 @@ function processAnswer(team, ans, socket){
     return false;
   }
   if(q.type === 'mc'){
-    if (['a', 'b', 'c', 'd', 'e'].indexOf(ans.toLowerCase()) === -1) {
+    if (['a', 'b', 'c', 'd', 'e'].indexOf(submission.toLowerCase()) === -1) {
       socket.emit('answer-ack', {ok: false, msg: 'Invalid multiple choice option'})
-      io.of('secure').emit('update', `processAnswer error: invalid MC option (${ans.toLowerCase()}) [${tid}]`); 
+      io.of('secure').emit('update', `processAnswer error: invalid MC option (${submission.toLowerCase()}) [${tid}]`); 
       return; 
     }
-    question.selections[tid] = ans.toLowerCase(); 
-    teamBroadcast(socket, 'answer-ack', {ok: true, selected: ans.toLowerCase()});
-    if(ans.toLowerCase() === q.answer.toLowerCase()){
+    question.selections[tid] = submission.toLowerCase(); 
+    teamBroadcast(socket, 'answer-ack', {ok: true, selected: submission.toLowerCase()});
+    if(submission.toLowerCase() === q.answer.toLowerCase()){
       question.scores[tid] = 1; 
       return true; 
     } else{
@@ -542,8 +684,8 @@ function processAnswer(team, ans, socket){
       return false; 
     }
   } else if(q.type === 'sa' || q.type === 'bz'){
-    question.selections[tid] = ans; 
-    ans = ans.toLowerCase().trim(); 
+    question.selections[tid] = submission; 
+    submission = submission.toLowerCase().trim(); 
     let cor = q.answer.toLowerCase().trim(); // correct answer
     if(!q.timed) {
         socket.emit('answer-ack', {ok: true})}
@@ -553,7 +695,7 @@ function processAnswer(team, ans, socket){
     }
 
     if(parseFloat(cor).toString() === cor) { // numerical answer
-      let input = parseFloat(ans.replace(/,/g, '')), actual = parseFloat(cor); 
+      let input = parseFloat(submission.replace(/,/g, '')), actual = parseFloat(cor); 
       if (input === actual) {
         sentAck = true; 
         if (q.timed) {
@@ -579,24 +721,28 @@ function processAnswer(team, ans, socket){
         socket.emit('answer-time', {time: Date.now() - question.timestamp, correct: false, message: 'should be a number'}); 
       }
     } else {
-      if(ans.slice(0, 1) !== cor.slice(0, 1)){ // non-numerical answer
+      if(submission.slice(0, 1) !== cor.slice(0, 1)){ // non-numerical answer
         question.scores[tid] = 0; // first letter must match
         sentAck = true; 
         socket.emit('answer-time', {time: Date.now() - question.timestamp, correct: false}); 
         return false; 
-      } else if(levenshtein(ans, cor) < 3  || levenshtein(ans, cor) === 3 && cor.length > 11){
+      } else if(levenshtein(submission, cor) < 3  || levenshtein(submission, cor) === 3 && cor.length > 11){
         sentAck = true; 
         if (q.type === 'bz') {
           question.scores[tid] = Math.max(Math.round(100*(1-0.065*Math.pow(question.numAnswered, 0.8)))/100, 0.25); // where question.numAnswered is the number of teams who correctly answered before your team
           question.numAnswered ++; 
 
-          let mult = scoring.roundMultiplier[scoring.countedRounds.indexOf(parseInt(q.round))]; 
+          // let mult = scoring.roundMultiplier[scoring.countedRounds.indexOf(parseInt(q.round))]; 
 
           teamBroadcast(socket, 'answer-time', {time: Date.now() - question.timestamp, correct: true, answer: q.answer}); 
           teamBroadcast(socket, 'answer-buzzer', {
             message: `Your team was ${getNumberWithOrdinal(question.numAnswered)} to answer correctly${question.numAnswered > 5 ? '.':'!'}`, 
-            points: mult ? Math.round(mult*question.scores[tid]) : question.scores[tid]
+            points: question.scores[tid]
           }); 
+          // teamBroadcast(socket, 'answer-buzzer', {
+          //   message: `Your team was ${getNumberWithOrdinal(question.numAnswered)} to answer correctly${question.numAnswered > 5 ? '.':'!'}`, 
+          //   points: mult ? Math.round(mult*question.scores[tid]) : question.scores[tid]
+          // }); 
 
           if (!question.firstCorrectTaken) {
             question.firstCorrectTaken = true; 
@@ -648,17 +794,32 @@ function getAnswerStats(){
   if(question.current.type === 'MC'){
     let resp = Object.values(question.selections);
     let t = resp.length; 
-    return {
-      type: 'mc', 
-      ans: question.current.answer.toLowerCase(), 
-      correct: Object.values(question.scores).filter(r => r==1).length, 
-      total: Object.values(question.scores).length, 
-      a: Math.round(resp.filter(i => i=='a').length/t*1000)/1000, 
-      b: Math.round(resp.filter(i => i=='b').length/t*1000)/1000, 
-      c: Math.round(resp.filter(i => i=='c').length/t*1000)/1000, 
-      d: Math.round(resp.filter(i => i=='d').length/t*1000)/1000, 
-      e: Math.round(resp.filter(i => i=='e').length/t*1000)/1000, 
-      scoresSaved: question.scoresSaved
+    if (question.current.answer.length === 1) {
+      return {
+        type: 'mc', 
+        ans: question.current.answer.toLowerCase(), 
+        correct: Object.values(question.scores).filter(r => r>=1).length, 
+        total: Object.values(question.scores).length, 
+        a: Math.round(resp.filter(i => i=='a').length/t*1000)/1000, 
+        b: Math.round(resp.filter(i => i=='b').length/t*1000)/1000, 
+        c: Math.round(resp.filter(i => i=='c').length/t*1000)/1000, 
+        d: Math.round(resp.filter(i => i=='d').length/t*1000)/1000, 
+        e: Math.round(resp.filter(i => i=='e').length/t*1000)/1000, 
+        scoresSaved: question.scoresSaved
+      }
+    } else {
+      return {
+        type: 'mc', 
+        ans: question.current.answer.toLowerCase(), 
+        correct: Object.values(question.scores).filter(r => r>=1).length, 
+        total: Object.values(question.scores).length, 
+        a: Math.round(resp.filter(i => i.indexOf('a')!==-1).length/t*1000)/1000, 
+        b: Math.round(resp.filter(i => i.indexOf('b')!==-1).length/t*1000)/1000, 
+        c: Math.round(resp.filter(i => i.indexOf('c')!==-1).length/t*1000)/1000, 
+        d: Math.round(resp.filter(i => i.indexOf('d')!==-1).length/t*1000)/1000, 
+        e: Math.round(resp.filter(i => i.indexOf('e')!==-1).length/t*1000)/1000, 
+        scoresSaved: question.scoresSaved
+      }
     }
   } else if(question.current.type === 'SA' || question.current.type === 'BZ'){
     return {
@@ -718,7 +879,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
   }); 
 
   socket.on('status', function(){
-    socket.emit('config-bk', currentBackground.slides); 
+    socket.emit('config-bk', round.background.slides); 
     if(question.curIndex > -1){
       socket.emit('question-full', getCurrentQuestion(1)); 
     } else {
@@ -807,6 +968,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
   socket.on('scores-compute', function(r){
     computeOverallScores(r?r:false, true).then(res => {
       socket.emit('scores-host', res); 
+      // console.log(res); 
     })
   })
 
@@ -867,17 +1029,18 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     io.of('/secure').emit('announcement', currentMessage); 
   })
 
-  socket.on('scores-slides', async function(round) {
+  socket.on('scores-slides', async function(round, hidePts) {
     let scores = round ? await computeOverallScores(round) : await computeOverallScores(); 
     currentTopScores = {
       title: round?`Round ${round}`:'Overall', 
-      scores
+      scores, 
+      hidePts
     }
     question.curIndex = -2; 
     if (question.active) question.active = false; 
     currentMessage = {
       title: 'Scores', 
-      body: 'The current top teams are being announced now. The scoreboard will be updated shortly.'
+      body: 'Top teams are currently being broadcasted. Please check the main presentation/video to see them.'
     }
     io.emit('announcement', currentMessage); 
     io.of('secure').emit('scores', currentTopScores); 
@@ -891,10 +1054,10 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
 
   socket.on('adm-setBK', function(type, image){
     if (type === 1) {
-      currentBackground.users = image; 
-      io.to('users').emit('config-bk', image); 
+      round.background.users = image; 
+      io.to('users').emit('config', round); 
     } else if (type === 2) {
-      currentBackground.slides = image; 
+      round.background.slides = image; 
       io.of('/secure').emit('config-bk', image); 
     }
   })
@@ -947,6 +1110,43 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     loadSheets(); 
     socket.emit('update', `Sheets reloaded. CAUTION: May cause system instability.`); 
   })
+
+  socket.on('adm-initBrackets', async () => {
+    let numToCreate = 3; 
+    await mdb.collection('brackets').drop(); 
+    let newBrackets = brackets.generateNewBrackets(numToCreate); 
+    let seeds = await computeOverallScores('1'); 
+    // Insert the initial metadata document
+    await mdb.collection('brackets').insertOne({
+      _md: true, 
+      numBrackets: numToCreate, 
+      numRounds: 4, 
+      seeds: seeds.data.map(r => {return {t: r.t, tn: r.tn, tm: r.tm, r: r.r}})
+    }); 
+    await mdb.collection('brackets').insertMany(brackets.listRoundMatchups(newBrackets)); 
+    socket.emit('update', 'Brackets created.')
+  }); 
+
+  socket.on('adm-startBracketRound', async (roundNum=0) => {
+    let metadata = await mdb.collection('brackets').findOne({
+      _md: true
+    }); 
+    if (!metadata) {
+      socket.emit('update', 'Brackets: Missing bracket metadata, cancelled.'); 
+      return; 
+    }
+    round.brackets = {
+      active: true, 
+      round: roundNum, 
+      seeds: metadata.seeds
+    }
+    let matchups = await mdb.collection('brackets').find({
+      round: roundNum
+    }).toArray(); 
+    // Broadcast matchups, offset rounds by 1 so that the first game is "game 1"
+    let res = brackets.broadcastMatchups(io, metadata.seeds, matchups, {round: roundNum+1}); 
+    socket.emit('update', `Brackets: Multicasted ${matchups.length} matchups to ${metadata.seeds.length} teams (${res} multicasts)`);
+  }); 
 });
 
 /**
@@ -976,7 +1176,7 @@ io.of('/').use(function(socket, next){
   if (socket.handshake.session && (socket.handshake.session.user || socket.handshake.session.host)){ // authorized users only
     logger.debug('[std] authenticated: '+socket.id);
     if (socket.handshake.session.user && socket.handshake.session.user.TeamID) {
-      socket.join(`team-${socket.handshake.session.user.TeamID}`); 
+      socket.join(`team-${socket.handshake.session.user.TeamID}`); // used to identify all sockets in a specified team ID
     }
     socket.join('users'); 
     next(); 
@@ -992,7 +1192,7 @@ io.of('/').use(function(socket, next){
    */
   socket.on('status', function(mode){
     if(socket.handshake.session.user){
-      socket.emit('config-bk', currentBackground.users); 
+      socket.emit('config', round); 
 
       if (!mode) {
         socket.emit('status', {valid: true, user: socket.handshake.session.user})}
@@ -1016,13 +1216,13 @@ io.of('/').use(function(socket, next){
         // send saved answer if applicable
         let {type, answer, timed} = getCurrentQuestion(1);
         if (type === 'mc' || type === 'md') {
-          socket.emit('answer-ack', {ok: true, selected: sel}); 
+          socket.emit('answer-ack', {ok: true, selected: sel, previousAnswer: true, canChangeAnswer: question.canChangeAnswer}); 
         } else if ((type === 'sa' && timed) || type === 'bz') {
           if (question.scores[socket.handshake.session.user.TeamID] > 0) {
             socket.emit('answer-time', {correct: true, answer: answer}); 
           }
         } else if (type === 'sa') {
-          socket.emit('answer-ack', {ok: true, selected: sel}); 
+          socket.emit('answer-ack', {ok: true, selected: sel, previousAnswer: true, canChangeAnswer: question.canChangeAnswer}); 
         }
       }
     } else{
@@ -1050,7 +1250,7 @@ io.of('/').use(function(socket, next){
     }
   });
 
-  socket.on('answer', function(ans){
+  socket.on('answer', async function(ans){
     if(socket.handshake.session.user){
       logger.debug('[std] recieved answer: '+ans);  
       if (socket.handshake.session.ac && typeof socket.handshake.session.ac.ret_qi !== 'undefined') {
@@ -1066,7 +1266,18 @@ io.of('/').use(function(socket, next){
           }
         }
       }
-      processAnswer(socket.handshake.session.user, ans, socket);
+      let processRes = await processAnswer(socket.handshake.session.user, ans, socket);
+      if (round.brackets.active && (!getCurrentQuestion(1).timed || (processRes && processRes.correct))) {
+        let bracketMsg = await brackets.routeMessage(io, mdb.collection('brackets'), {
+          tid: socket.handshake.session.user.TeamID, 
+          round: round.brackets.round
+        }, {
+          type: 'answerSubmit'
+        }); 
+        if (!bracketMsg.ok) {
+          logger.warn('brackets.routeMessage failed: ' + bracketMsg.msg); 
+        }
+      }
       emitAnswerUpdate(); 
     } else{
       socket.emit('status', {valid: false});
@@ -1124,6 +1335,10 @@ app.get('/contestant', (req, res) => {
 
 app.get('/scores', (req, res) => {
   res.status(200).sendFile(path.join(__dirname, 'public', 'scores.html'))
+})
+
+app.get('/about', (req, res) => {
+  res.status(200).sendFile(path.join(__dirname, 'public', 'about.html'))
 })
 
 app.get('/identity', (req, res) => {
@@ -1216,7 +1431,7 @@ app.post('/identity', (req, res) => {
   if (!user) {
     res.status(302).redirect('/'); 
   } else if (typeof req.body.name === 'string' && req.body.name.length > 1) {
-    if (!req.body.name.match(/^[a-z]{2,16}$/i)) {
+    if (!req.body.name.match(/^[a-z\.\s]{2,16}$/i)) {
       res.status(302).redirect(`/identity?tn=${encodeURIComponent(user.TeamName)}&err=${encodeURIComponent('Standard letters only.')}`);   
       return; 
     }
@@ -1239,7 +1454,14 @@ app.get('/scores/data', async function(req, res) {
       team: false
     })
   } else {
-    if (req.session.user) {
+    if (req.session.host) {
+      res.status(200).json({
+        ok: true, 
+        scores: scores.scores, 
+        team: 'Host Account'
+      })
+    }
+    else if (req.session.user) {
       let tid = req.session.user.TeamID; 
       try {
         let teamIndex = scores.scores.data.findIndex(r => r.t === tid); 
@@ -1248,7 +1470,7 @@ app.get('/scores/data', async function(req, res) {
           input.t = input.t.slice(0, 1); 
           input.hl = true; 
           scores.scores_clean.data.splice(teamIndex, 1, input); 
-        } 
+        }  
         res.status(200).json({
           ok: true, 
           scores: scores.scores_clean, 

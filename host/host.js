@@ -228,7 +228,7 @@ secSocket.on('answer-update', (dt) => {
 secSocket.on('scores-host', (res) => {
   console.log(res); 
   if (!res.ok) {
-    $('#scores-table').text(`Failed to load: ${res.error}`); 
+    $('#scores-table').text(`Failed to load: ${JSON.stringify(res.error)}`); 
     return; 
   }
   // <tr><th colspan='2'>Team</th><th colspan='${res.rounds.length}'>Rounds</th><th colspan='2'>Overall</th></tr>
@@ -342,8 +342,12 @@ $('#btn-ann').on('click', () => {
 });
 
 $('#btn-scores').on('click', () => {
-  secSocket.emit("scores-slides", $('#i-scores-round').val() ? $('#i-scores-round').val():0); 
-})
+  secSocket.emit("scores-slides", $('#i-scores-round').val() ? $('#i-scores-round').val():0, false); 
+}); 
+
+$('#btn-scores-alt').on('click', () => {
+  secSocket.emit("scores-slides", $('#i-scores-round').val() ? $('#i-scores-round').val():0, true); 
+}); 
 
 $('#nav-cat a').on('click', (e) => {
   let ele = e.srcElement; 

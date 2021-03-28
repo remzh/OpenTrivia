@@ -30,6 +30,10 @@ html {
   background-image: url(/images/bk2.jpg);
 }
 
+#nav {
+  height: 32px;
+}
+
 /* Messages at top */
 
 .message {
@@ -144,7 +148,7 @@ td:focus-visible {
   font-size: 1.6rem;
 }
 
-@media only screen and (max-width: 540px) {
+@media only screen and (max-width: 599px) {
   thead tr th:not(:nth-child(1)):not(:nth-last-child(1)), tbody tr td:not(:nth-child(1)):not(:nth-last-child(1)) {
     display: none;
   }
@@ -153,6 +157,10 @@ td:focus-visible {
   }
   tbody tr td:nth-last-child(1) {
     width: 88px;
+  }
+  table {
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
   }
 }
 
@@ -172,12 +180,5 @@ td:focus-visible {
     max-width: 1280px;
     margin-top: 18px;
     margin-bottom: 24px;
-  }
-}
-
-@media only screen and (max-width: 599px) {
-  table {
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
   }
 }

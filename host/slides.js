@@ -195,7 +195,7 @@ function numberWithCommas(x) {
 }
 
 function displayScores(data) {
-  console.log(data); 
+  // console.log(data); 
   $('#main').css('opacity', 0); 
   setTimeout(() => {
     $('#q-details').hide(); 
@@ -207,7 +207,8 @@ function displayScores(data) {
     $('#qnum').text('Top Teams'); 
     $('#question').hide(); 
     $('#main').css('opacity', 1); 
-    let showCor = (data.title === 'Overall' ? !1:!0); 
+    // let showCor = (data.title === 'Overall' ? !1:!0); 
+    let showCor = data.hidePts; 
     for (let i = 0; i < 5; i++) {
       let team = data.scores.data[i]; 
       if (team) {
@@ -271,7 +272,13 @@ secSocket.on('answer-stats', (data) => {
   logger.info('Recieved answers: '+JSON.stringify(data)); 
   if(data.type === 'mc'){
     $('.opt').addClass('incorrect'); 
-    $('#opt-'+data.ans).removeClass('incorrect').addClass('correct'); 
+    if (data.ans.length === 1) {
+      $('#opt-'+data.ans).removeClass('incorrect').addClass('correct'); 
+    } else {
+      for (let ans of data.ans.split('')) {
+        $('#opt-'+ans).removeClass('incorrect').addClass('correct'); 
+      }
+    }
     $('.opt-perc').remove(); 
     let p = ['a', 'b', 'c', 'd', 'e']; 
     for(let i = 0; i <= 4; i++){

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Scores • Trivia Night</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1, minimum-scale=1.0, maximum-scale=1.0'>
+    <link rel='stylesheet' href='main.css'/>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/js/all.min.js' integrity='sha256-qM7QTJSlvtPSxVRjVWNM2OfTAz/3k5ovHOKmKXuYMO4=' crossorigin='anonymous'></script>
+    <style>
+      html {
+        cursor: default
+      }
+    </style>
+  </head>
+  <body>
+    <div id='bk'></div>
+    <div id='nav'>
+      <div id='nav-top'>
+        <span id='s-team'>About</span>
+      </div>
+    </div>
+    <div class='container' style='margin-top: 32px'>
+      <div class='c-inner'>
+        <h1 style='text-shadow: 1px 1px 3px #444'>Open Trivia</h1>
+        <p><i>A free, simple, and extensible trivia server.</i></p>
+        <p>&copy; 2021 Ryan Zhang • Build 45</p>
+        <p>Open Trivia is open source! Its source code can be <a href='https://github.com/Ryan778/OpenTrivia' target='_blank'>found on GitHub</a>.<br/>Open Trivia is licensed under the <a href='https://github.com/Ryan778/OpenTrivia/blob/master/LICENSE.txt' target='_blank'>MIT License</a>.</p>
+        <hr style='max-width: 570px;'/>
+        <p id='p-devmode-on' style='display: none'>Developer mode is <b>disabled</b>. <a href='#' onclick='localStorage.ot_devmode=1; location.reload()'>Enable</a><br/><i>After enabling, tabs must be reloaded for changes to take effect.</i></p>
+        <p id='p-devmode-off' style='display: none'>Developer mode is <b>enabled</b>. <a href='#' onclick='localStorage.removeItem("ot_devmode"); location.reload()'>Disable</a><br/><i>After disabling, tabs must be reloaded for changes to take effect.</i></p>
+      </div>
+    </div>
+    <script>
+      if (localStorage.ot_devmode) {
+        document.getElementById('p-devmode-off').style.display = 'block'; 
+      } else {
+        document.getElementById('p-devmode-on').style.display = 'block'; 
+      }
+    </script>
+  </body>
+</html>
