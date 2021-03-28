@@ -195,7 +195,7 @@ function numberWithCommas(x) {
 }
 
 function displayScores(data) {
-  console.log(data); 
+  // console.log(data); 
   $('#main').css('opacity', 0); 
   setTimeout(() => {
     $('#q-details').hide(); 
@@ -207,7 +207,8 @@ function displayScores(data) {
     $('#qnum').text('Top Teams'); 
     $('#question').hide(); 
     $('#main').css('opacity', 1); 
-    let showCor = (data.title === 'Overall' ? !1:!0); 
+    // let showCor = (data.title === 'Overall' ? !1:!0); 
+    let showCor = data.hidePts; 
     for (let i = 0; i < 5; i++) {
       let team = data.scores.data[i]; 
       if (team) {

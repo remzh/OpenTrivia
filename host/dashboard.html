@@ -65,7 +65,10 @@
         <br/>
         <button id='btn-ann'>Post</button>
         <h2>Score Slides</h2>
-        <input type='number' id='i-scores-round' style='width: 40px' placeholder='0'/> <button id='btn-scores'>Show Score Slide</button>
+        <span>
+          Round: 
+          <input type='number' id='i-scores-round' style='width: 40px' placeholder='0'/> <br/><button id='btn-scores'>Show (w/ pts)</button> <button id='btn-scores-alt'>Show (w/ #q.cor)</button>
+        </span>
         <h2>Answers/Scoring</h2>
         <br/>
         <button class='btn-lg' onclick='secSocket.emit("show-answer", 1)'>Show Answer</button> <button class='btn-lg' onclick='secSocket.emit("scores-save")'>Save Scores</button><br/><button class='btn' onclick='secSocket.emit("show-answer")' style='margin-top: 8px'>Show w/o saving</button>

@@ -342,8 +342,12 @@ $('#btn-ann').on('click', () => {
 });
 
 $('#btn-scores').on('click', () => {
-  secSocket.emit("scores-slides", $('#i-scores-round').val() ? $('#i-scores-round').val():0); 
-})
+  secSocket.emit("scores-slides", $('#i-scores-round').val() ? $('#i-scores-round').val():0, false); 
+}); 
+
+$('#btn-scores-alt').on('click', () => {
+  secSocket.emit("scores-slides", $('#i-scores-round').val() ? $('#i-scores-round').val():0, true); 
+}); 
 
 $('#nav-cat a').on('click', (e) => {
   let ele = e.srcElement; 

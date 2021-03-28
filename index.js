@@ -588,7 +588,8 @@ async function processAnswer(team, submission, socket){
 
   // Make sure it's not an answer change if answer changes are disabled
   if (!canChangeAnswer && typeof question.scores[tid] !== 'undefined') {
-    socket.emit('answer-ack', {ok: false, msg: 'Answer already submitted, cannot change'})
+    socket.emit('answer-ack', {ok: false, msg: 'Answer already submitted, cannot change'}); 
+    return; 
   }
   let firstSubmission = (typeof question.scores[tid] === 'undefined'); 
 
@@ -614,13 +615,38 @@ async function processAnswer(team, submission, socket){
     question.scores[tid] = 0; 
   }
 
-  if (q.instantFeedback) {
+  if (q.instantFeedback || q.timed) {
     response.correct = correct; 
   } 
   
-  teamBroadcast(socket, 'answer-ack', response);
+  if (q.timed) {
+    if (correct) {
+      let tb = tbCalc(); 
+      question.tb[tid] = tb; 
+      Object.assign(response, {
+        time: Date.now() - question.timestamp, 
+        tb
+      });
 
-  return; 
+      // Announce which team got the correct answer first on the slides
+      if (!question.firstCorrectTaken) {
+        question.firstCorrectTaken = true; 
+        let user = socket.handshake.session.user; 
+        io.of('/secure').emit('answer-firstCorrect', user.name?`${user.name} from ${user.TeamName}` : user.TeamName); 
+      }
+    }
+    if (msg) {
+      response.message = msg; 
+    }
+    teamBroadcast(socket, 'answer-time', response);
+  } else {
+    teamBroadcast(socket, 'answer-ack', response);
+  }
+
+  return {
+    ok: true, 
+    correct
+  }; 
   if(typeof submission !== 'string' || !team.TeamID){
     socket.emit('answer-ack', {ok: false, msg: 'No answer provided'})
     logger.warn('Unable to process answer: Missing data'); 
@@ -772,7 +798,7 @@ function getAnswerStats(){
       return {
         type: 'mc', 
         ans: question.current.answer.toLowerCase(), 
-        correct: Object.values(question.scores).filter(r => r==1).length, 
+        correct: Object.values(question.scores).filter(r => r>=1).length, 
         total: Object.values(question.scores).length, 
         a: Math.round(resp.filter(i => i=='a').length/t*1000)/1000, 
         b: Math.round(resp.filter(i => i=='b').length/t*1000)/1000, 
@@ -785,7 +811,7 @@ function getAnswerStats(){
       return {
         type: 'mc', 
         ans: question.current.answer.toLowerCase(), 
-        correct: Object.values(question.scores).filter(r => r==1).length, 
+        correct: Object.values(question.scores).filter(r => r>=1).length, 
         total: Object.values(question.scores).length, 
         a: Math.round(resp.filter(i => i.indexOf('a')!==-1).length/t*1000)/1000, 
         b: Math.round(resp.filter(i => i.indexOf('b')!==-1).length/t*1000)/1000, 
@@ -1003,17 +1029,18 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     io.of('/secure').emit('announcement', currentMessage); 
   })
 
-  socket.on('scores-slides', async function(round) {
+  socket.on('scores-slides', async function(round, hidePts) {
     let scores = round ? await computeOverallScores(round) : await computeOverallScores(); 
     currentTopScores = {
       title: round?`Round ${round}`:'Overall', 
-      scores
+      scores, 
+      hidePts
     }
     question.curIndex = -2; 
     if (question.active) question.active = false; 
     currentMessage = {
       title: 'Scores', 
-      body: 'The current top teams are being announced now. The scoreboard will be updated shortly.'
+      body: 'Top teams are currently being broadcasted. Please check the main presentation/video to see them.'
     }
     io.emit('announcement', currentMessage); 
     io.of('secure').emit('scores', currentTopScores); 
@@ -1239,8 +1266,8 @@ io.of('/').use(function(socket, next){
           }
         }
       }
-      processAnswer(socket.handshake.session.user, ans, socket);
-      if (round.brackets.active) {
+      let processRes = await processAnswer(socket.handshake.session.user, ans, socket);
+      if (round.brackets.active && (!getCurrentQuestion(1).timed || (processRes && processRes.correct))) {
         let bracketMsg = await brackets.routeMessage(io, mdb.collection('brackets'), {
           tid: socket.handshake.session.user.TeamID, 
           round: round.brackets.round
