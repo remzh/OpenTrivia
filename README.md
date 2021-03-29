@@ -1,4 +1,4 @@
-**This is the Dev branch of Open Trivia. Builds here may or may not work, and will likely contain incomplete features. This branch is NOT intended for general public use.**
+**While builds here should work, they will likely also contain incomplete features until everything is ready. This branch is NOT intended for general public use. Production builds are available under "Releases".**
 
 # Open Trivia
 Welcome to Open Trivia! 
