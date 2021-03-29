@@ -118,8 +118,15 @@
       <div id='bracket-overlay-inner'>
         <h2>Welcome to <b id='brko-round'></b>!</h2>
         <hr/>
-        <h2>You're up against</h2>
-        <h1 id='brko-opponent'></h1>
+        <div id='brko-opponent'>
+          <h2>You're up against</h2>
+          <h1 id='brko-opponent-name'></h1>
+          <p id='brko-opponent-members'></p>
+        </div>
+        <div id='brko-bye'>
+          <h2>You got a bye round!</h2>
+          <p>Due to an uneven number of teams, you've been placed into a bye round.<br/>Regardless of how well (or poorly) you do, you'll automatically "win" this matchup. Try to maximize the points you get!</p>
+        </div>
         <br/>
         <button class='btn-lg' onclick='hideBracketOverlay()'>Dismiss</button>
       </div>

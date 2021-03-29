@@ -52,21 +52,26 @@ socket.on('brackets-newMatch', (data) => {
   logger.info(`[brackets] newMatch: ${JSON.stringify(data)}`); 
   showBuzzer(); 
   roundConfig.brackets = true; 
-  console.log(data); 
+  // console.log(data); 
 
-  $('#bracket-overlay').show(); 
   $('#brko-round').text(`Game ${data.round}`); 
-  $('#brko-opponent').text(data.opponent.tn); 
-  setTimeout(() => {
-    $('#bracket-overlay').css('opacity', 1); 
-  }, 100); 
+  if (data.opponent.bye) {
+    $('#brko-bye').show(); 
+    $('#brko-opponent').hide(); 
+  } else {
+    $('#brko-bye').hide(); 
+    $('#brko-opponent').show(); 
+    $('#brko-opponent-name').text(data.opponent.tn); 
+    $('#brko-opponent-members').text(data.opponent.tm); 
+  }
+  showBracketOverlay(); 
 })
 
 socket.on('brackets-endMatch', (data) => {
   logger.info(`[brackets] endMatch: ${JSON.stringify(data)}`); 
   // showBuzzer(); 
   // roundConfig.brackets = true; 
-  console.log(data); 
+  // console.log(data); 
 
   // $('#bracket-overlay').show(); 
   // $('#brko-round').text(`Game ${data.round}`); 
@@ -75,6 +80,13 @@ socket.on('brackets-endMatch', (data) => {
   //   $('#bracket-overlay').css('opacity', 1); 
   // }, 100); 
 })
+
+function showBracketOverlay() {
+  $('#bracket-overlay').show(); 
+  setTimeout(() => {
+    $('#bracket-overlay').css('opacity', 1); 
+  }, 100); 
+}
 
 function hideBracketOverlay() {
   $('#bracket-overlay').css('opacity', 0); 

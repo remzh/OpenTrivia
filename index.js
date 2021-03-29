@@ -32,16 +32,22 @@ const scoringPolicy = require('./lib/scoringPolicy.json');
 const brackets = require('./lib/brackets.js');
 app.use('/brackets/*', brackets.appHook); 
 
-let bracketSet = brackets.generateNewBrackets(5); 
-app.get('/brackets/data', (req, res) => {
-  res.json(bracketSet); 
+let bracketSet = brackets.generateNewBrackets(4); 
+app.get('/brackets/data', async (req, res) => {
+  // res.json(bracketSet); 
+  let matchups = await mdb.collection('brackets').find({
+    bracket: 0
+  }).toArray(); 
+  // res.json(matchups); return; 
+  let bracketData = brackets.generateBrackets(4, matchups); 
+  res.json(bracketData); 
 })
-app.get('/brackets/data/matches', (req, res) => {
-  res.json(brackets.listRoundMatchups(bracketSet)); 
-})
-app.get('/brackets/data/test', (req, res) => {
-  res.json(brackets.generateBrackets(5, brackets.listRoundMatchups(bracketSet))); 
-})
+// app.get('/brackets/data/matches', (req, res) => {
+//   res.json(brackets.listRoundMatchups(bracketSet)); 
+// })
+// app.get('/brackets/data/test', (req, res) => {
+//   res.json(brackets.generateBrackets(5, brackets.listRoundMatchups(bracketSet))); 
+// })
 
 const http = require('http').Server(app);
 const winston = require('winston');
@@ -972,7 +978,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
   })
 
   socket.on('adm-initBrackets', async () => {
-    let numToCreate = 3; 
+    let numToCreate = 4; 
     await mdb.collection('brackets').drop(); 
     let newBrackets = brackets.generateNewBrackets(numToCreate); 
     let seeds = await computeOverallScores('1'); 

@@ -327,11 +327,13 @@ $('#btn-adm-rs').on('click', () => {
 
 // brackets page (requires lib/brackets.js on the server for this page to be functional)
 $('#btn-brk-start').on('click', () => {
-  secSocket.emit('adm-startBracketRound', $('#i-brk-brkRound').val()); 
+  let val = $('#i-brk-brkRound').val() ? parseInt($('#i-brk-brkRound').val()) : 0; 
+  secSocket.emit('adm-startBracketRound', val); 
 });
 
 $('#btn-brk-finish').on('click', () => {
-  secSocket.emit('adm-finishBracketRound', $('#i-brk-brkRound').val()); 
+  let val = $('#i-brk-brkRound').val() ? parseInt($('#i-brk-brkRound').val()) : 0; 
+  secSocket.emit('adm-finishBracketRound', val); 
 });
 
 // utilities + general (not socket.io-specific)
