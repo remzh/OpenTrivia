@@ -62,6 +62,20 @@ socket.on('brackets-newMatch', (data) => {
   }, 100); 
 })
 
+socket.on('brackets-endMatch', (data) => {
+  logger.info(`[brackets] endMatch: ${JSON.stringify(data)}`); 
+  // showBuzzer(); 
+  // roundConfig.brackets = true; 
+  console.log(data); 
+
+  // $('#bracket-overlay').show(); 
+  // $('#brko-round').text(`Game ${data.round}`); 
+  // $('#brko-opponent').text(data.opponent.tn); 
+  // setTimeout(() => {
+  //   $('#bracket-overlay').css('opacity', 1); 
+  // }, 100); 
+})
+
 function hideBracketOverlay() {
   $('#bracket-overlay').css('opacity', 0); 
   setTimeout(() => {

@@ -124,13 +124,17 @@
       <div class='col'>
         <h2>Bracket Controls</h2>
         <button onclick='secSocket.emit("adm-initBrackets")'>Create Brackets</button>
-        <button onclick='secSocket.emit("adm-startBracketRound")'>Start Round</button>
+        <br/><br/>
+        <span>Bracket Round: </span><input type='number' id='i-brk-brkRound' placeholder='0' style='width: 60px'/>
+        <br/>
+        <button id='btn-brk-start'>Start Round</button>
+        <button id='btn-brk-finish'>Finish Round</button>
       </div>
       <div class='col'>
         <h2>Bracket Info</h2>
         <div class='left'>
           <!-- <p>5 brackets formed, 78 teams assigned<br/>Yay!</p> -->
-          <p>No updates yet.</p>
+          <p id='p-brk-status'>No updates yet.</p>
         </div>
       </div>
     </div>

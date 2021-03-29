@@ -325,6 +325,15 @@ $('#btn-adm-rs').on('click', () => {
   }
 });
 
+// brackets page (requires lib/brackets.js on the server for this page to be functional)
+$('#btn-brk-start').on('click', () => {
+  secSocket.emit('adm-startBracketRound', $('#i-brk-brkRound').val()); 
+});
+
+$('#btn-brk-finish').on('click', () => {
+  secSocket.emit('adm-finishBracketRound', $('#i-brk-brkRound').val()); 
+});
+
 // utilities + general (not socket.io-specific)
 
 $('#i-ann-template').on('change', () => {

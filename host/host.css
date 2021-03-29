@@ -4,6 +4,11 @@ html{
 
 /* General CSS */
 
+button, input, select, textarea {
+  padding: 4px 8px;
+  font-size: 14px;
+}
+
 .container.top{
   display: none;
   flex-wrap: wrap;

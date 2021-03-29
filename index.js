@@ -17,13 +17,6 @@ const app = require('express')();
 const path = require('path');
 const colors = require('colors');
 
-// const credentials = require(path.join(__dirname, 'secure', 'credentials.json')); // secure credentials
-// const scoring = require(path.join(__dirname, 'secure', 'scoring.json')); 
-// let scoring = {
-//   countedRounds: process.env.OT_SCORING_ROUNDS.split(',').map(r => parseInt(r)), 
-//   // roundMultiplier: process.env.OT_SCORING_MULT?process.env.OT_SCORING_MULT.split(',').map(r => parseFloat(r)):process.env.SCORING_ROUNDS.split(',').fill(1)
-// }
-
 const levenshtein = require('js-levenshtein');
 const tabletop = require('tabletop');
 const session = require('express-session');
@@ -191,7 +184,7 @@ function saveScores(roundNum, questionNum, data, tb){
   }); 
 
   if (round.brackets.active) {
-    brackets.updateScores(io, mdb.collection('brackets'), round.brackets.round, question.scores); 
+    brackets.updateScores(io, mdb.collection('brackets'), round.brackets.round, question.scores, question.tb); 
   }
 }
 
@@ -647,139 +640,6 @@ async function processAnswer(team, submission, socket){
     ok: true, 
     correct
   }; 
-  if(typeof submission !== 'string' || !team.TeamID){
-    socket.emit('answer-ack', {ok: false, msg: 'No answer provided'})
-    logger.warn('Unable to process answer: Missing data'); 
-    io.of('secure').emit('update', 'processAnswer error: missing required data'); 
-    return false;
-  }
-  else if(!q.answer || q.type === 'md'){
-    if (q.type === 'md') { // "are you ready" screen
-      if (submission.toLowerCase() === 'r') {
-        question.scores[tid] = 1; 
-        question.selections[tid] = 'r'; 
-        teamBroadcast(socket, 'answer-ack', {ok: true, selected: 'r'});
-        return true; 
-      }
-      return false; 
-    }
-    logger.warn('Unable to process answer: No question selected'); 
-    socket.emit('answer-ack', {ok: false, msg: 'No question active'})
-    io.of('secure').emit('update', `processAnswer error: no question selected server-side [${tid}]`); 
-    return false;
-  }
-  if(q.type === 'mc'){
-    if (['a', 'b', 'c', 'd', 'e'].indexOf(submission.toLowerCase()) === -1) {
-      socket.emit('answer-ack', {ok: false, msg: 'Invalid multiple choice option'})
-      io.of('secure').emit('update', `processAnswer error: invalid MC option (${submission.toLowerCase()}) [${tid}]`); 
-      return; 
-    }
-    question.selections[tid] = submission.toLowerCase(); 
-    teamBroadcast(socket, 'answer-ack', {ok: true, selected: submission.toLowerCase()});
-    if(submission.toLowerCase() === q.answer.toLowerCase()){
-      question.scores[tid] = 1; 
-      return true; 
-    } else{
-      question.scores[tid] = 0; 
-      return false; 
-    }
-  } else if(q.type === 'sa' || q.type === 'bz'){
-    question.selections[tid] = submission; 
-    submission = submission.toLowerCase().trim(); 
-    let cor = q.answer.toLowerCase().trim(); // correct answer
-    if(!q.timed) {
-        socket.emit('answer-ack', {ok: true})}
-    else if (question.scores[tid] > 0) { // already answered
-      socket.emit('answer-time', {correct: true, answer: q.answer}); 
-      return true; 
-    }
-
-    if(parseFloat(cor).toString() === cor) { // numerical answer
-      let input = parseFloat(submission.replace(/,/g, '')), actual = parseFloat(cor); 
-      if (input === actual) {
-        sentAck = true; 
-        if (q.timed) {
-          teamBroadcast(socket, 'answer-time', {time: Date.now() - question.timestamp, correct: true, tb: tbCalc(), answer: q.answer}); 
-          question.tb[tid] = tbCalc(); 
-
-          if (!question.firstCorrectTaken) {
-            question.firstCorrectTaken = true; 
-            let user = socket.handshake.session.user; 
-            io.of('/secure').emit('answer-firstCorrect', user.name?`${user.name} from ${user.TeamName}` : user.TeamName); 
-          }
-        }
-        question.scores[tid] = 1;
-        return true; 
-      } 
-      sentAck = true; 
-      question.scores[tid] = 0;
-      if (input < actual) {
-        socket.emit('answer-time', {time: Date.now() - question.timestamp, correct: false, message: 'too low'}); 
-      } else if (input > actual) {
-        socket.emit('answer-time', {time: Date.now() - question.timestamp, correct: false, message: 'too high'}); 
-      } else {
-        socket.emit('answer-time', {time: Date.now() - question.timestamp, correct: false, message: 'should be a number'}); 
-      }
-    } else {
-      if(submission.slice(0, 1) !== cor.slice(0, 1)){ // non-numerical answer
-        question.scores[tid] = 0; // first letter must match
-        sentAck = true; 
-        socket.emit('answer-time', {time: Date.now() - question.timestamp, correct: false}); 
-        return false; 
-      } else if(levenshtein(submission, cor) < 3  || levenshtein(submission, cor) === 3 && cor.length > 11){
-        sentAck = true; 
-        if (q.type === 'bz') {
-          question.scores[tid] = Math.max(Math.round(100*(1-0.065*Math.pow(question.numAnswered, 0.8)))/100, 0.25); // where question.numAnswered is the number of teams who correctly answered before your team
-          question.numAnswered ++; 
-
-          // let mult = scoring.roundMultiplier[scoring.countedRounds.indexOf(parseInt(q.round))]; 
-
-          teamBroadcast(socket, 'answer-time', {time: Date.now() - question.timestamp, correct: true, answer: q.answer}); 
-          teamBroadcast(socket, 'answer-buzzer', {
-            message: `Your team was ${getNumberWithOrdinal(question.numAnswered)} to answer correctly${question.numAnswered > 5 ? '.':'!'}`, 
-            points: question.scores[tid]
-          }); 
-          // teamBroadcast(socket, 'answer-buzzer', {
-          //   message: `Your team was ${getNumberWithOrdinal(question.numAnswered)} to answer correctly${question.numAnswered > 5 ? '.':'!'}`, 
-          //   points: mult ? Math.round(mult*question.scores[tid]) : question.scores[tid]
-          // }); 
-
-          if (!question.firstCorrectTaken) {
-            question.firstCorrectTaken = true; 
-            let user = socket.handshake.session.user; 
-            io.of('/secure').emit('answer-firstCorrect', user.name?`${user.name} from ${user.TeamName}` : user.TeamName); 
-          }
-
-          if (!question.timer.interval || question.timer.end > Date.now() + 10000) {
-            startTimer(10); 
-          }
-        } else {
-          question.scores[tid] = 1;
-          if (q.timed) {
-            teamBroadcast(socket, 'answer-time', {time: Date.now() - question.timestamp, correct: true, tb: tbCalc(), answer: q.answer}); 
-            question.tb[tid] = tbCalc(); 
-
-            if (!question.firstCorrectTaken) {
-              question.firstCorrectTaken = true; 
-              let user = socket.handshake.session.user; 
-              io.of('/secure').emit('answer-firstCorrect', user.name?`${user.name} from ${user.TeamName}` : user.TeamName); 
-            }
-          }
-        }
-        return true; 
-      } else{
-        question.scores[tid] = 0;
-        sentAck = true; 
-        if (q.timed) {
-          socket.emit('answer-time', {time: Date.now() - question.timestamp, correct: false}); 
-        }
-        return false; 
-      }
-    }
-
-  }
-  if(!sentAck){
-    socket.emit('answer-ack', {ok: false, msg: `We couldn't understand your answer. Please contact a dev.`})}
 }
 
 function emitAnswerUpdate(){
@@ -1146,6 +1006,13 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     // Broadcast matchups, offset rounds by 1 so that the first game is "game 1"
     let res = brackets.broadcastMatchups(io, metadata.seeds, matchups, {round: roundNum+1}); 
     socket.emit('update', `Brackets: Multicasted ${matchups.length} matchups to ${metadata.seeds.length} teams (${res} multicasts)`);
+  }); 
+
+  socket.on('adm-finishBracketRound', async (roundNum=0) => {
+    round.brackets.active = false; 
+    // Broadcast matchups, offset rounds by 1 so that the first game is "game 1"
+    let res = brackets.finishMatchups(io, mdb.collection('brackets'), roundNum); 
+    socket.emit('update', `Brackets: Finished round`);
   }); 
 });
 
