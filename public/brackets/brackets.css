@@ -34,6 +34,14 @@ html {
   padding: 1rem;
 }
 
+#bracket-inner h2, #bracket-inner p {
+  text-shadow: 1px 1px 4px #303030;
+  font-weight: 400;
+}
+#bracket-inner h2 {
+  margin: 8px 0;
+}
+
 .bk-round {
   display: inline-block;
   width: 18.0rem;

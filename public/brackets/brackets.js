@@ -118,7 +118,7 @@ function renderSpacingTemplate(item) {
  * @param {array} data - a single bracket from /brackets/data [(round) [{(matchup)}, {matchup}, ...]]
  * @returns {undefined}
  */
-function renderBracket(data, names) {
+function renderBracket(data) {
   let out = ''; 
   for (let i = 0; i < data.length; i++) {
     let round = data[i]; 
@@ -137,16 +137,23 @@ function renderBracket(data, names) {
   $('#bracket-inner').html(out); 
 }
 
+let initialHTML = false; 
+let bracketNames = ['First Bracket', 'B2', 'B3', 'B4']; 
 async function getBrackets(bracket) {
+  if (!initialHTML) {
+    initialHTML = $('#bracket-inner').html(); 
+  }
+  let res = await fetch(`data?bracket=${bracket}`).then(r => r.json()); 
+  renderBracket(res.data);
+  $('#bracket-inner').prepend(`<h2>${bracketNames[bracket]}</h2>`)
+}
+
+function init() {
   const urlParams = new URLSearchParams(location.search);
   if (urlParams.get('iframe') === '1') {
     $('#footer').hide(); 
     $('#bracket-outer').css('height', 'calc(100% - 82px)');
   }
-
-  let res = await fetch(`data?bracket=${bracket}`).then(r => r.json()); 
-  renderBracket(res.data);
-  // console.log(res); 
 }
 
-// window.onload = getBrackets; 
+window.onload = init; 

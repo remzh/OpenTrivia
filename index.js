@@ -376,6 +376,12 @@ let round = {
   brackets: {
     active: false
   }, 
+  divergence: {
+    active: false, 
+    teams: [], 
+    name: '', 
+    type: 'sp1'
+  }
 }; 
 
 let totalTeams = 0; 
