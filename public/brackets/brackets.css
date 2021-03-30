@@ -46,6 +46,16 @@ html {
   /* overflow: hidden; */
 }
 
+/* Landing screen */
+.landing-btn {
+  display: block;
+  width: 100%; 
+  max-width: 400px;
+  font-size: 1.4rem;
+  padding: 4px 12px;
+  margin-bottom: 8px;
+}
+
 /** Match information (box, 18x6rem)*/
 
 #bracket-inner section{

@@ -606,7 +606,7 @@ socket.on('config', (data) => {
     $('#bk').css('background', ''); 
     $('#bk').css('background-image', `url(images/${data.background.users})`);
   }
-  if (data.brackets.active) {
+  if (data.brackets && data.brackets.active) {
     roundConfig.brackets = true; 
     showBuzzer(); 
   } else {
@@ -625,6 +625,7 @@ window.onfocus = function() {
 
 window.onload = function () {
   makeDraggable($('#ext-draggable')[0]);
+  makeDraggable($('.module-draggable')[0]); // realtime chat overlay
   if (localStorage.ot_devmode) {
     $('.dev-mode-only').show(); 
     logger.logToConsole = true; 

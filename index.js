@@ -35,12 +35,17 @@ app.use('/brackets/*', brackets.appHook);
 let bracketSet = brackets.generateNewBrackets(4); 
 app.get('/brackets/data', async (req, res) => {
   // res.json(bracketSet); 
+  let bracketNum = req.query.bracket; 
+  if (!bracketNum || isNaN(parseInt(bracketNum)) || parseInt(bracketNum) < 0 || parseInt(bracketNum) > 3) {
+    res.json({ok: false, msg: 'Invalid bracket parameter.'})
+    return; 
+  }
   let matchups = await mdb.collection('brackets').find({
-    bracket: 0
+    bracket: parseInt(bracketNum)
   }).toArray(); 
   // res.json(matchups); return; 
   let bracketData = brackets.generateBrackets(4, matchups); 
-  res.json(bracketData); 
+  res.json({ok: true, data: bracketData[bracketNum]}); 
 })
 // app.get('/brackets/data/matches', (req, res) => {
 //   res.json(brackets.listRoundMatchups(bracketSet)); 
@@ -1065,7 +1070,14 @@ io.of('/').use(function(socket, next){
    */
   socket.on('status', function(mode){
     if(socket.handshake.session.user){
-      socket.emit('config', round); 
+      socket.emit('config', {
+        background: {
+          users: round.background.users
+        }, 
+        brackets: {
+          active: round.brackets.active
+        }
+      }); 
 
       if (!mode) {
         socket.emit('status', {valid: true, user: socket.handshake.session.user})}

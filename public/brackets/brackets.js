@@ -49,8 +49,8 @@ function formatScore(match, n) {
     sel = match.scores[0]; 
     other = match.scores[1]; 
   } else {
-    sel = match.scores[0]; 
-    other = match.scores[1]; 
+    sel = match.scores[1]; 
+    other = match.scores[0]; 
   }
   if (sel === -1 || typeof sel === 'undefined') {
     return `<span class='text-gray'>-</span>`
@@ -137,16 +137,16 @@ function renderBracket(data, names) {
   $('#bracket-inner').html(out); 
 }
 
-async function getBrackets() {
+async function getBrackets(bracket) {
   const urlParams = new URLSearchParams(location.search);
   if (urlParams.get('iframe') === '1') {
     $('#footer').hide(); 
     $('#bracket-outer').css('height', 'calc(100% - 82px)');
   }
 
-  let res = await fetch('data').then(r => r.json()); 
-  renderBracket(res[0]);
+  let res = await fetch(`data?bracket=${bracket}`).then(r => r.json()); 
+  renderBracket(res.data);
   // console.log(res); 
 }
 
-window.onload = getBrackets; 
+// window.onload = getBrackets; 
