@@ -325,7 +325,7 @@ $('#btn-adm-rs').on('click', () => {
   }
 });
 
-// brackets page (requires lib/brackets.js on the server for this page to be functional)
+// brackets addon (requires lib/brackets.js on the server for this to be functional)
 $('#btn-brk-start').on('click', () => {
   let val = $('#i-brk-brkRound').val() ? parseInt($('#i-brk-brkRound').val()) : 0; 
   secSocket.emit('adm-startBracketRound', val); 
@@ -334,6 +334,25 @@ $('#btn-brk-start').on('click', () => {
 $('#btn-brk-finish').on('click', () => {
   let val = $('#i-brk-brkRound').val() ? parseInt($('#i-brk-brkRound').val()) : 0; 
   secSocket.emit('adm-finishBracketRound', val); 
+});
+
+// divergence addon (requires lib/divergence.js)
+secSocket.on('divergence-config', (data) => {
+  $('#span-divg-enabled').text(data.active?'enabled':'disabled'); 
+  $('#i-divg-teams').val(data.teams.join(', ')); 
+  $('#i-divg-enabled')[0].checked = data.active; 
+  $('#i-divg-type').val(data.type); 
+}); 
+
+$('#btn-divg-update').on('click', () => {
+  let active = $('#i-divg-enabled')[0].checked; 
+  let teams = $('#i-divg-teams').val().replace(/ /g, '').toUpperCase().split(','); 
+  let type = $('#i-divg-type').val(); 
+  secSocket.emit('divergence-update', {
+    active, 
+    teams, 
+    type
+  });
 });
 
 // utilities + general (not socket.io-specific)

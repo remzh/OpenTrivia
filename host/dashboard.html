@@ -109,8 +109,8 @@
             <select id='adm-bks-users' class='adm-bks'></select>
             <button onclick='secSocket.emit("adm-setBK", 1, $("#adm-bks-users").val())' class='adm-bks'>Set BK (Users)</button>
             <span class='right'>
-              <button id='btn-adm-uc'>UC</button>
-              <button id='btn-adm-rs'><i class='fas fa-exclamation-triangle'></i> RS</button>
+              <button id='btn-adm-uc' title='Override Total Team Count'>TC</button>
+              <button id='btn-adm-rs' title='Reload Question/User Spreadsheets'><i class='fas fa-exclamation-triangle'></i> RS</button>
             </span>
             <hr/>
             <button id='admin-btn-query'>Query Users</button>
@@ -130,11 +130,14 @@
         <button id='btn-brk-start'>Start Round</button>
         <button id='btn-brk-finish'>Finish Round</button>
         <h2>Addon: Divergence</h2>
-        <p>Divergence is currently <b>disabled</b>.</p>
+        <p>Divergence is currently <b id='span-divg-enabled'>disabled</b>.</p>
         <br/>
+        <span>Type: </span><input type='text' id='i-divg-type' placeholder='sp1/sp2'/>
+        <br/><br/>
         <p>Current teams:</p>
-        <textarea placeholder='Teams'></textarea><br/>
-        <button>Toggle Divergence</button>
+        <textarea id='i-divg-teams' placeholder='Teams'></textarea><br/>
+        <span><input id='i-divg-enabled' type='checkbox'><label for='i-divg-enabled'>Enabled</label></span>
+        <button id='btn-divg-update'>Update</button>
       </div>
       <div class='col'>
         <h2>Bracket Info</h2>

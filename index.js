@@ -29,10 +29,12 @@ app.use(cookieParser());
 
 const scoring = require('./lib/scoring.js');
 const scoringPolicy = require('./lib/scoringPolicy.json');
-const brackets = require('./lib/brackets.js');
-app.use('/brackets/*', brackets.appHook); 
 
-let bracketSet = brackets.generateNewBrackets(4); 
+// Addons
+const brackets = require('./lib/brackets.js');
+const divergence = require('./lib/divergence.js');
+
+app.use('/brackets/*', brackets.appHook); 
 app.get('/brackets/data', async (req, res) => {
   // res.json(bracketSet); 
   let bracketNum = req.query.bracket; 
@@ -47,12 +49,6 @@ app.get('/brackets/data', async (req, res) => {
   let bracketData = brackets.generateBrackets(4, matchups); 
   res.json({ok: true, data: bracketData[bracketNum]}); 
 })
-// app.get('/brackets/data/matches', (req, res) => {
-//   res.json(brackets.listRoundMatchups(bracketSet)); 
-// })
-// app.get('/brackets/data/test', (req, res) => {
-//   res.json(brackets.generateBrackets(5, brackets.listRoundMatchups(bracketSet))); 
-// })
 
 const http = require('http').Server(app);
 const winston = require('winston');
@@ -379,8 +375,7 @@ let round = {
   divergence: {
     active: false, 
     teams: [], 
-    name: '', 
-    type: 'sp1'
+    type: 'sp1' // sp1: semifinal round, sp2: final round
   }
 }; 
 
@@ -757,6 +752,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
 
   socket.on('status', function(){
     socket.emit('config-bk', round.background.slides); 
+    socket.emit('divergence-config', round.divergence); // Divergence ONLY 
     if(question.curIndex > -1){
       socket.emit('question-full', getCurrentQuestion(1)); 
     } else {
@@ -988,6 +984,8 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     socket.emit('update', `Sheets reloaded. CAUTION: May cause system instability.`); 
   })
 
+  // Brackets (requires lib/brackets.js)
+
   socket.on('adm-initBrackets', async () => {
     let numToCreate = 4; 
     await mdb.collection('brackets').drop(); 
@@ -1031,6 +1029,17 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     let res = brackets.finishMatchups(io, mdb.collection('brackets'), roundNum); 
     socket.emit('update', `Brackets: Finished round`);
   }); 
+
+  // Divergence (requires lib/divergence.js)
+  socket.on('divergence-update', (data) => {
+    Object.assign(round.divergence, data); 
+    socket.emit('divergence-config', round.divergence); 
+    if (round.divergence.active) {
+      divergence.sendUpdate(io, round.divergence.teams, round.divergence.type); 
+    } else {
+      io.emit('divergence-status', {active: false})
+    }
+  })
 });
 
 /**
@@ -1084,6 +1093,9 @@ io.of('/').use(function(socket, next){
           active: round.brackets.active
         }
       }); 
+      if (round.divergence && round.divergence.active && round.divergence.teams.indexOf(socket.handshake.session.user.TeamID) !== -1) {
+        divergence.sendUpdate(io, socket.handshake.session.user.TeamID, round.divergence.type); 
+      }
 
       if (!mode) {
         socket.emit('status', {valid: true, user: socket.handshake.session.user})}
@@ -1174,6 +1186,19 @@ io.of('/').use(function(socket, next){
       socket.emit('status', {valid: false});
     }
   });
+
+  socket.on('brackets-chat', async function(msg) {
+    if (round.brackets && round.brackets.active) {
+      let resp = await brackets.routeMessage(io, mdb.collection('brackets'), {
+        tid: socket.handshake.session.user.TeamID, 
+        round: round.brackets.round
+      }, {
+        type: 'chat', 
+        sender: socket.handshake.session.user.name, 
+        msg
+      }); 
+    }
+  }); 
   
   socket.on('ac-blur', function(){
     if (question.active) {

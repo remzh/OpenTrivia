@@ -56,7 +56,6 @@
   margin-top: 15px;
   display: none;
   overflow: hidden;
-  transition: height 0.14s; 
 }
 
 #buzzer-score {

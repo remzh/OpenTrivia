@@ -48,6 +48,7 @@ function resetBuzzer() {
  */
 function showBuzzer(scoreBlue=0, scoreRed=0) {
   resetBuzzer(); 
+  $('#btn-showChat').show(); 
   $('#buzzer-score-blue').text(scoreBlue); 
   $('#buzzer-score-red').text(scoreRed); 
   $('#buzzers-outer').show(); 
@@ -123,6 +124,16 @@ function rt_hideChatOverlay() {
   }, 400); 
 }
 
+$('#bracket-chat-input').on('keypress', (event) => {
+  if (event.code === 'Enter') {
+    let msg = $('#bracket-chat-input').val(); 
+    if (msg.length > 0) {
+      $('#bracket-chat-input').val(''); 
+      socket.emit('brackets-chat', msg); 
+    }
+  }
+}); 
+
 socket.on('brackets-msg', (data) => {
   logger.info(`[brackets] msg: ${JSON.stringify(data)}`); 
   switch (data.type) {
@@ -138,5 +149,11 @@ socket.on('brackets-msg', (data) => {
       $('#buzzer-score-red').text(data.opponentScore[1]); 
       // let teamMsg = data.teamScore[0] === 10 ? 'Answered correctly first!' : (data.teamScore[0] > 0 ? 'Correct answer, but not first' : 'Incorrect answer.'); 
       // showSnackbar(`[+${data.teamScore[0]}] ${teamMsg}`, 1); 
+      $('#bracket-chat-messages').append(`<p><b class='chat-yellow'>System</b><br/>Your team got ${data.teamScore[0]} points. Total points: ${data.teamScore[1]}.</p>`); 
+    case 'chat': 
+      // Chat isn't "trusted", so we have to sanitize it
+      $('#bracket-chat-messages').append(`<p><b id='temp-chatSender' class='chat-${data.fromTeam?'blue':'red'}'></b><br/><span id='temp-chatMsg'></span></p>`); 
+      $('#temp-chatSender').text(data.sender).prop('id', ''); 
+      $('#temp-chatMsg').text(data.msg).prop('id', ''); 
   }
 })

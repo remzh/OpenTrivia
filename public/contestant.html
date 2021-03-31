@@ -7,6 +7,7 @@
     <link rel='stylesheet' href='main.css'/>
     <link rel='stylesheet' href='contestant/core.css'/>
     <link rel='stylesheet' href='contestant/realtime.css'/>
+    <link rel='stylesheet' href='contestant/divergence.css'/>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/levenshtein/1.0.5/levenshtein.min.js' integrity='sha256-5RTt+B1DlqFis/ipkeYZ+1D8500HFobtz2aBJnhKRsA=' crossorigin='anonymous'></script>
     <script defer src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js' integrity='sha256-4iQZ6BVL4qNKlQ27TExEhBN1HFPvAvAMbFavKKosSWQ=' crossorigin='anonymous'></script>
     <script defer src='https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js' integrity='sha256-vrn14y7WH7zgEElyQqm2uCGSQrX/xjYDjniRUQx3NyU=' crossorigin='anonymous'></script>
@@ -16,6 +17,7 @@
     <script defer src='logger.js'></script>
     <script defer src='contestant/core.js'></script>
     <script defer src='contestant/realtime.js'></script>
+    <script defer src='contestant/divergence.js'></script>
   </head>
   <body>
     <div id='bk' style='background: linear-gradient(120deg, #b8b8b8, #585858)'></div>
@@ -38,6 +40,10 @@
           <!-- <div id='buzzer-scoreInfo'>
             <b class='buzzer-text-blue buzzer-text'>[+10 pts]</b> Your team answered correctly first!<br/>
           </div> -->
+        </div>
+        <div id='divergence-outer'>
+          <p id='divergence-header'>Divergence:</p>
+          <p id='divergence-name'></p>
         </div>
         <div id='q-header-wrapper' class='q'>
           <h1 id='q-num' class='q'></h1>
@@ -107,7 +113,7 @@
     <div id='snackbar-sm' class='snackbar'></div>
     <div id='footer'>
       <span class='right'>
-        <button class='btn-external' onclick='rt_showChatOverlay()'><span><i class='fas fa-fw fa-comments'></i></span><span>Chat</span></button>
+        <button id='btn-showChat' class='btn-external' onclick='rt_showChatOverlay()' style='display: none'><span><i class='fas fa-fw fa-comments'></i></span><span>Chat</span></button>
         <button class='btn-external' onclick='showExternal("/scores")'><span><i class='fas fa-fw fa-list-ol'></i></span><span>Scores</span></button>
         <button class='btn-external' onclick='showExternal("/brackets/public.html")'><span><i class='fas fa-fw fa-medal'></i></span><span>Brackets</span></button>
         <button class='btn-external' onclick='showExternal("/about")'><span><i class='fas fa-fw fa-info-circle'></i></span><span>About</span></button>
@@ -162,7 +168,7 @@
             <p><b class='chat-yellow'>System</b><br/>Welcome to Chat! Messages sent here can only be seen by your team and your opponent team. We'll also keep track of score for you here!</p>
             <p><b class='chat-yellow'>System</b><br/>Do not send any personal information. Messages are logged to deter abuse.</p>
           </div>
-          <input placeholder='Type a message...'/>
+          <input id='bracket-chat-input' placeholder='Type a message...'/>
         </div>
         <div class='module-draggable'></div>
         <div class='module-actions'>

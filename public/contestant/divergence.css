@@ -1,0 +1,24 @@
+#divergence-outer {
+  text-align: left;
+  box-sizing: border-box;
+  margin-top: 15px;
+  height: 50px;
+  padding: 4px;
+  background: #00000050;
+  text-shadow: 1px 1px 3px #444;
+  border: 1px solid #ffbc8f; 
+  display: none;
+}
+
+#divergence-outer p {
+  margin: 0;
+}
+
+#divergence-header {
+  color: #ffbc8f;
+  font-size: 14px;
+}
+
+#divergence-name {
+  font-size: 20px;
+}
