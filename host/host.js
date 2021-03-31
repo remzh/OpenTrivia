@@ -355,6 +355,10 @@ $('#btn-divg-update').on('click', () => {
   });
 });
 
+$('#btn-divg-scores').on('click', () => {
+  secSocket.emit('divergence-showScores'); 
+}); 
+
 // utilities + general (not socket.io-specific)
 
 $('#i-ann-template').on('change', () => {

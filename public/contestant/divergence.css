@@ -19,6 +19,15 @@
   font-size: 14px;
 }
 
-#divergence-name {
+#divergence-header-right {
+  color: #ffb7ff;
+}
+
+#divergence-name, #divergence-value {
+  display: inline-block;
   font-size: 20px;
+}
+
+#divergence-header-right, #divergence-value {
+  float: right;
 }

@@ -532,6 +532,11 @@ function loadQuestion(index, socket){
   io.emit('question', getCurrentQuestion()); 
   io.of('secure').emit('question-full', getCurrentQuestion(1)); 
 
+  // Divergence: In sp1, the first team to answer gets 15 points. 
+  if (round.divergence && round.divergence.active && round.divergence.type === 'sp1') {
+    divergence.sendUpdate(io, round.divergence.teams, 'sp1', 15); 
+  }
+
   if (getCurrentQuestion().type === 'bz') {
     startTimer(60); 
   }
@@ -552,7 +557,8 @@ function getNumberWithOrdinal(n) {
  * @param {string} tid - Team ID, used during bracket rounds to see if the team answered first
  */
 async function calcPoints(tid) {
-  if (round.brackets) {
+  if (round.brackets && round.brackets.active) {
+    // Brackets
     // 10 points for first to answer correctly, 4 points for second to answer correctly
     let matchData = await brackets.findMatch(mdb.collection('brackets'), {
       tid, 
@@ -565,6 +571,19 @@ async function calcPoints(tid) {
       }
     }
     return 10; 
+  } else if (round.divergence && round.divergence.active && round.divergence.type === 'sp1' && round.divergence.teams.indexOf(tid) !== -1) {
+    // Divergence
+    let points = [15, 13, 11, 9, 7, 6, 5, 4, 4]; 
+    let alreadyAnswered = Object.keys(question.scores).filter(tid => {
+      // Only count teams that are part of divergence AND answered correctly
+      return (round.divergence.teams.indexOf(tid) !== -1 && question.scores[tid] > 0); 
+    }); 
+    console.log('aa:', alreadyAnswered);  
+    let aal = alreadyAnswered.length; 
+    if (aal > 7) aal = 7; 
+    let pointVal = points[aal]; 
+    divergence.sendUpdate(io, round.divergence.teams, 'sp1', points[aal + 1]); 
+    return pointVal; 
   }
   return 10; 
 }
@@ -613,6 +632,7 @@ async function processAnswer(team, submission, socket){
     firstSubmission
   }
 
+  // Give points if response is correct
   if (correct) {
     question.scores[tid] = await calcPoints(tid); 
     console.log('gave score: ', question.scores[tid])
@@ -620,9 +640,17 @@ async function processAnswer(team, submission, socket){
     question.scores[tid] = 0; 
   }
 
+  // Instant feedback / timed
   if (q.instantFeedback || q.timed) {
     response.correct = correct; 
   } 
+
+  // Divergence: sp1
+  if (round.divergence && round.divergence.active && round.divergence.type === 'sp1' && round.divergence.teams.indexOf(tid) !== -1) {
+    response.canChangeAnswer = false; 
+    response.correct = correct; 
+    teamBroadcast(socket, 'divergence-points', question.scores[tid]); 
+  }
   
   if (q.timed) {
     if (correct) {
@@ -1035,11 +1063,24 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     Object.assign(round.divergence, data); 
     socket.emit('divergence-config', round.divergence); 
     if (round.divergence.active) {
-      divergence.sendUpdate(io, round.divergence.teams, round.divergence.type); 
+      divergence.sendInit(io, round.divergence.teams, round.divergence.type); 
     } else {
       io.emit('divergence-status', {active: false})
     }
-  })
+  }); 
+
+  socket.on('divergence-showScores', async function() {
+    // Hardcoded to use Round 3. This can be changed easily. 
+    let scores = await computeOverallScores(3); 
+    scores.data = scores.data.filter(i => round.divergence.teams.indexOf(i.t) !== -1); // Only show divergence teams
+    console.log(scores); 
+    currentTopScores = {
+      title: 'Divergence', 
+      scores, 
+      hidePts: false
+    }
+    io.of('secure').emit('scores', currentTopScores); 
+  }); 
 });
 
 /**
@@ -1094,7 +1135,7 @@ io.of('/').use(function(socket, next){
         }
       }); 
       if (round.divergence && round.divergence.active && round.divergence.teams.indexOf(socket.handshake.session.user.TeamID) !== -1) {
-        divergence.sendUpdate(io, socket.handshake.session.user.TeamID, round.divergence.type); 
+        divergence.sendInit(io, socket.handshake.session.user.TeamID, round.divergence.type); 
       }
 
       if (!mode) {
