@@ -27,7 +27,7 @@
         <a data-target='advanced' href='#advanced'>Advanced</a>
         <a data-target='scores' href='#scores'>Scores</a>
         <a data-target='admin' href='#admin'>Admin</a>
-        <a data-target='brackets' href='#brackets'>Brackets</a>
+        <a data-target='addons' href='#addons'>Addons</a>
       </div>
     </div>
     <div id='basic' class='container top'>
@@ -47,7 +47,7 @@
         <h2>Control Panel:</h2>
         <span style='background: #964c4c; padding: 4px 6px'><i class='fas fa-exclamation-triangle'></i> Do NOT use this page unless you know <b>exactly</b> what you're doing.</span>
         <h3>Override Defaults</h3>
-        <select id='sel-questions'></select> <button id='btn-loadQuestion'>Load</button> <button id='btn-loadNextQuestion'>Load Next</button><br/><br/>
+        <select id='sel-questions'></select> <button id='btn-loadQuestion'>Load</button> <button id='btn-loadNextQuestion'>Load Next</button><br/>
         <input type='number' id='i-timer' style='width: 40px'/> <button id='btn-startTimer'>Start Timer</button> <button id='btn-stopTimer'>Pause Timer</button>
         <h3>Announcement Page</h3>
         <input id='i-ann-title' placeholder='Title'/>
@@ -120,15 +120,21 @@
         </div>
       </div>
     </div>
-    <div id='brackets' class='container top'>
+    <div id='addons' class='container top'>
       <div class='col'>
-        <h2>Bracket Controls</h2>
+        <h2>Addon: Bracket Controls</h2>
         <button onclick='secSocket.emit("adm-initBrackets")'>Create Brackets</button>
         <br/><br/>
         <span>Bracket Round: </span><input type='number' id='i-brk-brkRound' placeholder='0' style='width: 60px'/>
         <br/>
         <button id='btn-brk-start'>Start Round</button>
         <button id='btn-brk-finish'>Finish Round</button>
+        <h2>Addon: Divergence</h2>
+        <p>Divergence is currently <b>disabled</b>.</p>
+        <br/>
+        <p>Current teams:</p>
+        <textarea placeholder='Teams'></textarea><br/>
+        <button>Toggle Divergence</button>
       </div>
       <div class='col'>
         <h2>Bracket Info</h2>
