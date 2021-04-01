@@ -98,7 +98,12 @@ function updateQuestion(data){
   }
   $('#q-details').show(); 
   $('#question').show().css('font-size', '3.5rem'); 
-  if (data.question.indexOf('|') === -1) {
+  if (data.slow) {
+    $('#question').html(`<span id='q-sp-slow1'></span><span id='q-sp-slow2' class='blurred'></span>`); 
+    $('#q-sp-slow2').text(data.question); 
+    displaySlowQuestion(); 
+  }
+  else if (data.question.indexOf('|') === -1) {
     $('#question').text(data.question); 
   } else {
     $('#question').html(data.question.split('|')[0] + '<br/>' + data.question.split('|').slice(1).map(r => `<span class='blurred'><span class='hint'>Hint: </span>${r}</span>`).join('<br/>')); 
@@ -174,6 +179,26 @@ function updateQuestion(data){
     }
   }
   $('#q-details').css('height', `${window.innerHeight - $('#question')[0].offsetHeight - 130}px`); 
+}
+
+function displaySlowQuestion() {
+  if (1) {
+    let time = 90; 
+    let textLeft = $('#q-sp-slow2').text(); 
+    if (textLeft.length === 0) {
+      $('#image').css('filter', ''); 
+      return; 
+    }; 
+    $('#image').css('filter', 'blur(10px)'); 
+    let char = textLeft.slice(0, 1); 
+    if (['.', ',', ':', ';'].indexOf(char) !== -1) {
+      time = 570; 
+    }
+    $('#q-sp-slow1').text($('#q-sp-slow1').text() + char); 
+    console.log(textLeft); 
+    $('#q-sp-slow2').text(textLeft.slice(1)); 
+    setTimeout(displaySlowQuestion, time); 
+  }
 }
 
 function displayAnnouncement(data) {

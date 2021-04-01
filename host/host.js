@@ -326,6 +326,12 @@ $('#btn-adm-rs').on('click', () => {
 });
 
 // brackets addon (requires lib/brackets.js on the server for this to be functional)
+$('#btn-brk-create').on('click', () => {
+  if (window.confirm('This will overwrite existing brackets. Are you sure?')) {
+    secSocket.emit("adm-initBrackets"); 
+  }
+})
+
 $('#btn-brk-start').on('click', () => {
   let val = $('#i-brk-brkRound').val() ? parseInt($('#i-brk-brkRound').val()) : 0; 
   secSocket.emit('adm-startBracketRound', val); 

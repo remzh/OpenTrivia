@@ -369,6 +369,9 @@ let round = {
     slides: 'nature.jpg', 
     users: 'bk.jpg'
   }, 
+  questionModifiers: {
+    slow: true
+  }, 
   brackets: {
     active: false
   }, 
@@ -465,6 +468,9 @@ function getCurrentQuestion(full){
       out.category = obj.category;
       out.timed = obj.timed; 
       out.index = question.curIndex; 
+      if (round.questionModifiers && round.questionModifiers.slow) {
+        out.slow = true; 
+      }
     }
     return out; 
   } catch (e) {
