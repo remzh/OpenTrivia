@@ -34,22 +34,6 @@ const scoringPolicy = require('./lib/scoringPolicy.json');
 const brackets = require('./lib/brackets.js');
 const divergence = require('./lib/divergence.js');
 
-app.use('/brackets/*', brackets.appHook); 
-app.get('/brackets/data', async (req, res) => {
-  // res.json(bracketSet); 
-  let bracketNum = req.query.bracket; 
-  if (!bracketNum || isNaN(parseInt(bracketNum)) || parseInt(bracketNum) < 0 || parseInt(bracketNum) > 3) {
-    res.json({ok: false, msg: 'Invalid bracket parameter.'})
-    return; 
-  }
-  let matchups = await mdb.collection('brackets').find({
-    bracket: parseInt(bracketNum)
-  }).toArray(); 
-  // res.json(matchups); return; 
-  let bracketData = brackets.generateBrackets(4, matchups); 
-  res.json({ok: true, data: bracketData[bracketNum]}); 
-})
-
 const http = require('http').Server(app);
 const winston = require('winston');
 const logger_color = function(s) {
@@ -130,6 +114,58 @@ const io = require('socket.io')(http);
 io.use(sharedsession(session(sess))); 
 
 // End of init
+// Addon: Bracket endpoints
+
+app.get('/brackets/data', async (req, res) => {
+  // res.json(bracketSet); 
+  let bracketNum = req.query.bracket; 
+  if (!bracketNum || isNaN(parseInt(bracketNum)) || parseInt(bracketNum) < 0 || parseInt(bracketNum) > 3) {
+    res.json({ok: false, msg: 'Invalid bracket parameter.'})
+    return; 
+  }
+  let matchups = await mdb.collection('brackets').find({
+    bracket: parseInt(bracketNum)
+  }).toArray(); 
+  let bracketSeeds = await mdb.collection('brackets').findOne({
+    _md: true
+  }); 
+  // res.json(matchups); return; 
+  let bracketData = brackets.generateBrackets(4, matchups); 
+  res.json({ok: true, data: bracketData[bracketNum], seeds: bracketSeeds ? bracketSeeds.seeds : false}); 
+});
+
+app.get('/brackets/findTeamBracket', async (req, res) => {
+  if (!req.session.user || !req.session.user.TeamID) {
+    res.json({ok: false, msg: `N/A - You're not signed in.`})
+    return; 
+  } 
+
+  let tid = req.session.user.TeamID; 
+  let bracketSeeds = await mdb.collection('brackets').findOne({
+    _md: true
+  }); 
+  if (!bracketSeeds || !bracketSeeds.seeds) {
+    res.json({ok: false, msg: `Hi ${req.session.user.TeamName}, bracket rounds haven't started yet.`})  
+  }
+  let seed = bracketSeeds.seeds.findIndex(team => team.t === tid); 
+  if (seed === -1) {
+    res.json({ok: false, msg: `Hi ${req.session.user.TeamName}, you're not in any brackets. Did the bracket rounds start yet?`})  
+  }
+
+  let bracketIndex = await mdb.collection('brackets').findOne({
+    seeds: seed
+  }); 
+  if (!bracketIndex) {
+    res.json({ok: false, msg: `Hi ${req.session.user.TeamName}, you've been assigned a seed (${seed}) but you're not part of any brackets. Please contact event staff for assistance.`});
+  }
+  res.json({
+    ok: true, 
+    tn: req.session.user.TeamName, 
+    bracketIndex: bracketIndex.bracket
+  })
+}); 
+
+// End of bracket endpoints
 // Loading UserDB
 
 let userdb = []; 
@@ -365,6 +401,7 @@ let currentTopScores = {
 }
 
 let round = {
+  currentRoundName: '0', 
   background: {
     slides: 'nature.jpg', 
     users: 'bk.jpg'
@@ -381,6 +418,18 @@ let round = {
     type: 'sp1' // sp1: semifinal round, sp2: final round
   }
 }; 
+
+function getUserConfig() {
+  return {
+    roundName: round.currentRoundName, 
+    background: {
+      users: round.background.users
+    }, 
+    brackets: {
+      active: round.brackets.active
+    }
+  }; 
+}
 
 let totalTeams = 0; 
 
@@ -408,7 +457,6 @@ let question = {
   }, 
   current: {}, // current question taken from array
   curIndex: -1, // index of question in array
-  numAnswered: 0, // only used on buzzer ("BZ") rounds to determine scoring
   scores: {}, // actual scores of each team (TeamID: 0/1)
   scoresSaved: false, // whether the scores for this question have been saved or not
   tb: {}, // tiebreak values (each timed question can gie up to 10.00 of TB)
@@ -528,23 +576,26 @@ function loadQuestion(index, socket){
   question.current = mapQuestionEntry(questiondb[index]);
   question.curIndex = index; 
   question.timestamp = Date.now(); 
-  question.numAnswered = 0; 
 
   // Clear scores
   question.scores = {}; 
   question.tb = {}; 
   question.selections = {}; 
 
-  io.emit('question', getCurrentQuestion()); 
-  io.of('secure').emit('question-full', getCurrentQuestion(1)); 
+  let currentQuestion = getCurrentQuestion(), fullCurrentQuestion = getCurrentQuestion(1); 
+  io.emit('question', currentQuestion); 
+  io.of('secure').emit('question-full', fullCurrentQuestion); 
 
   // Divergence: In sp1, the first team to answer gets 15 points. 
   if (round.divergence && round.divergence.active && round.divergence.type === 'sp1') {
     divergence.sendUpdate(io, round.divergence.teams, 'sp1', 15); 
   }
 
-  if (getCurrentQuestion().type === 'bz') {
+  if (currentQuestion.type === 'bz') {
     startTimer(60); 
+  }
+  if (fullCurrentQuestion.slow) {
+    question.inProgress = true; 
   }
 }
 
@@ -584,7 +635,6 @@ async function calcPoints(tid) {
       // Only count teams that are part of divergence AND answered correctly
       return (round.divergence.teams.indexOf(tid) !== -1 && question.scores[tid] > 0); 
     }); 
-    console.log('aa:', alreadyAnswered);  
     let aal = alreadyAnswered.length; 
     if (aal > 7) aal = 7; 
     let pointVal = points[aal]; 
@@ -617,7 +667,7 @@ async function processAnswer(team, submission, socket){
   let canChangeAnswer = question.canChangeAnswer || q.timed; // if timed=true, teams can always change their answer (due to its design)
 
   // Make sure it's not an answer change if answer changes are disabled
-  if (!canChangeAnswer && typeof question.scores[tid] !== 'undefined') {
+  if (!canChangeAnswer && typeof question.scores[tid] !== 'undefined' || round.divergence.active && round.divergence.teams.indexOf(tid) !== -1 && typeof question.scores[tid] !== 'undefined') {
     socket.emit('answer-ack', {ok: false, msg: 'Answer already submitted, cannot change'}); 
     return; 
   }
@@ -652,10 +702,9 @@ async function processAnswer(team, submission, socket){
   } 
 
   // Divergence: sp1
-  if (round.divergence && round.divergence.active && round.divergence.type === 'sp1' && round.divergence.teams.indexOf(tid) !== -1) {
+  let sendDivergenceUpdate = (round.divergence && round.divergence.active && round.divergence.type === 'sp1' && round.divergence.teams.indexOf(tid) !== -1); 
+  if (sendDivergenceUpdate) {
     response.canChangeAnswer = false; 
-    response.correct = correct; 
-    teamBroadcast(socket, 'divergence-points', question.scores[tid]); 
   }
   
   if (q.timed) {
@@ -680,6 +729,11 @@ async function processAnswer(team, submission, socket){
     teamBroadcast(socket, 'answer-time', response);
   } else {
     teamBroadcast(socket, 'answer-ack', response);
+  }
+
+  if (sendDivergenceUpdate) {
+    teamBroadcast(socket, 'divergence-points', question.scores[tid]); 
+    teamBroadcast(socket, 'answer', getCurrentQuestion(1).answer); 
   }
 
   return {
@@ -840,8 +894,9 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     }
     if (shouldSaveScores) {
       question.scoresSaved = true; 
-      let r = parseInt(getCurrentQuestion(true).round), n = parseInt(getCurrentQuestion(true).num); 
-      if(scoring.countedRounds.indexOf(r) !== -1){
+      let fullCurrentQuestion = getCurrentQuestion(1); 
+      let r = parseInt(fullCurrentQuestion.round), n = parseInt(fullCurrentQuestion.num); 
+      if(scoring.countedRounds.indexOf(r) !== -1 && fullCurrentQuestion.type !== 'md'){
         socket.emit('update-scores', `Scores saved for R${r} Q${n}`);
         saveScores(r, n, question.scores, question.tb); 
       }
@@ -851,7 +906,11 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
   })
 
   socket.on('host-firstConnect', async function(){
-    socket.emit('question-list', questiondb.map(r => {return {r: r.Round, q: r.Q}}))
+    socket.emit('host-question-list', questiondb.map(r => {return {r: r.Round, q: r.Q}}))
+    socket.emit('host-round-info', {
+      current: round.currentRoundName ? round.currentRoundName : 'None', 
+      scoringPolicy
+    }); 
     let curScores = await scoreDB.findOne({
       published: true
     }); 
@@ -860,11 +919,47 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     }
   }); 
 
+  socket.on('host-setScoringPolicy', function(index) {
+    let policy = scoringPolicy[index]; 
+    if (policy) {
+      if (policy.slow) {
+        round.questionModifiers.slow = true; 
+      } else {
+        round.questionModifiers.slow = false; 
+      }
+      if (policy.canChangeAnswer) {
+        question.canChangeAnswer = true; 
+      } else {
+        question.canChangeAnswer = false; 
+      }
+
+      if (policy.userBackground) {
+        round.background.users = policy.userBackground; 
+      } 
+      if (policy.slideBackground) {
+        round.background.slides = policy.slideBackground; 
+        io.of('/secure').emit('config-bk', policy.slideBackground); 
+      }
+      round.currentRoundName = policy.roundName; 
+      io.to('users').emit('config', getUserConfig()); 
+      let firstQuestionIndex = questiondb.findIndex(q => {
+        return q.Round.toLowerCase() === policy.roundName.toLowerCase(); 
+      }); 
+      if (firstQuestionIndex !== -1) {
+        loadQuestion(firstQuestionIndex, socket); 
+      }
+      socket.emit('update', 'setScoringPolicy: success!'); 
+    } else {
+      socket.emit('update', 'Invalid scoring policy - policy does not exist.'); 
+    }
+  })
+
   socket.on('scores-save', function(){
-    let r = parseInt(getCurrentQuestion(true).round); 
-    let n = parseInt(getCurrentQuestion(true).num); 
+    let fullCurrentQuestion = getCurrentQuestion(1); 
+    let r = parseInt(fullCurrentQuestion.round); 
+    let n = parseInt(fullCurrentQuestion.num); 
     question.scoresSaved = true; 
-    if(scoring.countedRounds.indexOf(r) !== -1){
+    if(scoring.countedRounds.indexOf(r) !== -1 && fullCurrentQuestion.type !== 'md'){
       saveScores(r, n, question.scores, question.tb); 
       socket.emit('update-scores', `Scores saved for R${r} Q${n}`);
     } else{
@@ -882,7 +977,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
   socket.on('scores-publish', async function(v){
     let scores = await computeOverallScores(); 
     if (!scores.ok) {
-      socket.emit({type: 'scores-publish', ok: false, error: scores.error}); 
+      socket.emit('update', {type: 'scores-publish', ok: false, error: scores.error}); 
       return; 
     }
     // scores w/o team IDs or teams' individual scores
@@ -962,7 +1057,7 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
   socket.on('adm-setBK', function(type, image){
     if (type === 1) {
       round.background.users = image; 
-      io.to('users').emit('config', round); 
+      io.to('users').emit('config', getUserConfig()); 
     } else if (type === 2) {
       round.background.slides = image; 
       io.of('/secure').emit('config-bk', image); 
@@ -1071,21 +1166,29 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     if (round.divergence.active) {
       divergence.sendInit(io, round.divergence.teams, round.divergence.type); 
     } else {
-      io.emit('divergence-status', {active: false})
+      io.emit('divergence-status', {active: false});
     }
   }); 
 
   socket.on('divergence-showScores', async function() {
     // Hardcoded to use Round 3. This can be changed easily. 
-    let scores = await computeOverallScores(3); 
+    let scores = await computeOverallScores('3'); 
     scores.data = scores.data.filter(i => round.divergence.teams.indexOf(i.t) !== -1); // Only show divergence teams
-    console.log(scores); 
     currentTopScores = {
       title: 'Divergence', 
       scores, 
       hidePts: false
     }
     io.of('secure').emit('scores', currentTopScores); 
+    let teamOutput = {}; // output sent to teams 
+    for (let team of scores.data) {
+      teamOutput[team.t] = team.s ? team.s.s : -1; 
+    }
+    divergence.sendScores(io, round.divergence.teams, teamOutput); 
+  }); 
+
+  socket.on('sp-slides-finished', function() {
+    question.inProgress = false; 
   }); 
 });
 
@@ -1103,7 +1206,9 @@ function teamBroadcast(socket, message, payload={}) {
       payload.senderName = socket.handshake.session.user.name; 
     }
     socket.to(`team-${teamID}`).emit(message, payload); 
-    payload.sender = true;
+    if (typeof payload === 'object') {
+      payload.sender = true;
+    }
     socket.emit(message, payload); 
     return true; 
   }
@@ -1132,16 +1237,11 @@ io.of('/').use(function(socket, next){
    */
   socket.on('status', function(mode){
     if(socket.handshake.session.user){
-      socket.emit('config', {
-        background: {
-          users: round.background.users
-        }, 
-        brackets: {
-          active: round.brackets.active
-        }
-      }); 
+      socket.emit('config', getUserConfig()); 
       if (round.divergence && round.divergence.active && round.divergence.teams.indexOf(socket.handshake.session.user.TeamID) !== -1) {
         divergence.sendInit(io, socket.handshake.session.user.TeamID, round.divergence.type); 
+      } else {
+        socket.emit('divergence-status', {active: false});
       }
 
       if (!mode) {

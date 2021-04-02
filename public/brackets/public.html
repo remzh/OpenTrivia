@@ -21,11 +21,7 @@
         <span id='s-school'>16-Team Single Elimination • 5 Brackets</span>
       </div>
       <div id='nav-cat'>
-        <a data-target='0' href='#0' class='active'>Your Bracket</a>
-        <!-- <a data-target='1' href='#1'>Second Bracket</a>
-        <a data-target='2' href='#2'>Third Bracket</a>
-        <a data-target='3' href='#3'>Fourth Bracket</a>
-        <a data-target='4' href='#4'>Fifth Bracket</a> -->
+        <a class='active'>Bracket Details</a>
       </div>
     </div>
     <div class='container'>
@@ -34,6 +30,7 @@
         <div id='bracket-inner'>
           <h2>Welcome!</h2>
           <p>Please select a bracket to view.</p>
+          <p id='p-teamBracket'>Unsure which bracket your team is in? <a onclick='queryTeamBracket()'>Click/tap here!</a></p>
           <button class='landing-btn' onclick='getBrackets(0)'>First Bracket</button>
           <button class='landing-btn' onclick='getBrackets(1)'>Second Bracket</button>
           <button class='landing-btn' onclick='getBrackets(2)'>Third Bracket</button>
@@ -47,4 +44,3 @@
     </div>
   </body>
 </html>
-<!-- Test Message! -->

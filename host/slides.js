@@ -183,19 +183,20 @@ function updateQuestion(data){
 
 function displaySlowQuestion() {
   if (1) {
-    let time = 90; 
+    let time = 80; 
     let textLeft = $('#q-sp-slow2').text(); 
     if (textLeft.length === 0) {
       $('#image').css('filter', ''); 
+      secSocket.emit('sp-slides-finished'); 
       return; 
     }; 
     $('#image').css('filter', 'blur(10px)'); 
     let char = textLeft.slice(0, 1); 
     if (['.', ',', ':', ';'].indexOf(char) !== -1) {
-      time = 570; 
+      time = 580; 
     }
     $('#q-sp-slow1').text($('#q-sp-slow1').text() + char); 
-    console.log(textLeft); 
+    // console.log(textLeft); 
     $('#q-sp-slow2').text(textLeft.slice(1)); 
     setTimeout(displaySlowQuestion, time); 
   }

@@ -80,10 +80,13 @@
         </div>
         <div id='q-sa' class='q'>
           <input id='i-sa' maxlength='32' placeholder='Type here...'/>
+        </div>
+        <div id='q-res'>
           <p id='sa-wrong-timed' class='q'><span class='q-sa incorrect'><b>Incorrect</b>, <span id='q-sa-incorrect-msg'>try again</span>.</span></p>
           <p id='sa-right-timed' class='q'><span class='q-sa correct'><i class='fas fa-check'></i> <b>Correct!</b> Time: <span id='sa-time'></span></span></p>
           <p id='sa-wrong' class='q'><span class='q-sa incorrect'><b>Oops.</b> Next time!</span></p>
           <p id='sa-right' class='q'><span class='q-sa correct'><i class='fas fa-check'></i> <b>Correct!</b> Nice job.</span></p>
+          <p id='sa-right-score' class='q'><span class='q-sa correct'><i class='fas fa-check'></i> <b>Correct!</b> You got <span></span> points.</p>
           <p id='sa-buzzer' class='q q-sa light-blue'>
             <span id='sa-buzzer-msg'></span><br/>
             <span>Your team gained <b id='sa-buzzer-points'></b> points.</span>
@@ -121,7 +124,7 @@
         <button class='btn-external dev-mode-only' onclick='logger.open()'><span><i class='fas fa-fw fa-terminal'></i></span><span>Console</span></button>
       </span>
       <div id='footer-left'>
-        <span id='footer-round'>Round 1</span>
+        <span id='footer-round'>Welcome!</span>
         <br/>
         <span id='footer-logo'>Open Trivia</span>
       </div>

@@ -166,7 +166,7 @@ secSocket.on('question-full', (q) => {
   }
 }); 
 
-secSocket.on('question-list', (l) => {
+secSocket.on('host-question-list', (l) => {
   let curRound = -1; 
   for(let i = 0; i < l.length; i++){
     if(l[i].r !== curRound) {
@@ -179,6 +179,18 @@ secSocket.on('question-list', (l) => {
     $('#sel-questions')[0].insertAdjacentHTML('beforeEnd', `<option value='${i}'>R${l[i].r} Q${l[i].q}</option>`); 
   }
   $('#sel-questions')[0].insertAdjacentHTML('beforeEnd', `</optgroup>`);
+})
+
+secSocket.on('host-round-info', (data) => {
+  $('#p-currentRound').text(data.current); 
+  let arr = data.scoringPolicy; 
+  for (let i = 0; i < arr.length; i++) {
+    $('#sel-round').append(`<option value='${i}'>Round ${arr[i].roundName}</option>`); 
+  }
+}); 
+
+$('#btn-loadRound').on('click', () => {
+  secSocket.emit('host-setScoringPolicy', parseInt($('#sel-round').val()));
 })
 
 function updateAnn(val) {

@@ -2,6 +2,10 @@ html {
   cursor: default;
 }
 
+a:hover {
+  cursor: pointer;
+}
+
 #bk {
   background-image: url(../images/bk.jpg);
 }
@@ -161,4 +165,21 @@ sup {
 .bk-connector .bk-cr.bk-db {
   height: 100%;
   border-bottom: 1px dashed #fff;
+}
+
+/* Colored text */
+.text-gray {
+  color: #aaa;
+}
+
+.text-green {
+  color: #bfb; 
+}
+
+.text-yellow {
+  color: #ffb; 
+}
+
+.text-blue {
+  color: #bdf; 
 }

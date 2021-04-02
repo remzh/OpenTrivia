@@ -11,3 +11,12 @@ socket.on('divergence-value', data => {
   $("#divergence-header-right").text(data.divergenceKey); 
   $("#divergence-value").text(data.divergenceValue); 
 }); 
+
+socket.on('divergence-points', pts => {
+  if (pts > 0) {
+    $('#sa-right-score span span').text(pts); 
+    $('#sa-right-score').show(); 
+  } else {
+    $('#sa-wrong').show(); 
+  }
+})

@@ -46,6 +46,9 @@
       <div class='col'>
         <h2>Control Panel:</h2>
         <span style='background: #964c4c; padding: 4px 6px'><i class='fas fa-exclamation-triangle'></i> Do NOT use this page unless you know <b>exactly</b> what you're doing.</span>
+        <h3>Start a Round</h3>
+        <p>Current: <b id='p-currentRound'>...</b></p>
+        <select id='sel-round'></select> <button id='btn-loadRound'>Load</button>
         <h3>Override Defaults</h3>
         <select id='sel-questions'></select> <button id='btn-loadQuestion'>Load</button> <button id='btn-loadNextQuestion'>Load Next</button><br/>
         <input type='number' id='i-timer' style='width: 40px'/> <button id='btn-startTimer'>Start Timer</button> <button id='btn-stopTimer'>Pause Timer</button>
@@ -152,7 +155,7 @@
     <br/><br/>
     <div id='snackbar'></div>
     <div id='footer'>
-      <a target='_blank' href='https://github.com/Ryan778/opentrivia'>OpenTrivia</a> &copy; 2020 Ryan Zhang.
+      <a target='_blank' href='https://github.com/Ryan778/opentrivia'>OpenTrivia</a> &copy; 2021 Ryan Zhang.
       <span class='right'><a href='#' onclick='logger.open()'>Open Console</a></span>
     </div>
   </body>

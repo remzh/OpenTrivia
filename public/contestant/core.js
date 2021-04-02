@@ -9,7 +9,7 @@
  */
 
 let socket = io({
-  transports: ['websocket']
+  transports: ['websocket', 'polling']
 });
 let status = 0; // 0 = offline,
 let lastConnected = 0; 
@@ -144,7 +144,7 @@ function checkSA(a, b){
   let lev = new Levenshtein(ans, cor).distance; 
   if(ans.slice(0, 1) !== cor.slice(0, 1)){
     return false; 
-  } else if(lev < 3  || lev === 3 && cor.length > 11){
+  } else if(lev === 0 || lev === 1 && cor.length >= 5 || lev === 2 && cor.length >= 10){
     return true; 
   } else{
     return false; 
@@ -279,7 +279,7 @@ function disableSubmissions() {
     $('.btn-mc').prop('disabled', true);
     $('#btn-mc-submit').hide();
   } else if (question.qType === 'sa') {
-    $('.i-sa').prop('disabled', true);
+    $('#i-sa').prop('disabled', true);
   }
 }
 
@@ -415,13 +415,12 @@ socket.on('question', (data) => {
       break; 
     case 'md': 
       $('#q-md').show(); 
+      question.selectMultiple = false; 
       $('#btn-r').prop('disabled', false).removeClass('selected correct').html(`<b><i class='far fa-check-circle'></i></b> My team's ready!`);
   }
   if(!data.active){
     $('#q-num').hide(); 
     $('#q-stop').show(); 
-    // $('.btn-mc').prop('disabled', true); 
-    // $('#i-sa').prop('disabled', true); 
     disableSubmissions(); 
   }
 })
@@ -464,18 +463,6 @@ socket.on('answer', (ans) => {
         }
       }
     }
-
-    // let sel = $('.selected')[0].id.slice(4); 
-    // if(sel === ans){
-    //   $('.selected').addClass('correct');
-    //   $('.selected').children('b').html(`<i class='fas fa-check'></i>`); 
-    // } else{
-    //   $('.selected').addClass('incorrect'); 
-    //   $('.selected').children('b').html(`<i class='fas fa-times'></i>`); 
-    //   if ($('#btn-'+ans)[0]) {
-    //     $('#btn-'+ans).children('b').html(`<i class='fas fa-check'></i>`); 
-    //   }
-    // }
   } else if(question.qType === 'sa' || question.qType === 'bz'){
     // $('#i-sa').prop('disabled', true); 
     $('#i-sa').val($('#i-sa').prop('placeholder')); 
@@ -497,7 +484,6 @@ socket.on('answer-ack', (ack) => {
     if(question.qType === 'mc') {
       question.mc_selected = ack.selected ? ack.selected.split('') : []; 
       updateMC(); 
-      // $(`#btn-${ack.selected}`).prop('disabled', true).addClass('selected'); 
     } else if (question.qType === 'md') {
       $(`#btn-r`).prop('disabled', true).addClass('selected correct').children('b').html(`<i class='fas fa-check'></i>`); 
     }
@@ -612,6 +598,9 @@ socket.on('config', (data) => {
   } else {
     roundConfig.brackets = false; 
     hideBuzzer(); 
+  }
+  if (data.roundName) {
+    $('#footer-round').text(`Round ${data.roundName}`)
   }
 }); 
 
