@@ -377,6 +377,10 @@ $('#btn-divg-scores').on('click', () => {
   secSocket.emit('divergence-showScores'); 
 }); 
 
+$('#btn-divg-continueSlow').on('click', () => {
+  secSocket.emit('divergence-continueSlow');
+}); 
+
 // utilities + general (not socket.io-specific)
 
 $('#i-ann-template').on('change', () => {

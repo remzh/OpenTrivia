@@ -407,7 +407,7 @@ let round = {
     users: 'bk.jpg'
   }, 
   questionModifiers: {
-    slow: true
+    slow: false
   }, 
   brackets: {
     active: false
@@ -1187,6 +1187,10 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
     divergence.sendScores(io, round.divergence.teams, teamOutput); 
   }); 
 
+  socket.on('divergence-continueSlow', function() {
+    io.of('secure').emit('divergence-continueQuestion'); 
+  }); 
+
   socket.on('sp-slides-finished', function() {
     question.inProgress = false; 
   }); 
@@ -1346,6 +1350,19 @@ io.of('/').use(function(socket, next){
       }); 
     }
   }); 
+
+  socket.on('divergence-buzz', async function() {
+    if(!socket.handshake.session.user || !question.active || round.divergence.teams.indexOf(socket.handshake.session.user.TeamID) === -1){
+      socket.emit('divergence-buzzer-ack', {ok: false}); 
+      return; 
+    }
+    io.of('secure').emit('divergence-showBuzz', {
+      interrupt: question.inProgress, 
+      team: socket.handshake.session.user.TeamName, 
+      name: socket.handshake.session.user.name ? socket.handshake.session.user.name : socket.handshake.session.user.TeamID
+    });
+    teamBroadcast(socket, 'divergence-buzzer-ack', {ok: true}); 
+  });
   
   socket.on('ac-blur', function(){
     if (question.active) {

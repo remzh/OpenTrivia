@@ -390,3 +390,16 @@ h1 span{
   margin-left: 80px;
   font-size: 1.2rem;
 }
+
+/* Divergence */
+.divg-blue {
+  background: #34349ba4; 
+  padding: 4px 6px; 
+  font-size: 85%;
+}
+
+.divg-red {
+  background: #a33838a4; 
+  padding: 4px 6px; 
+  font-size: 85%;
+}

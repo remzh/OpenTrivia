@@ -31,3 +31,14 @@
 #divergence-header-right, #divergence-value {
   float: right;
 }
+
+#divg-buzzer {
+  margin-top: 8px;
+  width: 100%;
+  height: 120px;
+  text-align: center;
+}
+
+#divg-buzzer:not(.blue):not(.light-blue)[disabled] {
+  color: #888;
+}

@@ -100,7 +100,8 @@ function updateQuestion(data){
   $('#question').show().css('font-size', '3.5rem'); 
   if (data.slow) {
     $('#question').html(`<span id='q-sp-slow1'></span><span id='q-sp-slow2' class='blurred'></span>`); 
-    $('#q-sp-slow2').text(data.question); 
+    $('#q-sp-slow2').html(data.question); 
+    sp_slowPaused = false; 
     displaySlowQuestion(); 
   }
   else if (data.question.indexOf('|') === -1) {
@@ -181,8 +182,9 @@ function updateQuestion(data){
   $('#q-details').css('height', `${window.innerHeight - $('#question')[0].offsetHeight - 130}px`); 
 }
 
+let sp_slowPaused = false; 
 function displaySlowQuestion() {
-  if (1) {
+  if (!sp_slowPaused) {
     let time = 80; 
     let textLeft = $('#q-sp-slow2').text(); 
     if (textLeft.length === 0) {
@@ -195,9 +197,9 @@ function displaySlowQuestion() {
     if (['.', ',', ':', ';'].indexOf(char) !== -1) {
       time = 580; 
     }
-    $('#q-sp-slow1').text($('#q-sp-slow1').text() + char); 
+    $('#q-sp-slow1').html($('#q-sp-slow1').html() + char); 
     // console.log(textLeft); 
-    $('#q-sp-slow2').text(textLeft.slice(1)); 
+    $('#q-sp-slow2').html(textLeft.slice(1)); 
     setTimeout(displaySlowQuestion, time); 
   }
 }
@@ -268,6 +270,7 @@ secSocket.on('question-full', (data) => {
   $('#q-stats-answer span').css('opacity', 0);
 
   if(data.image){
+    $('#image').css('filter', ''); 
     imagePlaceholder = new Image; 
     Promise.all([Promise.race([new Promise((res) => {
       imagePlaceholder.onload = res; 
@@ -349,6 +352,23 @@ socket.on('timer', (t) => {
   else{
     $('#timer').removeClass('timer-low')}
 }); 
+
+secSocket.on('divergence-showBuzz', (data) => {
+  if (data.interrupt) {
+    sp_slowPaused = true; 
+  }
+  if ($('#q-sp-slow1').length === 1) {
+    $('#q-sp-slow1').append(`<span class='divg-${data.interrupt?'red':'blue'}'><i class='fas fa-bell'></i> ${data.name}</span>`);
+  } else {
+    $('#question').append(`<span class='divg-blue'><i class='fas fa-bell'></i> ${data.name}</span>`); 
+  }
+});
+
+secSocket.on('divergence-continueQuestion', () => {
+  console.log('yay'); 
+  sp_slowPaused = false; 
+  displaySlowQuestion(); 
+})
 
 window.onresize = function(){
   $('#q-details').css('height', `${window.innerHeight - $('#question')[0].offsetHeight - 130}px`); 
