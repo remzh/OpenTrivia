@@ -166,7 +166,7 @@ secSocket.on('question-full', (q) => {
   }
 }); 
 
-secSocket.on('question-list', (l) => {
+secSocket.on('host-question-list', (l) => {
   let curRound = -1; 
   for(let i = 0; i < l.length; i++){
     if(l[i].r !== curRound) {
@@ -179,6 +179,18 @@ secSocket.on('question-list', (l) => {
     $('#sel-questions')[0].insertAdjacentHTML('beforeEnd', `<option value='${i}'>R${l[i].r} Q${l[i].q}</option>`); 
   }
   $('#sel-questions')[0].insertAdjacentHTML('beforeEnd', `</optgroup>`);
+})
+
+secSocket.on('host-round-info', (data) => {
+  $('#p-currentRound').text(data.current); 
+  let arr = data.scoringPolicy; 
+  for (let i = 0; i < arr.length; i++) {
+    $('#sel-round').append(`<option value='${i}'>Round ${arr[i].roundName}</option>`); 
+  }
+}); 
+
+$('#btn-loadRound').on('click', () => {
+  secSocket.emit('host-setScoringPolicy', parseInt($('#sel-round').val()));
 })
 
 function updateAnn(val) {
@@ -324,6 +336,46 @@ $('#btn-adm-rs').on('click', () => {
     secSocket.emit('adm-refreshSheets'); 
   }
 });
+
+// brackets addon (requires lib/brackets.js on the server for this to be functional)
+$('#btn-brk-create').on('click', () => {
+  if (window.confirm('This will overwrite existing brackets. Are you sure?')) {
+    secSocket.emit("adm-initBrackets"); 
+  }
+})
+
+$('#btn-brk-start').on('click', () => {
+  let val = $('#i-brk-brkRound').val() ? parseInt($('#i-brk-brkRound').val()) : 0; 
+  secSocket.emit('adm-startBracketRound', val); 
+});
+
+$('#btn-brk-finish').on('click', () => {
+  let val = $('#i-brk-brkRound').val() ? parseInt($('#i-brk-brkRound').val()) : 0; 
+  secSocket.emit('adm-finishBracketRound', val); 
+});
+
+// divergence addon (requires lib/divergence.js)
+secSocket.on('divergence-config', (data) => {
+  $('#span-divg-enabled').text(data.active?'enabled':'disabled'); 
+  $('#i-divg-teams').val(data.teams.join(', ')); 
+  $('#i-divg-enabled')[0].checked = data.active; 
+  $('#i-divg-type').val(data.type); 
+}); 
+
+$('#btn-divg-update').on('click', () => {
+  let active = $('#i-divg-enabled')[0].checked; 
+  let teams = $('#i-divg-teams').val().replace(/ /g, '').toUpperCase().split(','); 
+  let type = $('#i-divg-type').val(); 
+  secSocket.emit('divergence-update', {
+    active, 
+    teams, 
+    type
+  });
+});
+
+$('#btn-divg-scores').on('click', () => {
+  secSocket.emit('divergence-showScores'); 
+}); 
 
 // utilities + general (not socket.io-specific)
 

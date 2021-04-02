@@ -1,4 +1,11 @@
 {
     // Open port 8100 by default
-    "forwardPorts": [8100]
+	"forwardPorts": [
+		8100
+	],
+	"portsAttributes": {
+		"8100": {
+			"label": "8100 (OpenTrivia)"
+		}
+	}
 }

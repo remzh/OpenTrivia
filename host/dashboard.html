@@ -27,7 +27,7 @@
         <a data-target='advanced' href='#advanced'>Advanced</a>
         <a data-target='scores' href='#scores'>Scores</a>
         <a data-target='admin' href='#admin'>Admin</a>
-        <a data-target='brackets' href='#brackets'>Brackets</a>
+        <a data-target='addons' href='#addons'>Addons</a>
       </div>
     </div>
     <div id='basic' class='container top'>
@@ -46,8 +46,11 @@
       <div class='col'>
         <h2>Control Panel:</h2>
         <span style='background: #964c4c; padding: 4px 6px'><i class='fas fa-exclamation-triangle'></i> Do NOT use this page unless you know <b>exactly</b> what you're doing.</span>
+        <h3>Start a Round</h3>
+        <p>Current: <b id='p-currentRound'>...</b></p>
+        <select id='sel-round'></select> <button id='btn-loadRound'>Load</button>
         <h3>Override Defaults</h3>
-        <select id='sel-questions'></select> <button id='btn-loadQuestion'>Load</button> <button id='btn-loadNextQuestion'>Load Next</button><br/><br/>
+        <select id='sel-questions'></select> <button id='btn-loadQuestion'>Load</button> <button id='btn-loadNextQuestion'>Load Next</button><br/>
         <input type='number' id='i-timer' style='width: 40px'/> <button id='btn-startTimer'>Start Timer</button> <button id='btn-stopTimer'>Pause Timer</button>
         <h3>Announcement Page</h3>
         <input id='i-ann-title' placeholder='Title'/>
@@ -109,8 +112,8 @@
             <select id='adm-bks-users' class='adm-bks'></select>
             <button onclick='secSocket.emit("adm-setBK", 1, $("#adm-bks-users").val())' class='adm-bks'>Set BK (Users)</button>
             <span class='right'>
-              <button id='btn-adm-uc'>UC</button>
-              <button id='btn-adm-rs'><i class='fas fa-exclamation-triangle'></i> RS</button>
+              <button id='btn-adm-uc' title='Override Total Team Count'>TC</button>
+              <button id='btn-adm-rs' title='Reload Question/User Spreadsheets'><i class='fas fa-exclamation-triangle'></i> RS</button>
             </span>
             <hr/>
             <button id='admin-btn-query'>Query Users</button>
@@ -120,24 +123,39 @@
         </div>
       </div>
     </div>
-    <div id='brackets' class='container top'>
+    <div id='addons' class='container top'>
       <div class='col'>
-        <h2>Bracket Controls</h2>
-        <button onclick='secSocket.emit("adm-initBrackets")'>Create Brackets</button>
-        <button onclick='secSocket.emit("adm-startBracketRound")'>Start Round</button>
+        <h2>Addon: Bracket Controls</h2>
+        <a target='_blank' href='../brackets/public.html'>Open Brackets</a><br/>
+        <button id='btn-brk-create'>Create Brackets</button>
+        <br/><br/>
+        <span>Bracket Round: </span><input type='number' id='i-brk-brkRound' placeholder='0' style='width: 60px'/>
+        <br/>
+        <button id='btn-brk-start'>Start Round</button>
+        <button id='btn-brk-finish'>Finish Round</button>
+        <h2>Addon: Divergence</h2>
+        <p>Divergence is currently <b id='span-divg-enabled'>disabled</b>.</p>
+        <br/>
+        <span>Type: </span><input type='text' id='i-divg-type' placeholder='sp1/sp2'/>
+        <br/><br/>
+        <p>Current teams:</p>
+        <textarea id='i-divg-teams' placeholder='Teams'></textarea><br/>
+        <span><input id='i-divg-enabled' type='checkbox'><label for='i-divg-enabled'>Enabled</label></span>
+        <button id='btn-divg-update'>Update</button><br/>
+        <button id='btn-divg-scores'>Show Scores (sp1)</button>
       </div>
       <div class='col'>
         <h2>Bracket Info</h2>
         <div class='left'>
           <!-- <p>5 brackets formed, 78 teams assigned<br/>Yay!</p> -->
-          <p>No updates yet.</p>
+          <p id='p-brk-status'>No updates yet.</p>
         </div>
       </div>
     </div>
     <br/><br/>
     <div id='snackbar'></div>
     <div id='footer'>
-      <a target='_blank' href='https://github.com/Ryan778/opentrivia'>OpenTrivia</a> &copy; 2020 Ryan Zhang.
+      <a target='_blank' href='https://github.com/Ryan778/opentrivia'>OpenTrivia</a> &copy; 2021 Ryan Zhang.
       <span class='right'><a href='#' onclick='logger.open()'>Open Console</a></span>
     </div>
   </body>

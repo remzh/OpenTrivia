@@ -2,6 +2,10 @@ html {
   cursor: default;
 }
 
+a:hover {
+  cursor: pointer;
+}
+
 #bk {
   background-image: url(../images/bk.jpg);
 }
@@ -34,6 +38,14 @@ html {
   padding: 1rem;
 }
 
+#bracket-inner h2, #bracket-inner p {
+  text-shadow: 1px 1px 4px #303030;
+  font-weight: 400;
+}
+#bracket-inner h2 {
+  margin: 8px 0;
+}
+
 .bk-round {
   display: inline-block;
   width: 18.0rem;
@@ -44,6 +56,16 @@ html {
   display: inline-block;
   width: 3.0rem;
   /* overflow: hidden; */
+}
+
+/* Landing screen */
+.landing-btn {
+  display: block;
+  width: 100%; 
+  max-width: 400px;
+  font-size: 1.4rem;
+  padding: 4px 12px;
+  margin-bottom: 8px;
 }
 
 /** Match information (box, 18x6rem)*/
@@ -143,4 +165,21 @@ sup {
 .bk-connector .bk-cr.bk-db {
   height: 100%;
   border-bottom: 1px dashed #fff;
+}
+
+/* Colored text */
+.text-gray {
+  color: #aaa;
+}
+
+.text-green {
+  color: #bfb; 
+}
+
+.text-yellow {
+  color: #ffb; 
+}
+
+.text-blue {
+  color: #bdf; 
 }

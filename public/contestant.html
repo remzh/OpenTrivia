@@ -7,14 +7,17 @@
     <link rel='stylesheet' href='main.css'/>
     <link rel='stylesheet' href='contestant/core.css'/>
     <link rel='stylesheet' href='contestant/realtime.css'/>
+    <link rel='stylesheet' href='contestant/divergence.css'/>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/levenshtein/1.0.5/levenshtein.min.js' integrity='sha256-5RTt+B1DlqFis/ipkeYZ+1D8500HFobtz2aBJnhKRsA=' crossorigin='anonymous'></script>
     <script defer src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js' integrity='sha256-4iQZ6BVL4qNKlQ27TExEhBN1HFPvAvAMbFavKKosSWQ=' crossorigin='anonymous'></script>
     <script defer src='https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js' integrity='sha256-vrn14y7WH7zgEElyQqm2uCGSQrX/xjYDjniRUQx3NyU=' crossorigin='anonymous'></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/js/all.min.js' integrity='sha256-qM7QTJSlvtPSxVRjVWNM2OfTAz/3k5ovHOKmKXuYMO4=' crossorigin='anonymous'></script>
+    <script defer src='https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.1/howler.core.min.js' integrity='sha512-wzeZyTAYqFv+VKD/mGwXREXBIzy4pE3E617SBskkLFuYcPQgX6px2Il3gwZwXb9DuyjYPIsbTEO/6c3+mUvoPA==' crossorigin='anonymous'></script>
     <script defer src='/socket.io/socket.io.js'></script>
     <script defer src='logger.js'></script>
     <script defer src='contestant/core.js'></script>
     <script defer src='contestant/realtime.js'></script>
+    <script defer src='contestant/divergence.js'></script>
   </head>
   <body>
     <div id='bk' style='background: linear-gradient(120deg, #b8b8b8, #585858)'></div>
@@ -34,6 +37,14 @@
           <div id='buzzer-blue' class='buzzer'><div></div></div>
           <div id='buzzer-red' class='buzzer'><div></div></div>
           <div id='buzzer-score'><span id='buzzer-score-blue'>0</span> | <span id='buzzer-score-red'>0</span></div>
+          <!-- <div id='buzzer-scoreInfo'>
+            <b class='buzzer-text-blue buzzer-text'>[+10 pts]</b> Your team answered correctly first!<br/>
+          </div> -->
+        </div>
+        <div id='divergence-outer'>
+          <p id='divergence-header'>Divergence: <span id='divergence-header-right'></span></p>
+          <p id='divergence-name'></p>
+          <p id='divergence-value'></p>
         </div>
         <div id='q-header-wrapper' class='q'>
           <h1 id='q-num' class='q'></h1>
@@ -69,10 +80,13 @@
         </div>
         <div id='q-sa' class='q'>
           <input id='i-sa' maxlength='32' placeholder='Type here...'/>
+        </div>
+        <div id='q-res'>
           <p id='sa-wrong-timed' class='q'><span class='q-sa incorrect'><b>Incorrect</b>, <span id='q-sa-incorrect-msg'>try again</span>.</span></p>
           <p id='sa-right-timed' class='q'><span class='q-sa correct'><i class='fas fa-check'></i> <b>Correct!</b> Time: <span id='sa-time'></span></span></p>
           <p id='sa-wrong' class='q'><span class='q-sa incorrect'><b>Oops.</b> Next time!</span></p>
           <p id='sa-right' class='q'><span class='q-sa correct'><i class='fas fa-check'></i> <b>Correct!</b> Nice job.</span></p>
+          <p id='sa-right-score' class='q'><span class='q-sa correct'><i class='fas fa-check'></i> <b>Correct!</b> You got <span></span> points.</p>
           <p id='sa-buzzer' class='q q-sa light-blue'>
             <span id='sa-buzzer-msg'></span><br/>
             <span>Your team gained <b id='sa-buzzer-points'></b> points.</span>
@@ -103,25 +117,70 @@
     <div id='snackbar-sm' class='snackbar'></div>
     <div id='footer'>
       <span class='right'>
+        <button id='btn-showChat' class='btn-external' onclick='rt_showChatOverlay()' style='display: none'><span><i class='fas fa-fw fa-comments'></i></span><span>Chat</span></button>
         <button class='btn-external' onclick='showExternal("/scores")'><span><i class='fas fa-fw fa-list-ol'></i></span><span>Scores</span></button>
         <button class='btn-external' onclick='showExternal("/brackets/public.html")'><span><i class='fas fa-fw fa-medal'></i></span><span>Brackets</span></button>
         <button class='btn-external' onclick='showExternal("/about")'><span><i class='fas fa-fw fa-info-circle'></i></span><span>About</span></button>
         <button class='btn-external dev-mode-only' onclick='logger.open()'><span><i class='fas fa-fw fa-terminal'></i></span><span>Console</span></button>
       </span>
       <div id='footer-left'>
-        <span id='footer-round'>Round 1</span>
+        <span id='footer-round'>Welcome!</span>
         <br/>
         <span id='footer-logo'>Open Trivia</span>
       </div>
     </div>
     <div id='bracket-overlay'>
       <div id='bracket-overlay-inner'>
-        <h2>Welcome to <b id='brko-round'></b>!</h2>
-        <hr/>
-        <h2>You're up against</h2>
-        <h1 id='brko-opponent'></h1>
-        <br/>
+        <div id='bracket-overlay-intro' class='bracket-overlay-msg'>
+          <h2>Welcome to <b id='brko-round'></b>!</h2>
+          <hr/>
+          <div id='brko-opponent'>
+            <h2>You're up against</h2>
+            <h1 id='brko-opponent-name'></h1>
+            <p id='brko-opponent-members'></p>
+          </div>
+          <div id='brko-bye'>
+            <h2>You got a bye round!</h2>
+            <p>Due to an uneven number of teams, you've been placed into a bye round.<br/>Regardless of how well (or poorly) you do, you'll automatically "win" this matchup. Try to maximize the points you get!</p>
+          </div>
+          <br/>
+        </div>
+        <div id='bracket-overlay-results' class='bracket-overlay-msg'>
+          <h2>Round Complete.</h2>
+          <div id='bracket-overlay-results-win' class='bracket-overlay-msg'>
+            <p class='chat-blue'><i class='fas fa-check'></i> Congratulations!</p>
+            <p>Your team has won the round.</p>
+          </div>
+          <div id='bracket-overlay-results-loss' class='bracket-overlay-msg'>
+            <p class='chat-blue'><i class='fas fa-times'></i> Nice Try.</p>
+            <p>Your team has lost the round.</p>
+          </div>
+          <hr/>
+          <p><b>Final Score: </b><span id='bracket-overlay-results-score'></span></p>
+          <p>Check the "Brackets" window to see updated brackets!</p>
+        </div>
         <button class='btn-lg' onclick='hideBracketOverlay()'>Dismiss</button>
+      </div>
+      <!-- <audio id='brko-buzz-1' src='sounds/buzz1.mp3'></audio>
+      <audio id='brko-buzz-2' src='sounds/buzz2.mp3'></audio> -->
+    </div>
+    <div id='bracket-chat-overlay' class='module-overlay'>
+      <div class='module-inner'>
+        <div id='bracket-chat-display'>
+          <div id='bracket-chat-header'>Chat</div>
+          <div id='bracket-chat-messages'>
+            <p><b class='chat-yellow'>System</b><br/>Welcome to Chat! Messages sent here can only be seen by your team and your opponent team. We'll also keep track of score for you here!</p>
+            <p><b class='chat-yellow'>System</b><br/>Do not send any personal information. Messages are logged to deter abuse.</p>
+          </div>
+          <input id='bracket-chat-input' placeholder='Type a message...'/>
+        </div>
+        <div class='module-draggable'></div>
+        <div class='module-actions'>
+          <button title='Hide Window' onclick='rt_hideChatOverlay()'><i class='fas fa-fw fa-times'></i></button>
+        </div>
+        <div class='module-resize'>
+          <i class='fas fa-chevron-right' data-fa-transform='rotate-45'></i>
+        </div>
       </div>
     </div>
   </body>

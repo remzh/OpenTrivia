@@ -24,10 +24,15 @@ function getOrdinal(i) {
   return i + '<sup>th</sup>';
 }
 
-function formatName(n, index) {
+function formatName(n, index, seed) {
   if (n !== -1 && typeof n !== 'undefined') {
     // return `<span class='fa-layers fa-fw'><i class='fas fa-circle' style='color: #fff000'></i><i class='fas fa-heart' style='color: tomato' data-fa-transform='shrink-6'></i></span> Team ${n} Fjalj FDjieo MEewio Faiww`; 
-    return `Team ${n}`; 
+    if (seed) {
+      return seed.tn; 
+    } else {
+      return `<i class='text-gray'>Bye Round</i>`; 
+    }
+    // return `Team ${n}`; 
   }
   if (typeof index !== 'undefined') {
     // return `Game ${index+1}`;
@@ -49,13 +54,18 @@ function formatScore(match, n) {
     sel = match.scores[0]; 
     other = match.scores[1]; 
   } else {
-    sel = match.scores[0]; 
-    other = match.scores[1]; 
+    sel = match.scores[1]; 
+    other = match.scores[0]; 
   }
-  if (sel === -1 || typeof sel === 'undefined') {
+  if (sel === 0 || typeof sel === 'undefined') {
     return `<span class='text-gray'>-</span>`
   } else {
-    return `<span class='text-accent-win'>${sel}</span>`
+    if (sel > other) {
+      return `<b class='text-green'>${sel}</b>`
+    } else if (other > sel) {
+      return `<span class='text-yellow'>${sel}</span>`
+    }
+    return `<span>${sel}</span>`
   }
 }
 
@@ -116,16 +126,17 @@ function renderSpacingTemplate(item) {
 /**
  * Renders a provided bracket.
  * @param {array} data - a single bracket from /brackets/data [(round) [{(matchup)}, {matchup}, ...]]
+ * @param {array} seeds - array of which team is at what seed
  * @returns {undefined}
  */
-function renderBracket(data, names) {
+function renderBracket(data, seeds) {
   let out = ''; 
   for (let i = 0; i < data.length; i++) {
     let round = data[i]; 
     let matchups = round.map((match, index) => {
       return `<div class='bk-match-outer' style='margin-top: ${calcMatchOffset(i, index)}'>\
-      <div class='bk-match-inner bk-match-top'><div class='bk-match-inner-main'>${formatName(match.seeds[0], index)}</div><div class='bk-match-inner-score'>${formatScore(match, 1)}</div><div class='bk-match-inner-sub'>${formatPos(match.seeds[0])}</div></div>\
-      <div class='bk-match-inner bk-match-btm'><div class='bk-match-inner-main'>${formatName(match.seeds[1], index)}</div><div class='bk-match-inner-score'>${formatScore(match, 2)}</div><div class='bk-match-inner-sub'>${formatPos(match.seeds[1])}</div></div>\
+      <div class='bk-match-inner bk-match-top'><div class='bk-match-inner-main'>${formatName(match.seeds[0], index, seeds[match.seeds[0]])}</div><div class='bk-match-inner-score'>${formatScore(match, 1)}</div><div class='bk-match-inner-sub'>${formatPos(match.seeds[0])}</div></div>\
+      <div class='bk-match-inner bk-match-btm'><div class='bk-match-inner-main'>${formatName(match.seeds[1], index, seeds[match.seeds[1]])}</div><div class='bk-match-inner-score'>${formatScore(match, 2)}</div><div class='bk-match-inner-sub'>${formatPos(match.seeds[1])}</div></div>\
       </div>`
     })
     out += `<section id='bk-round-${i+1}' class='bk-round'>${matchups.join('')}</section>`; 
@@ -137,16 +148,39 @@ function renderBracket(data, names) {
   $('#bracket-inner').html(out); 
 }
 
-async function getBrackets() {
+let initialHTML = false; 
+let bracketNames = ['First Bracket', 'Second Bracket', 'Third Bracket', 'Fourth Bracket']; 
+async function getBrackets(bracket) {
+  if (!initialHTML) {
+    initialHTML = $('#bracket-inner').html(); 
+  }
+  let res = await fetch(`data?bracket=${bracket}`).then(r => r.json()); 
+  renderBracket(res.data, res.seeds);
+  $('#bracket-inner').prepend(`<h2>${bracketNames[bracket]}</h2><p>Scroll left/right to see the different rounds.<br/><a onclick='showBracketLanding()'>Return to Bracket Selection</a></p>`)
+}
+
+function showBracketLanding() {
+  $('#bracket-inner').html(initialHTML); 
+}
+
+function init() {
   const urlParams = new URLSearchParams(location.search);
   if (urlParams.get('iframe') === '1') {
     $('#footer').hide(); 
     $('#bracket-outer').css('height', 'calc(100% - 82px)');
   }
-
-  let res = await fetch('data').then(r => r.json()); 
-  renderBracket(res[0]);
-  // console.log(res); 
 }
 
-window.onload = getBrackets; 
+async function queryTeamBracket() {
+  $('#p-teamBracket').text('Please wait...'); 
+  let res = await fetch(`findTeamBracket`).then(r => r.json()); 
+  if (res.ok) {
+    $('#p-teamBracket').html(`Hi <span class='text-blue'>${res.tn}</span>! You're in the <b class='text-green'>${bracketNames[res.bracketIndex]}</b>.`); 
+  } else if (res.msg) {
+    $('#p-teamBracket').text(res.msg); 
+  } else {
+    $('#p-teamBracket').text('Failed to fetch for an unknown reason.'); 
+  }
+}
+
+window.onload = init; 

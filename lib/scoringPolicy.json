@@ -1,36 +1,49 @@
 [{
-  "round": 0, 
+  "roundName": "0", 
+  "userBackground": "bk.jpg", 
+  "slideBackground": "nature.jpg", 
+  "canChangeAnswer": true, 
+  "brackets": false
+}, {
   "roundName": "1", 
-  "brackets": false, 
-  "multiplier": 10
+  "userBackground": "bk.jpg", 
+  "slideBackground": "nature.jpg", 
+  "canChangeAnswer": true, 
+  "brackets": false
 }, {
-  "round": 1, 
-  "roundName": "2A", 
-  "brackets": true, 
-  "multiplier": 1
+  "roundName": "2a", 
+  "userBackground": "bk2.jpg", 
+  "slideBackground": "1-city.jpg", 
+  "canChangeAnswer": false, 
+  "brackets": true
 }, {
-  "round": 2, 
-  "roundName": "2B", 
-  "brackets": true, 
-  "multiplier": 1
+  "roundName": "2b", 
+  "userBackground": "bk2.jpg", 
+  "slideBackground": "2-history.jpg", 
+  "canChangeAnswer": false, 
+  "brackets": true
 }, {
-  "round": 3, 
-  "roundName": "2C", 
-  "brackets": true, 
-  "multiplier": 1
+  "roundName": "2c", 
+  "userBackground": "bk2.jpg", 
+  "slideBackground": "3-sports.jpg", 
+  "canChangeAnswer": false, 
+  "brackets": true
+}, { 
+  "roundName": "2d", 
+  "userBackground": "bk2.jpg", 
+  "slideBackground": "3-sports.jpg", 
+  "canChangeAnswer": false, 
+  "brackets": true
 }, {
-  "round": 4, 
-  "roundName": "2D", 
-  "brackets": true, 
-  "multiplier": 1
-}, {
-  "round": 5, 
   "roundName": "3", 
-  "brackets": false, 
-  "multiplier": 10
+  "userBackground": "bk3.jpg", 
+  "slideBackground": "5-volcano.jpg", 
+  "canChangeAnswer": true, 
+  "slow": true
 }, {
-  "round": 6, 
-  "roundName": "4 (Finals)", 
-  "brackets": false, 
-  "multiplier": 1
+  "roundName": "4", 
+  "userBackground": "bk4.jpg", 
+  "slideBackground": "6-nightcity.jpg", 
+  "canChangeAnswer": true, 
+  "slow": true
 }]

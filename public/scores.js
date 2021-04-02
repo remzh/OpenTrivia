@@ -1,9 +1,11 @@
 function getType(i) {
   switch (i) {
     case 'T': 
-      return 'Test Team'; 
+      return 'Teacher Team'; 
     case 'S': 
       return 'Student Team';
+    case 'N': 
+      return 'Non-Fossil Student Team';
     case 'A': 
       return 'Alumni Team';
     default: 

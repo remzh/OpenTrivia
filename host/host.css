@@ -4,6 +4,11 @@ html{
 
 /* General CSS */
 
+button, input, select, textarea {
+  padding: 4px 8px;
+  font-size: 14px;
+}
+
 .container.top{
   display: none;
   flex-wrap: wrap;
@@ -14,6 +19,7 @@ html{
   width: calc(50% - 40px); 
   padding: 10px 20px;
   display: inline-block;
+  line-height: 1;
 }
 
 .col-l{
@@ -38,6 +44,12 @@ p{
 
 input::placeholder {
   color: #bbb;
+}
+
+/* Add element spacing */
+#advanced * button, #addons * button {
+  margin-top: 6px;
+  margin-bottom: 4px;
 }
 
 /* Scoring */
