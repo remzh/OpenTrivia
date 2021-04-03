@@ -128,7 +128,7 @@ button.btn-external:active {
   margin-top: 18px;
 }
 
-#q-num, #q-stop, #q-msg, #q-sp p, #q-md h2, #q-md p, #q-scores *{
+#q-num, #q-stop, #q-msg, #q-sp p, #q-md h2, #q-md p, #q-scores *, #q-buzzer *{
   text-shadow: 1px 1px 3px #444;
 }
 

@@ -378,10 +378,6 @@ socket.on('status', (res) => {
 socket.on('question', (data) => {
   logger.info('recieved question: '+JSON.stringify(data));
 
-  if (roundConfig.brackets) {
-    resetBuzzer(); 
-  }
-
   $('.q').hide(); 
   $('#q-header-wrapper').show(); 
   $('#q-timer').css('background', ''); 
@@ -391,6 +387,14 @@ socket.on('question', (data) => {
     $('#q-num').show(); 
     $('#q-num').text('Question ' + data.num); 
   }
+
+  if (roundConfig.brackets) {
+    resetBuzzer(); 
+  } else if (divg_buzzerMode) {
+    divg_resetBuzzer(); 
+    return; 
+  }
+
   switch(data.type){
     case 'mc': 
       resetMC(data.selectMultiple ? true : false);
@@ -446,6 +450,12 @@ socket.on('scores-release', () => {
 
 socket.on('answer', (ans) => {
   logger.info('recieved question answer: '+ans); 
+
+  if (divg_buzzerMode) {
+    $('#divg-buzzer').prop('disabled', true); 
+    return; 
+  }
+
   disableSubmissions(); 
   if(question.qType === 'mc'){
     let answer = ans.toLowerCase().split(''), selected = question.mc_selected, all = ['a', 'b', 'c', 'd', 'e']; 

@@ -407,7 +407,7 @@ let round = {
     users: 'bk.jpg'
   }, 
   questionModifiers: {
-    slow: true
+    slow: false
   }, 
   brackets: {
     active: false
@@ -691,7 +691,7 @@ async function processAnswer(team, submission, socket){
   // Give points if response is correct
   if (correct) {
     question.scores[tid] = await calcPoints(tid); 
-    console.log('gave score: ', question.scores[tid])
+    // console.log('gave score: ', question.scores[tid])
   } else {
     question.scores[tid] = 0; 
   }
@@ -1067,7 +1067,6 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
   socket.on('adm-getSockets', async function(){
     let sockets = io.of('/').in('users').sockets; 
     let hostSockets = io.of('/secure').sockets; 
-    // console.log(io.of('/').in('users').sockets);
 
     let userCount = sockets.size;
 
@@ -1185,6 +1184,40 @@ nsp.use(sharedsession(session(sess))).use(function(socket, next){
       teamOutput[team.t] = team.s ? team.s.s : -1; 
     }
     divergence.sendScores(io, round.divergence.teams, teamOutput); 
+  }); 
+
+  socket.on('divergence-continueSlow', function() {
+    io.of('secure').emit('divergence-continueQuestion'); 
+  }); 
+
+  socket.on('divergence-showFinalistStandings', function(text) {
+    try {
+      let data = text.split('\n'); 
+      let out = []; 
+      for (let input of data) {
+        let i = input.trim().split(';');
+        let teamName = userdb.find(obj => {
+          return obj.TeamID === i[0]
+        }); 
+        if (teamName && teamName.TeamName) {
+          teamName = teamName.TeamName; 
+        } else {
+          teamName = i[0]; 
+        }
+        out.push({
+          tid: i[0], 
+          teamName, 
+          score: i[1]
+        }); 
+      }
+      io.of('secure').emit('divergence-renderScores', out); 
+    } catch (err) {
+      socket.emit('update', err); 
+    }
+  }); 
+
+  socket.on('divergence-hideFinalistStandings', function() {
+    io.of('secure').emit('divergence-renderScores', false); 
   }); 
 
   socket.on('sp-slides-finished', function() {
@@ -1346,6 +1379,20 @@ io.of('/').use(function(socket, next){
       }); 
     }
   }); 
+
+  socket.on('divergence-buzz', async function() {
+    if(!socket.handshake.session.user || !question.active || round.divergence.teams.indexOf(socket.handshake.session.user.TeamID) === -1){
+      socket.emit('divergence-buzzer-ack', {ok: false}); 
+      return; 
+    }
+    io.of('secure').emit('divergence-showBuzz', {
+      interrupt: question.inProgress, 
+      team: socket.handshake.session.user.TeamName, 
+      tid: socket.handshake.session.user.TeamID, 
+      name: socket.handshake.session.user.name ? socket.handshake.session.user.name : socket.handshake.session.user.TeamID
+    });
+    teamBroadcast(socket, 'divergence-buzzer-ack', {ok: true}); 
+  });
   
   socket.on('ac-blur', function(){
     if (question.active) {

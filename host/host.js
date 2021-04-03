@@ -377,6 +377,19 @@ $('#btn-divg-scores').on('click', () => {
   secSocket.emit('divergence-showScores'); 
 }); 
 
+$('#btn-divg-continueSlow').on('click', () => {
+  secSocket.emit('divergence-continueSlow');
+}); 
+
+$('#btn-divg-updateFinalistScores').on('click', () => {
+  let val = $('#i-divg-finalistScores').val(); 
+  secSocket.emit('divergence-showFinalistStandings', val); 
+});
+
+$('#btn-divg-hideFinalistScores').on('click', () => {
+  secSocket.emit('divergence-hideFinalistStandings'); 
+});
+
 // utilities + general (not socket.io-specific)
 
 $('#i-ann-template').on('change', () => {

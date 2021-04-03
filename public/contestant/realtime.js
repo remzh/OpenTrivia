@@ -21,6 +21,19 @@ let _sounds = {
   }), 
 }
 
+// Shared across realtime.js and brackets.js (too small to warrant its own file)
+const TEAMPHOTO_BASE_URL = `https://ryanz.blob.core.windows.net/triviaphotos/%t.jpg`; 
+
+function _getTeamPhoto(tid) {
+  return TEAMPHOTO_BASE_URL.replace('%t', tid); 
+}
+
+function _teamPhotoError(ele) {
+  if (ele.src !== 'images/teamPhotoFallback.jpg') {
+    ele.src = 'images/teamPhotoFallback.jpg';
+  }
+}
+
 /**
  * Lights up a buzzer and plays its respective sound
  * @param {boolean} type - true for contestant (blue), false for opponent (red)
@@ -58,7 +71,8 @@ function showBuzzer(scoreBlue=0, scoreRed=0) {
  * Resets and hides the two buzzers at the top
  */
 function hideBuzzer() {
-  $('#buzzers-outer').hide(); 
+  $('#buzzers-outer').hide();
+  $('#btn-showChat').hide();  
   resetBuzzer(); 
 }
 
@@ -66,7 +80,6 @@ socket.on('brackets-newMatch', (data) => {
   logger.info(`[brackets] newMatch: ${JSON.stringify(data)}`); 
   showBuzzer(); 
   roundConfig.brackets = true; 
-  // console.log(data); 
 
   $('#brko-round').text(`Game ${data.round}`); 
   if (data.opponent.bye) {
@@ -77,14 +90,17 @@ socket.on('brackets-newMatch', (data) => {
     $('#brko-opponent').show(); 
     $('#brko-opponent-name').text(data.opponent.tn); 
     $('#brko-opponent-members').text(data.opponent.tm); 
+    $('#brko-opponent-img').prop('src', _getTeamPhoto(data.opponent.t));
   }
   $('.bracket-overlay-msg').hide(); 
   $('#bracket-overlay-intro').show(); 
+  $('#bracket-chat-messages').append(`<p><b class='chat-yellow'>System</b><br/>You are now up against <b class='chat-red'>${data.opponent.tn}</b>.</p>`); 
   showBracketOverlay(); 
 })
 
 socket.on('brackets-endMatch', (data) => {
   logger.info(`[brackets] endMatch: ${JSON.stringify(data)}`); 
+  hideBuzzer(); 
   $('.bracket-overlay-msg').hide(); 
   if (data.winner) {
     $('#bracket-overlay-results-win').show(); 
@@ -132,7 +148,7 @@ $('#bracket-chat-input').on('keypress', (event) => {
       socket.emit('brackets-chat', msg); 
     }
   }
-}); 
+});
 
 socket.on('brackets-msg', (data) => {
   logger.info(`[brackets] msg: ${JSON.stringify(data)}`); 
@@ -149,11 +165,12 @@ socket.on('brackets-msg', (data) => {
       $('#buzzer-score-red').text(data.opponentScore[1]); 
       // let teamMsg = data.teamScore[0] === 10 ? 'Answered correctly first!' : (data.teamScore[0] > 0 ? 'Correct answer, but not first' : 'Incorrect answer.'); 
       // showSnackbar(`[+${data.teamScore[0]}] ${teamMsg}`, 1); 
-      $('#bracket-chat-messages').append(`<p><b class='chat-yellow'>System</b><br/>Your team got ${data.teamScore[0]} points. Total points: ${data.teamScore[1]}.</p>`); 
+      $('#bracket-chat-messages').append(`<p><b class='chat-yellow'>System</b><br/>Your team got <b>${data.teamScore[0]} points</b>. You now have a total of <b>${data.teamScore[1]} points</b>.</p>`); 
     case 'chat': 
       // Chat isn't "trusted", so we have to sanitize it
       $('#bracket-chat-messages').append(`<p><b id='temp-chatSender' class='chat-${data.fromTeam?'blue':'red'}'></b><br/><span id='temp-chatMsg'></span></p>`); 
       $('#temp-chatSender').text(data.sender).prop('id', ''); 
       $('#temp-chatMsg').text(data.msg).prop('id', ''); 
+      $('#bracket-chat-messages')[0].scrollTo(0, 1e10); 
   }
-})
+}); 

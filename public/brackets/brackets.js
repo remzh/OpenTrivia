@@ -3,6 +3,21 @@
  * (C) 2021 Ryan Zhang
  */
 
+let seedData = []; 
+
+// Shared across realtime.js and brackets.js (too small to warrant its own file)
+const TEAMPHOTO_BASE_URL = `https://ryanz.blob.core.windows.net/triviaphotos/%t.jpg`; 
+
+function _getTeamPhoto(tid) {
+  return TEAMPHOTO_BASE_URL.replace('%t', tid); 
+}
+
+function _teamPhotoError(ele) {
+  if (!ele.src || ele.src.indexOf('images/teamPhotoFallback.jpg') === -1) {
+    ele.src = '../images/teamPhotoFallback.jpg';
+  }
+}
+
 /**
  * Adds an ordinal suffix to a number
  * @param {number} i - input number
@@ -135,8 +150,8 @@ function renderBracket(data, seeds) {
     let round = data[i]; 
     let matchups = round.map((match, index) => {
       return `<div class='bk-match-outer' style='margin-top: ${calcMatchOffset(i, index)}'>\
-      <div class='bk-match-inner bk-match-top'><div class='bk-match-inner-main'>${formatName(match.seeds[0], index, seeds[match.seeds[0]])}</div><div class='bk-match-inner-score'>${formatScore(match, 1)}</div><div class='bk-match-inner-sub'>${formatPos(match.seeds[0])}</div></div>\
-      <div class='bk-match-inner bk-match-btm'><div class='bk-match-inner-main'>${formatName(match.seeds[1], index, seeds[match.seeds[1]])}</div><div class='bk-match-inner-score'>${formatScore(match, 2)}</div><div class='bk-match-inner-sub'>${formatPos(match.seeds[1])}</div></div>\
+      <div class='bk-match-inner bk-match-top' onclick='showTeamDetails(${match.seeds[0]})'><div class='bk-match-inner-main'>${formatName(match.seeds[0], index, seeds[match.seeds[0]])}</div><div class='bk-match-inner-score'>${formatScore(match, 1)}</div><div class='bk-match-inner-sub'>${formatPos(match.seeds[0])}</div></div>\
+      <div class='bk-match-inner bk-match-btm' onclick='showTeamDetails(${match.seeds[1]})'><div class='bk-match-inner-main'>${formatName(match.seeds[1], index, seeds[match.seeds[1]])}</div><div class='bk-match-inner-score'>${formatScore(match, 2)}</div><div class='bk-match-inner-sub'>${formatPos(match.seeds[1])}</div></div>\
       </div>`
     })
     out += `<section id='bk-round-${i+1}' class='bk-round'>${matchups.join('')}</section>`; 
@@ -155,6 +170,7 @@ async function getBrackets(bracket) {
     initialHTML = $('#bracket-inner').html(); 
   }
   let res = await fetch(`data?bracket=${bracket}`).then(r => r.json()); 
+  seedData = res.seeds; 
   renderBracket(res.data, res.seeds);
   $('#bracket-inner').prepend(`<h2>${bracketNames[bracket]}</h2><p>Scroll left/right to see the different rounds.<br/><a onclick='showBracketLanding()'>Return to Bracket Selection</a></p>`)
 }
@@ -181,6 +197,30 @@ async function queryTeamBracket() {
   } else {
     $('#p-teamBracket').text('Failed to fetch for an unknown reason.'); 
   }
+}
+
+function showBracketOverlay() {
+  $('#bracket-overlay').show(); 
+  setTimeout(() => {
+    $('#bracket-overlay').css('opacity', 1); 
+  }, 100); 
+}
+
+function hideBracketOverlay() {
+  $('#bracket-overlay').css('opacity', 0); 
+  setTimeout(() => {
+    $('#bracket-overlay').hide(); 
+  }, 320); 
+}
+
+function showTeamDetails(seed) {
+  let team = seedData[seed]; 
+  if (!team) {
+    $('#bracket-overlay-inner').html(`<p>Team data missing.</p><button class='btn-lg' onclick='hideBracketOverlay()'>Dismiss</button>`)
+  } else {
+    $('#bracket-overlay-inner').html(`<h2><span class='text-blue' style='font-size: 1rem'>${team.t}</span><br/>${team.tn}</h2><p><b>Members:</b> ${team.tm}</p><div><img src='${_getTeamPhoto(team.t)}' class='teamPhoto' onerror='_teamPhotoError(this)'/></div><br/><button class='btn-lg' onclick='hideBracketOverlay()'>Dismiss</button>`); 
+  }
+  showBracketOverlay(); 
 }
 
 window.onload = init; 

@@ -83,24 +83,6 @@
   color: hsl(60, 100%, 90%);
 }
 
-/* .buzzer-text {
-  display: inline-block;
-  width: 62px;
-}
-
-#buzzer-scoreInfo {
-  box-sizing: border-box;
-  border-top: 1px solid #fff; 
-  background: #00000050;
-  width: 100%;
-  margin-top: 6px;
-  height: 44px;
-  padding: 2px 6px;
-  text-align: left;
-  overflow: hidden;
-  text-overflow: ellipsis;
-} */
-
 /* Bracket Overlay */
 #bracket-overlay {
   z-index: 5; 
@@ -160,13 +142,21 @@
   bottom: 0px;
   left: 0; 
   width: 100%; 
-  height: 24px; 
+  height: 28px; 
+  border: none; 
+  border-top: 1px solid #fff; 
+  font-size: 14px;
   box-sizing: border-box;
 }
 
 /* #bracket-chat-overlay .module-inner:hover, #bracket-chat-overlay .module-inner:focus, #bracket-chat-overlay .module-inner:focus-within {
   opacity: 1;
 }  */
+
+#bracket-chat-messages {
+  height: calc(100% - 54px); 
+  overflow-y: scroll;
+}
 
 #bracket-chat-messages p {
   font-size: 1rem;
