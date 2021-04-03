@@ -1,7 +1,7 @@
-**While builds here should work, they will likely also contain incomplete features until everything is ready. This branch is NOT intended for general public use. Production builds are available under "Releases".**
-
 # Open Trivia
 Welcome to Open Trivia! 
+
+**v2.0.0 - Production Ready -- this readme will be updated with more details in the next few weeks after the event to reflect new changes.**
 
 ## What is it? 
 Think of it like [Socrative](https://socrative.com/), except less test-like and more flexible.  OpenTrivia is an all-in-one trivia server that handles a client interface, a host interface, and a slideshow interface (intended to be projected/presented). It supports the following: 
