@@ -164,7 +164,7 @@ function renderBracket(data, seeds) {
 }
 
 let initialHTML = false; 
-let bracketNames = ['First Bracket', 'Second Bracket', 'Third Bracket', 'Fourth Bracket']; 
+let bracketNames = ['Rocky Mountain Bracket', 'Mesa Verde Bracket', 'Black Canyon Bracket', 'Sand Dunes Bracket']; 
 async function getBrackets(bracket) {
   if (!initialHTML) {
     initialHTML = $('#bracket-inner').html(); 

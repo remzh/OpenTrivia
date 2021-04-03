@@ -1,7 +1,7 @@
 [{
   "roundName": "0", 
   "userBackground": "bk.jpg", 
-  "slideBackground": "nature.jpg", 
+  "slideBackground": "0-practice.jpg", 
   "canChangeAnswer": true, 
   "brackets": false
 }, {
@@ -19,25 +19,25 @@
 }, {
   "roundName": "2b", 
   "userBackground": "bk2.jpg", 
-  "slideBackground": "2-history.jpg", 
+  "slideBackground": "2b-sunset.jpg", 
   "canChangeAnswer": false, 
   "brackets": true
 }, {
   "roundName": "2c", 
-  "userBackground": "bk2.jpg", 
-  "slideBackground": "3-sports.jpg", 
+  "userBackground": "bk2b.jpg", 
+  "slideBackground": "2c-sunset.jpg", 
   "canChangeAnswer": false, 
   "brackets": true
 }, { 
   "roundName": "2d", 
-  "userBackground": "bk2.jpg", 
-  "slideBackground": "3-sports.jpg", 
+  "userBackground": "bk2b.jpg", 
+  "slideBackground": "2d-volcano.jpg", 
   "canChangeAnswer": false, 
   "brackets": true
 }, {
   "roundName": "3", 
   "userBackground": "bk3.jpg", 
-  "slideBackground": "5-volcano.jpg", 
+  "slideBackground": "3-colorado.jpg", 
   "canChangeAnswer": true, 
   "slow": true
 }, {
