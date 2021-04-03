@@ -1377,6 +1377,14 @@ io.of('/').use(function(socket, next){
         sender: socket.handshake.session.user.name, 
         msg
       }); 
+      if (resp.ok && resp.sent) {
+        await mdb.collection('brackets-chat').insertOne({
+          ts: new Date(), 
+          from: socket.handshake.session.user.TeamID, 
+          to: resp.otid, 
+          msg
+        }); 
+      }
     }
   }); 
 

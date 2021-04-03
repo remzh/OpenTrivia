@@ -125,14 +125,6 @@
     </div>
     <div id='addons' class='container top'>
       <div class='col'>
-        <h2>Addon: Bracket Controls</h2>
-        <a target='_blank' href='../brackets/public.html'>Open Brackets</a><br/>
-        <button id='btn-brk-create'>Create Brackets</button>
-        <br/><br/>
-        <span>Bracket Round: </span><input type='number' id='i-brk-brkRound' placeholder='0' style='width: 60px'/>
-        <br/>
-        <button id='btn-brk-start'>Start Round</button>
-        <button id='btn-brk-finish'>Finish Round</button>
         <h2>Addon: Divergence</h2>
         <p>Divergence is currently <b id='span-divg-enabled'>disabled</b>.</p>
         <br/>
@@ -143,17 +135,21 @@
         <span><input id='i-divg-enabled' type='checkbox'><label for='i-divg-enabled'>Enabled</label></span>
         <button id='btn-divg-update'>Update</button><br/>
         <button id='btn-divg-scores'>Show Scores (sp1)</button>
-        <br/>
+        <br/><br/>
         <p>Finalist Scores:</p>
         <textarea id='i-divg-finalistScores' placeholder='TID;0'></textarea><br/>
-        <button id='btn-divg-continueSlow'>Continue Slow</button> <button id='btn-divg-updateFinalistScores'>Update Scores</button> <button id='btn-divg-hideFinalistScores'>Hide Scores</button>
+        <button id='btn-divg-continueSlow'>Continue Slow</button> <button id='btn-divg-updateFinalistScores'>Update Scores</button> <button id='btn-divg-hideFinalistScores'>Hide Scores</button><br/><br/>
+        <button class='btn' onclick='secSocket.emit("show-answer", 1)'>Divg (finals): Show Answer + Save</button>
       </div>
       <div class='col'>
-        <h2>Bracket Info</h2>
-        <div class='left'>
-          <!-- <p>5 brackets formed, 78 teams assigned<br/>Yay!</p> -->
-          <p id='p-brk-status'>No updates yet.</p>
-        </div>
+        <h2>Addon: Bracket Controls</h2>
+        <a target='_blank' href='../brackets/public.html'>Open Brackets</a><br/><br/>
+        <button id='btn-brk-create'>Create Brackets</button>
+        <br/><br/>
+        <span>Bracket Round: </span><input type='number' id='i-brk-brkRound' placeholder='0' style='width: 60px'/>
+        <br/>
+        <button id='btn-brk-start'>Start Round</button>
+        <button id='btn-brk-finish'>Finish Round</button>
       </div>
     </div>
     <br/><br/>
