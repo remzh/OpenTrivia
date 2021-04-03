@@ -195,7 +195,7 @@ function updateQuestion(data){
 let sp_slowPaused = false; 
 function displaySlowQuestion() {
   if (!sp_slowPaused) {
-    let time = 80; 
+    let time = 65; 
     let textLeft = $('#q-sp-slow2').text(); 
     if (textLeft.length === 0) {
       $('#image').css('filter', ''); 
