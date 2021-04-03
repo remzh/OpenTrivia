@@ -7,6 +7,16 @@ let status = 0;
 let curType = ''; 
 let imagePlaceholder = {}; 
 
+let _sounds = {
+  buzz: new Howl({
+    src: '../sounds/buzz2.mp3'
+  }), 
+}
+
+function playBuzz() {
+  _sounds.buzz.play(); 
+}
+
 function showStatus(type, msg){
   let map = {
     'error': ['fa-exclamation-triangle', 'st-red'], 
@@ -357,12 +367,30 @@ secSocket.on('divergence-showBuzz', (data) => {
   if (data.interrupt) {
     sp_slowPaused = true; 
   }
+  playBuzz(); 
   if ($('#q-sp-slow1').length === 1) {
     $('#q-sp-slow1').append(`<span class='divg-${data.interrupt?'red':'blue'}'><i class='fas fa-bell'></i> ${data.name}</span>`);
   } else {
     $('#question').append(`<span class='divg-blue'><i class='fas fa-bell'></i> ${data.name}</span>`); 
   }
+  if ($(`#divg-buzzer-${data.tid}`).length > 0) {
+    $(`#divg-buzzer-${data.tid}`).addClass('active'); 
+  }
 });
+
+secSocket.on('divergence-renderScores', (data) => {
+  if (!data) {
+    $('#divg-finalists').hide(); 
+    return; 
+  }
+  $('#divg-finalists').show(); 
+  let template = `<div class='divg-buzzer-outer'><div class='divg-buzzer-score'>%s</div><div class='divg-buzzer-name'>%n</div><div id='%i' class='divg-buzzer'></div></div>`; 
+  let html = ''; 
+  for (let i of data) {
+    html += template.replace('%s', i.score).replace('%n', i.teamName).replace('%i', `divg-buzzer-${i.tid}`);
+  }
+  $('#divg-finalists-standings').html(html); 
+})
 
 secSocket.on('divergence-continueQuestion', () => {
   console.log('yay'); 
@@ -380,10 +408,10 @@ window.onresize = function(){
 let mhTimeout; 
 document.body.onmousemove = function() {
   clearTimeout(mhTimeout); 
-  $('body').prop('style', 'cursor: default'); 
+  $('html').prop('style', 'cursor: default'); 
   $('#footer').css('opacity', 1);
   mhTimeout = setTimeout(() => {
-    $('body').prop('style', 'cursor: none'); 
+    $('html').prop('style', 'cursor: none'); 
     $('#footer').css('opacity', 0);
   }, 1600); 
 }

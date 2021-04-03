@@ -9,6 +9,10 @@ function divg_resetBuzzer() {
 socket.on('divergence-status', data => {
   if (!data.active) {
     $('#divergence-outer').hide(); 
+    if (divg_buzzerMode) {
+      divg_buzzerMode = false; 
+      socket.emit('status'); 
+    }
     return;   
   }
   $('#divergence-outer').show(); 
@@ -17,9 +21,7 @@ socket.on('divergence-status', data => {
   if (data.buzzerMode && !divg_buzzerMode) {
     divg_buzzerMode = true; 
     divg_resetBuzzer(); 
-  } else if (!data.buzzerMode && divg_buzzerMode) {
-    divg_buzzerMode = false; 
-  }
+  } 
 });
 
 socket.on('divergence-value', data => {

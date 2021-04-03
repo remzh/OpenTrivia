@@ -7,11 +7,12 @@
     <script defer src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js' integrity='sha256-4iQZ6BVL4qNKlQ27TExEhBN1HFPvAvAMbFavKKosSWQ=' crossorigin='anonymous'></script>
     <script defer src='https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js' integrity='sha256-vrn14y7WH7zgEElyQqm2uCGSQrX/xjYDjniRUQx3NyU=' crossorigin='anonymous'></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/js/all.min.js' integrity='sha256-qM7QTJSlvtPSxVRjVWNM2OfTAz/3k5ovHOKmKXuYMO4=' crossorigin='anonymous'></script>
+    <script defer src='https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.1/howler.core.min.js' integrity='sha512-wzeZyTAYqFv+VKD/mGwXREXBIzy4pE3E617SBskkLFuYcPQgX6px2Il3gwZwXb9DuyjYPIsbTEO/6c3+mUvoPA==' crossorigin='anonymous'></script>
     <script defer src='/socket.io/socket.io.js'></script>
     <script defer src='../logger.js'></script>
     <script defer src='slides.js'></script>
   </head>
-  <body style='cursor: none'>
+  <body>
     <div id='bkimg'></div>
     <div id='main' style='opacity: 0'>
       <div id='catInfo'>
@@ -42,6 +43,10 @@
               <b id='q-stats-num'>0%</b> of teams <span id='q-stats-msg'>have correctly answered.</span>
               <br/><span id='q-stats-first'><i class='fas fa-fire-alt'></i> <b id='q-stats-first-name'>Bob</b> got it first!</span>
             </p>
+            <div id='divg-finalists'>
+              <p style='margin: 0'>Our Finalists:</p>
+              <div id='divg-finalists-standings'></div>
+            </div>
             <div id='q-stats-answer'><span></span></div>
           </div>
         </div>
@@ -62,7 +67,7 @@
       <span id='status'><i class='fas fa-circle-notch fa-spin'></i> Loading...</span>
       <span id='s-ping-outer' style='display: none'> (Ping: <span id='s-ping'>...</span>ms)</span>
       <span class='right'>
-        <a href='#' onclick='logger.open()'>Console</a>
+        <a onclick='playBuzz()'>Test Buzzer</a> • <a onclick='logger.open()'>Console</a>
       </span>
     </div>
   </body>
