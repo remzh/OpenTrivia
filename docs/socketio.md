@@ -72,3 +72,5 @@ Event sent when a user returns to their competition tab
 Hosts connect to a host-specific, secure namespace (`/secure`).
 
 In order for a host to connect, they must have authenticated via the host key set using the `HOST_KEY` environment variable. Otherwise, the connection request will be rejected. 
+
+Host documentation will be added in the coming few weeks. 
