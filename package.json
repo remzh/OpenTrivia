@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Ryan Zhang",
+  "author": "Rem Zhang",
   "license": "UNLICENSED",
   "dependencies": {
     "body-parser": "^1.19.0",

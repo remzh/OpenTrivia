@@ -22,7 +22,7 @@ let _sounds = {
 }
 
 // Shared across realtime.js and brackets.js (too small to warrant its own file)
-const TEAMPHOTO_BASE_URL = `https://ryanz.blob.core.windows.net/triviaphotos/%t.jpg`; 
+const TEAMPHOTO_BASE_URL = `https://Remz.blob.core.windows.net/triviaphotos/%t.jpg`; 
 
 function _getTeamPhoto(tid) {
   return TEAMPHOTO_BASE_URL.replace('%t', tid); 

@@ -1,6 +1,6 @@
 /**
  * Open Trivia 
- * (C) 2020 Ryan Zhang
+ * (C) 2023 Rem Zhang
  * 
  * See license.md for legal information.
  */

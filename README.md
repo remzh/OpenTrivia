@@ -1,19 +1,19 @@
-![Open Trivia Logo](docs/logo.jpg)
 # Open Trivia
-![MIT License](https://img.shields.io/github/license/Ryan778/OpenTrivia?style=flat-square)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/Ryan778/OpenTrivia?style=flat-square)
+![MIT License](https://img.shields.io/github/license/remzh/OpenTrivia?style=flat-square)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/remzh/OpenTrivia?style=flat-square)
 
 Welcome to Open Trivia! 
 
 ## Deprecation Notice
+OpenTrivia will be superseded by a new trivia platform. This repository will no longer receive any updates.
+
+----------------
 
 **v2.0.0 -- Note that [Tabletop.js](https://github.com/jsoma/tabletop) has been deprecated, causing this version of OpenTrivia to no longer work.**
 
 Due to the 1) degrading code quality (last-minute features meant many aspects must be manually setup directly in the code), 2) relatively poor and unintuitive backend UI (partly due to the pandemic, which significantly affected developement plans), and 3) the deprecation of Tabletop.js, Open Trivia v2 has also been deprecated. 
 
 If you'd still like to use OpenTrivia, I recommend you using [PapaParse](https://www.npmjs.com/package/papaparse) and local CSV files to load questions and teams. Local files will work interchangably as long as you specify PapaParse to use headers. An example CSV file with different question types can be found under [docs/questions-example.csv](docs/questions-example.csv).
-
-A successor may be developed in the future if there's enough interest/demand, but don't count on it. If it does ever happen, this page will be updated.
 
 ## What is it? 
 Think of it like [Socrative](https://socrative.com/), except less test-like and more flexible.  Open Trivia is an all-in-one trivia server that handles a client interface, a host interface, and a slideshow interface (intended to be projected/presented). It supports the following: 
