@@ -5,7 +5,7 @@
 Welcome to Open Trivia! 
 
 ## Deprecation Notice
-OpenTrivia will be superseded by a new trivia platform. This repository will no longer receive any updates.
+OpenTrivia has been superseded by [Trivione](https://github.com/remzh/trivione), which is based on this codebase. This repository will no longer receive any updates.
 
 ----------------
 
